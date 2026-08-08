@@ -1,0 +1,16 @@
+/* Locally bundled fonts — no Google Fonts / CDN network calls at runtime. */
+
+/* Plus Jakarta Sans — interface face */
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/plus-jakarta-sans/800.css';
+
+/* IBM Plex Mono — numeric face (Crux IDs, amounts, reference codes) */
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
+/* Material Symbols Rounded — 24pt optical size, unfilled, variable weight */
+@import 'material-symbols/rounded.css';

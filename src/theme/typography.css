@@ -1,0 +1,93 @@
+/**
+ * Typography utility classes mapped 1:1 to the tokens in tokens.css.
+ * Use these instead of ad-hoc font declarations in component styles.
+ */
+body {
+  font-family: var(--cc-font-interface);
+  color: var(--cc-ink-900);
+  background: var(--cc-surface-app);
+}
+
+.cc-text-display {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-display-size);
+  line-height: var(--cc-text-display-line);
+  font-weight: var(--cc-text-display-weight);
+  letter-spacing: -0.02em;
+}
+
+.cc-text-h1 {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-h1-size);
+  line-height: var(--cc-text-h1-line);
+  font-weight: var(--cc-text-h1-weight);
+  letter-spacing: -0.01em;
+}
+
+.cc-text-h2 {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-h2-size);
+  line-height: var(--cc-text-h2-line);
+  font-weight: var(--cc-text-h2-weight);
+}
+
+.cc-text-body {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-body-size);
+  line-height: var(--cc-text-body-line);
+  font-weight: var(--cc-text-body-weight);
+  color: var(--cc-ink-600);
+}
+
+.cc-text-body-strong {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-body-strong-size);
+  line-height: var(--cc-text-body-strong-line);
+  font-weight: var(--cc-text-body-strong-weight);
+  color: var(--cc-ink-900);
+}
+
+.cc-text-subtitle {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-subtitle-size);
+  line-height: var(--cc-text-subtitle-line);
+  font-weight: var(--cc-text-subtitle-weight);
+  color: var(--cc-ink-400);
+}
+
+.cc-text-caption {
+  font-family: var(--cc-font-interface);
+  font-size: var(--cc-text-caption-size);
+  line-height: var(--cc-text-caption-line);
+  font-weight: var(--cc-text-caption-weight);
+  color: var(--cc-ink-400);
+}
+
+.cc-text-mono {
+  font-family: var(--cc-font-mono);
+  font-size: var(--cc-text-mono-size);
+  line-height: var(--cc-text-mono-line);
+  font-weight: var(--cc-text-mono-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Elder-friendly mode — applied via a `cc-elder` class on an ancestor
+   (Point Facility attendee screens, L1-L4). */
+.cc-elder .cc-text-body {
+  font-size: var(--cc-text-elder-body-size);
+  line-height: var(--cc-text-elder-body-line);
+}
+.cc-elder .cc-text-caption {
+  font-size: var(--cc-text-elder-caption-size);
+  line-height: var(--cc-text-elder-caption-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

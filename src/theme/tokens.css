@@ -1,0 +1,131 @@
+/**
+ * CruxCare design tokens.
+ * Source of truth: design_handoff_cruxcare_mobile/README.md ("Design tokens").
+ * Values are pixel-final per the design handoff — do not introduce ad-hoc
+ * hex/spacing/radius values in components; add a token here instead.
+ */
+:root {
+  /* ---- Color: brand ---- */
+  --cc-color-primary: #0e7c6b;
+  --cc-color-primary-dark: #0a5a4e;
+  --cc-color-leaf: #2fa36b;
+  --cc-color-sand: #f3efe6;
+  --cc-color-mist: #eaf3f0;
+
+  /* ---- Color: semantic ---- */
+  --cc-color-success: #2e9e5b;
+  --cc-color-warning: #c9772e;
+  --cc-color-danger: #c1443b;
+  --cc-color-info: #2b7dbd;
+
+  /* Small-text-on-light variants for warning/success (contrast-safe) */
+  --cc-color-warning-text: #8a4e17;
+  --cc-color-success-text: #1f6e42;
+
+  /* Amber fee/lock banner fill */
+  --cc-color-warning-tint: rgba(201, 119, 46, 0.14);
+
+  /* ---- Color: ink & neutrals ---- */
+  --cc-ink-900: #1a2b22; /* primary text */
+  --cc-ink-600: #2e3a33; /* secondary body text */
+  --cc-ink-400: #61706a; /* muted text, inactive tab labels, helper copy */
+  --cc-ink-300: #8a9a93; /* placeholder text, low-emphasis dividers */
+  --cc-line: #cbd8d2; /* card/input borders, hairlines */
+  --cc-divider: #eaf3f0; /* inner row dividers, tinted rows */
+
+  /* ---- Color: surface ---- */
+  --cc-surface-app: #f7faf9; /* app background / screen fill */
+  --cc-surface-0: #ffffff; /* cards, sheets, tab bar */
+
+  /* ---- Color: error surface (distinct from semantic/danger) ---- */
+  --cc-error-surface: #fdf2f0;
+  --cc-error-surface-border: #f3cfc8;
+  --cc-error-surface-text: #a5321f;
+  /* Input-specific error border (per Input component spec) */
+  --cc-input-error-border: #c0392b;
+
+  /* ---- Typography: families ---- */
+  --cc-font-interface: 'Plus Jakarta Sans', -apple-system, 'SF Pro Text', Roboto, system-ui,
+    sans-serif;
+  --cc-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* ---- Typography: scale (size/line-height/weight) ---- */
+  --cc-text-display-size: 18px;
+  --cc-text-display-line: 22px;
+  --cc-text-display-weight: 700;
+
+  --cc-text-h1-size: 17px;
+  --cc-text-h1-line: 22px;
+  --cc-text-h1-weight: 700;
+
+  --cc-text-h2-size: 16px;
+  --cc-text-h2-line: 21px;
+  --cc-text-h2-weight: 700;
+
+  --cc-text-body-size: 14px;
+  --cc-text-body-line: 22px;
+  --cc-text-body-weight: 400;
+
+  --cc-text-body-strong-size: 14px;
+  --cc-text-body-strong-line: 22px;
+  --cc-text-body-strong-weight: 600;
+
+  --cc-text-subtitle-size: 12px;
+  --cc-text-subtitle-line: 18px;
+  --cc-text-subtitle-weight: 400;
+
+  --cc-text-caption-size: 11px; /* floor — nothing renders smaller */
+  --cc-text-caption-line: 15px;
+  --cc-text-caption-weight: 400;
+
+  --cc-text-mono-size: 14px;
+  --cc-text-mono-line: 20px;
+  --cc-text-mono-weight: 500;
+
+  /* Elder-friendly mode (Point Facility attendee screens, L1-L4) */
+  --cc-text-elder-body-size: 17px;
+  --cc-text-elder-body-line: 26px;
+  --cc-text-elder-caption-size: 15px;
+  --cc-text-elder-caption-line: 22px;
+  --cc-touch-elder: 56px;
+
+  /* ---- Spacing scale (4-point) ---- */
+  --cc-space-1: 4px;
+  --cc-space-2: 8px;
+  --cc-space-3: 12px;
+  --cc-space-4: 16px; /* base gutter */
+  --cc-space-5: 20px;
+  --cc-space-6: 24px; /* section gap */
+  --cc-space-7: 32px;
+  --cc-space-8: 40px;
+  --cc-space-9: 48px;
+
+  /* ---- Radius ---- */
+  --cc-radius-sm: 8px; /* inputs */
+  --cc-radius-md: 12px; /* buttons */
+  --cc-radius-lg: 16px; /* cards (16-18px) */
+  --cc-radius-lg-max: 18px;
+  --cc-radius-pill: 999px; /* chips, avatars */
+  --cc-radius-sheet: 24px; /* bottom sheet top corners */
+
+  /* ---- Elevation ---- */
+  --cc-elevation-1: 0 2px 8px rgba(26, 43, 34, 0.08); /* e1 card */
+  --cc-elevation-2: 0 8px 24px rgba(26, 43, 34, 0.12); /* e2 sheet */
+
+  /* ---- Touch & layout ---- */
+  --cc-touch-min: 44px;
+  --cc-button-height: 47px;
+  --cc-input-height: 44px;
+  --cc-textbutton-height: 44px;
+  --cc-tabbar-height: 66px;
+  --cc-statusbar-height: 50px;
+  --cc-screen-padding: 16px;
+  --cc-card-padding-min: 14px;
+  --cc-card-padding-max: 18px;
+
+  /* ---- Motion ---- */
+  --cc-motion-fast: 150ms;
+  --cc-motion-slow: 250ms;
+  --cc-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --cc-ease-in: cubic-bezier(0.4, 0, 1, 1);
+}

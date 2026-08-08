@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<style>
+  body { margin: 0; background: #EDF1EF; -webkit-font-smoothing: antialiased; }
+  a { color: #0E7C6B; text-decoration: none; }
+  a:hover { color: #0A5A4E; text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#1A2B22;padding:48px 48px 80px;background:#EDF1EF">
+
+  <div style="max-width:1100px;margin:0 0 44px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <img src="assets/logo-mark.png" alt="CruxCare" style="width:34px;height:37px;display:block" />
+      <span style="font:800 16px/22px 'Plus Jakarta Sans',sans-serif">CruxCare</span>
+      <span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#61706A;letter-spacing:0.08em">PHASE 2 · FINANCE</span>
+    </div>
+    <h1 style="margin:0 0 12px;font:800 27px/32px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Wallet · Commitment · Cooperative · Rank</h1>
+    <p style="margin:0 0 20px;max-width:70ch;font:400 15px/24px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;text-wrap:pretty">One member's money, told consistently: wallet $2,405.12 available, $2,000 committed at 1.8%/month to 12 Apr 2027, week 18 of a 52-week cooperative cycle, Gold rank on 128 referrals. Every fee, lock and eligibility gate comes from the server before a confirm button is offered.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <span style="padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid #CBD8D2;font:500 13px/18px 'Plus Jakarta Sans',sans-serif">Min 5% charge on withdrawals &amp; member transfers</span>
+      <span style="padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid #CBD8D2;font:500 13px/18px 'Plus Jakarta Sans',sans-serif">Interest withdrawal after 3 months</span>
+      <span style="padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid #CBD8D2;font:500 13px/18px 'Plus Jakarta Sans',sans-serif">60-day notice to return capital</span>
+      <span style="padding:6px 14px;border-radius:999px;background:#FFFFFF;border:1px solid #CBD8D2;font:500 13px/18px 'Plus Jakarta Sans',sans-serif">Help after 12 consistent weeks · 3 guarantors</span>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">E · WALLET</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Balance → Ledger → Withdraw → Fee preview ⧉ → Step-up auth ⧉ → Processing</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:60px">
+
+    <div>
+      <div id="s-E1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%);color:#1A2B22;padding-bottom:20px">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:6px 16px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px"><span style="font:700 17px/22px 'Plus Jakarta Sans',sans-serif">Wallet</span><span style="display:flex;gap:14px"><span style="font-family:'Material Symbols Rounded';font-size:22px">visibility_off</span><span style="font-family:'Material Symbols Rounded';font-size:22px">help_outline</span></span></div>
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Available balance</div>
+            <div style="font:700 34px/40px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-0.01em">$2,405.12</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1"><span style="font-family:'Material Symbols Rounded';font-size:15px">cloud_done</span>From CruxCare · updated just now</div>
+            <div style="display:flex;gap:10px;margin-top:18px">
+              <div style="flex:1;background:rgba(255,255,255,0.78);color:#0A5A4E;border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Pending out</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$240.00</div></div>
+              <div style="flex:1;background:rgba(255,255,255,0.78);color:#0A5A4E;border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Committed</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$2,000.00</div></div>
+              <div style="flex:1;background:rgba(255,255,255,0.78);color:#0A5A4E;border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Coop saved</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$180.00</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
+            <div style="text-align:center"><div style="height:52px;border-radius:14px;background:#FFFFFF;border:1px solid #CBD8D2;display:grid;place-items:center;margin-bottom:6px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">arrow_outward</span></div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Withdraw</div></div>
+            <div style="text-align:center"><div style="height:52px;border-radius:14px;background:#FFFFFF;border:1px solid #CBD8D2;display:grid;place-items:center;margin-bottom:6px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">swap_horiz</span></div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Transfer</div></div>
+            <div style="text-align:center"><div style="height:52px;border-radius:14px;background:#FFFFFF;border:1px solid #CBD8D2;display:grid;place-items:center;margin-bottom:6px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">savings</span></div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Contribute</div></div>
+            <div style="text-align:center"><div style="height:52px;border-radius:14px;background:#FFFFFF;border:1px solid #CBD8D2;display:grid;place-items:center;margin-bottom:6px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">receipt_long</span></div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Statements</div></div>
+          </div>
+          <div style="background:#FBEEE2;border:1px solid #E8C9A6;border-radius:16px;padding:14px;display:flex;gap:10px;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">schedule</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#5E3810">Withdrawal processing</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">$240.00 requested 3 Aug · fee $12.00 · settles in 1–3 business days.</div></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Recent activity</span><a href="#ledger" style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Full ledger</a></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:12px;background:#FBEEE2;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#C9772E">arrow_outward</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Withdrawal</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">3 Aug · processing</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#8A4E17">−$240.00</div><div style="font:400 11px/15px 'IBM Plex Mono',monospace;color:#61706A">REF-90420</div></div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:12px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#0E7C6B">shopping_bag</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Order REF-90412</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 Aug · Cayenmis, Green Tea</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace">−$74.88</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">paid</div></div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:12px;background:#E4F4EA;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">trending_up</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Commitment interest</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1 Aug · Jul cycle · 1.8%</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">+$36.00</div><div style="font:400 11px/15px 'IBM Plex Mono',monospace;color:#61706A">REF-90388</div></div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px"><div style="width:38px;height:38px;border-radius:12px;background:#E4F4EA;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">workspace_premium</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Gold rank earning</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1 Aug · monthly</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">+$10.00</div><div style="font:400 11px/15px 'IBM Plex Mono',monospace;color:#61706A">REF-90381</div></div></div>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">home</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">storefront</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Shop</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">trending_up</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Grow</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">account_balance_wallet</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Wallet</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">E1 · Wallet home</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">One balance, three commitments of it · pending states up front</div>
+    </div>
+
+    <div>
+      <div id="s-E2" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Ledger</span><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">tune</span></div>
+          <div style="padding:0 16px 12px;display:flex;gap:8px;overflow:hidden">
+            <span style="padding:6px 13px;border-radius:999px;background:#0E7C6B;color:#FFFFFF;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">All</span>
+            <span style="padding:6px 13px;border-radius:999px;border:1px solid #CBD8D2;background:#FFFFFF;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">Money in</span>
+            <span style="padding:6px 13px;border-radius:999px;border:1px solid #CBD8D2;background:#FFFFFF;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">Money out</span>
+            <span style="padding:6px 13px;border-radius:999px;border:1px solid #CBD8D2;background:#FFFFFF;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">Pending</span>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:14px 16px;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px 14px;margin-bottom:14px">
+            <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">In · August</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">+$46.00</div></div>
+            <div style="width:1px;height:30px;background:#EAF3F0"></div>
+            <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Out · August</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#C1443B">−$324.88</div></div>
+            <div style="width:1px;height:30px;background:#EAF3F0"></div>
+            <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Fees</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#8A4E17">$12.00</div></div>
+          </div>
+          <div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A;letter-spacing:0.06em;margin-bottom:8px">3 AUGUST</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px"><div style="width:38px;height:38px;border-radius:12px;background:#FBEEE2;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#C9772E">arrow_outward</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Withdrawal to bank</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Fee $12.00 · GTBank ••4821</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#8A4E17">−$240.00</div><span style="padding:3px 8px;border-radius:999px;background:#FBEEE2;color:#8A4E17;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Processing</span></div></div>
+          </div>
+          <div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A;letter-spacing:0.06em;margin-bottom:8px">2 AUGUST</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:12px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#0E7C6B">shopping_bag</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Order REF-90412</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet payment</div></div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">−$74.88</div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px"><div style="width:38px;height:38px;border-radius:12px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#0E7C6B">savings</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Weekly contribution</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Week 18 · auto</div></div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">−$10.00</div></div>
+          </div>
+          <div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A;letter-spacing:0.06em;margin-bottom:8px">1 AUGUST</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:12px;background:#E4F4EA;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">trending_up</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Commitment interest</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Jul cycle · 1.8% of $2,000</div></div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">+$36.00</div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px"><div style="width:38px;height:38px;border-radius:12px;background:#E4F4EA;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">workspace_premium</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Gold rank earning</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Level 3 · District</div></div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">+$10.00</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">E2 · Ledger</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Grouped by day · fees named on the row · month summary</div>
+    </div>
+
+    <div>
+      <div id="s-E3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">close</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Withdraw</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">How much?</label>
+          <div style="display:flex;align-items:center;height:72px;padding:0 16px;border:1.5px solid #0E7C6B;border-radius:14px;background:#FFFFFF;box-shadow:0 0 0 3px rgba(14,124,107,0.16);margin-bottom:8px">
+            <span style="font:600 18px/23px 'IBM Plex Mono',monospace;color:#61706A;margin-right:8px">$</span>
+            <span style="font:700 32px/38px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">400.00</span>
+            <span style="margin-left:auto;padding:6px 12px;border-radius:999px;background:#EAF3F0;color:#0A5A4E;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">MAX</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:18px"><span>Available $2,405.12</span><span>Min $5.00 · max $2,405.12</span></div>
+          <div style="display:flex;gap:8px;margin-bottom:20px">
+            <span style="flex:1;text-align:center;padding:9px 0;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;font:600 13px/19px 'IBM Plex Mono',monospace">$100</span>
+            <span style="flex:1;text-align:center;padding:9px 0;border-radius:12px;border:1.5px solid #0E7C6B;background:#EAF3F0;color:#0A5A4E;font:600 13px/19px 'IBM Plex Mono',monospace">$400</span>
+            <span style="flex:1;text-align:center;padding:9px 0;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;font:600 13px/19px 'IBM Plex Mono',monospace">$1,000</span>
+            <span style="flex:1;text-align:center;padding:9px 0;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;font:600 13px/19px 'IBM Plex Mono',monospace">All</span>
+          </div>
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">To</div>
+          <div style="background:#FFFFFF;border:1.5px solid #0E7C6B;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:10px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">account_balance</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">GTBank ••4821</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Ada Nwosu · saved</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">radio_button_checked</span></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:18px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">add</span><div style="flex:1;font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Add another account</div></div>
+          <div style="background:#F3EFE6;border-radius:14px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">percent</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#5E3810">A minimum 5% admin charge applies. You'll see the exact fee and what lands in your account before anything is submitted.</div></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer" style-hover="background:#0A5A4E">Review withdrawal</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">E3 · Withdraw amount</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Bounds stated · fee promised, not yet claimed · "Review", not "Send"</div>
+    </div>
+
+    <div>
+      <div id="s-E4" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;position:relative">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">close</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Withdraw</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;opacity:0.4">
+          <div style="height:72px;border:1px solid #CBD8D2;border-radius:14px;background:#FFFFFF;display:flex;align-items:center;padding:0 16px"><span style="font:700 32px/38px 'IBM Plex Mono',monospace">$400.00</span></div>
+        </div>
+        <div style="position:absolute;inset:0;background:rgba(26,43,34,0.38)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%);border-radius:24px 24px 40px 40px;box-shadow:0 -8px 24px rgba(26,43,34,0.16);padding:12px 20px 28px">
+          <div style="display:grid;place-items:center;margin-bottom:12px"><div style="width:44px;height:5px;border-radius:999px;background:#CBD8D2"></div></div>
+          <div style="font:700 18px/22px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Confirm withdrawal</div>
+          <div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:16px">Figures returned by CruxCare at 09:41. They expire in 5 minutes.</div>
+          <div style="background:#F7FAF9;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">You requested</span><span style="font:600 14px/21px 'IBM Plex Mono',monospace">$400.00</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Admin charge · 5%</span><span style="font:600 14px/21px 'IBM Plex Mono',monospace;color:#8A4E17">−$20.00</span></div>
+            <div style="height:1px;background:#CBD8D2"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/22px 'Plus Jakarta Sans',sans-serif">Lands in GTBank ••4821</span><span style="font:700 18px/23px 'IBM Plex Mono',monospace">$380.00</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet after this</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">$2,005.12</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Expected arrival</span><span style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1–3 business days</span></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#E7F0F8;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#1E5C8D">fingerprint</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#123F63">Face ID is required next. Nothing is submitted until it succeeds.</div></div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:8px" style-hover="background:#0A5A4E">Verify &amp; withdraw $400.00</button>
+          <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Cancel</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">E4 · Fee preview ⧉</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Server figures, quote expiry, resulting balance, step-up warned</div>
+    </div>
+
+    <div>
+      <div id="s-E5" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22;background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="flex:1;background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%);padding:24px 20px 0;display:flex;flex-direction:column">
+          <div style="text-align:center;padding-top:26px">
+            <div style="width:84px;height:84px;border-radius:999px;background:#FBEEE2;display:grid;place-items:center;margin:0 auto 18px"><span style="font-family:'Material Symbols Rounded';font-size:42px;color:#C9772E">hourglass_top</span></div>
+            <h2 style="margin:0 0 8px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Withdrawal submitted</h2>
+            <p style="margin:0 0 4px;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;text-wrap:pretty">CruxCare has your request. We'll notify you the moment it settles — not before.</p>
+            <div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#61706A;margin-bottom:22px">REF-90436 · 4 Aug, 09:41</div>
+          </div>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Requested</span><span style="font:600 14px/23px 'IBM Plex Mono',monospace">$400.00</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Admin charge · 5%</span><span style="font:600 14px/23px 'IBM Plex Mono',monospace;color:#8A4E17">−$20.00</span></div>
+            <div style="height:1px;background:#EAF3F0;margin:10px 0"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/22px 'Plus Jakarta Sans',sans-serif">To land</span><span style="font:700 18px/23px 'IBM Plex Mono',monospace">$380.00</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A"><span>Wallet now</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace">$2,005.12</span></div>
+          </div>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:auto">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:12px">Where it is</div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Submitted &amp; debited</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">4 Aug 09:41</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#C9772E"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Admin review</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Usually same business day</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box"></span></div><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Paid to your bank</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1–3 business days</div></div></div>
+          </div>
+          <div style="padding:16px 0 28px">
+            <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Back to wallet</button>
+            <button type="button" style="width:100%;height:44px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">View in ledger</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">E5 · Submitted, not "done"</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Amber not green · settlement is the server's word, not ours</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">F · COMMITMENT</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Overview → New commitment ⧉ terms → Cycle detail → Withdraw interest → 60-day notice</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:60px">
+
+    <div>
+      <div id="s-F1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:4px 16px 12px"><div style="font:700 17px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Commitment</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Capital committed to CruxCare equipment</div></div>
+          <div style="display:flex;padding:0 16px;gap:20px;border-bottom:1px solid #EAF3F0">
+            <div style="padding:8px 0;border-bottom:2px solid #0E7C6B;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">Active</div>
+            <div style="padding:8px 0;font:500 12px/17px 'Plus Jakarta Sans',sans-serif;color:#61706A">History</div>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#0A5A4E;border-radius:18px;padding:18px;color:#FFFFFF;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+              <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Total committed</div><div style="font:700 30px/36px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">$2,000.00</div></div>
+              <span style="padding:5px 11px;border-radius:999px;background:rgba(255,255,255,0.16);font:600 11px/15px 'Plus Jakarta Sans',sans-serif">1 cycle</span>
+            </div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Interest paid</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$108.00</div></div>
+              <div style="flex:1;background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Rate</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">1.8%/mo</div></div>
+              <div style="flex:1;background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Lock ends</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">12 Apr 27</div></div>
+            </div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Your cycle</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Cycle CMT-2041</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Opened 12 Apr 2026</div></div>
+              <span style="padding:4px 10px;border-radius:999px;background:#FBEEE2;color:#8A4E17;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Locked 8 mo left</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px"><span>Month 4 of 12</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace">12 Apr 26 → 12 Apr 27</span></div>
+            <div style="height:8px;border-radius:999px;background:#EAF3F0;margin-bottom:14px"><div style="width:33%;height:100%;background:#0E7C6B;border-radius:999px"></div></div>
+            <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #EAF3F0">
+              <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Principal</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$2,000.00</div></div>
+              <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Interest available</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">$108.00</div></div>
+              <div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Next payout</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">1 Sep</div></div>
+            </div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px;margin-bottom:14px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">lock_open</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Interest is now withdrawable</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Three months completed on 12 Jul. A 5% charge applies; your principal stays locked.</div></div></div>
+          <div style="background:#FFFFFF;border:1px dashed #CBD8D2;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">add_circle</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Start another cycle</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Each cycle locks separately for 12 months</div></div></div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF;display:flex;gap:10px">
+          <button type="button" style="flex:1;height:47px;border:1.5px solid #0E7C6B;border-radius:12px;background:#FFFFFF;color:#0E7C6B;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Withdraw interest</button>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">New commitment</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">F1 · Commitment overview</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Lock time visible everywhere · interest separated from principal</div>
+    </div>
+
+    <div>
+      <div id="s-F2" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">close</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">New commitment</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">Amount to commit</label>
+          <div style="display:flex;align-items:center;height:72px;padding:0 16px;border:1.5px solid #0E7C6B;border-radius:14px;background:#FFFFFF;box-shadow:0 0 0 3px rgba(14,124,107,0.16);margin-bottom:8px">
+            <span style="font:600 18px/23px 'IBM Plex Mono',monospace;color:#61706A;margin-right:8px">$</span>
+            <span style="font:700 32px/38px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">1,000.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:18px"><span>From wallet · $2,405.12 available</span><span>Min $100.00</span></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:12px">What this earns, if held</div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Monthly interest · 1.8%</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace">$18.00</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Over the 12-month lock</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace">$216.00</span></div>
+            <div style="height:1px;background:#EAF3F0;margin:10px 0"></div>
+            <div style="display:flex;gap:8px;font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A"><span style="font-family:'Material Symbols Rounded';font-size:16px;color:#C9772E">info</span>Interest is credited monthly by CruxCare. Figures are indicative until each month is posted.</div>
+          </div>
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">Terms you're accepting</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#C9772E">lock_clock</span><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><strong style="font-weight:600">12-month lock.</strong> Capital cannot be returned before 4 Aug 2027.</div></div>
+            <div style="display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#C9772E">event_repeat</span><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><strong style="font-weight:600">60-day notice.</strong> After the lock, capital returns 60 days after you give notice and an admin approves.</div></div>
+            <div style="display:flex;gap:12px;padding:13px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#C9772E">schedule</span><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><strong style="font-weight:600">Interest after 3 months.</strong> Withdrawable from 4 Nov 2026, with a 5% charge.</div></div>
+            <div style="display:flex;gap:12px;padding:13px 14px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#C9772E">gavel</span><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><strong style="font-weight:600">Not a bank deposit.</strong> Capital supports CruxCare equipment and products. <a href="#terms">Read the full terms</a>.</div></div>
+          </div>
+        </div>
+        <div style="padding:12px 16px 26px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">check_box</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">I understand my $1,000.00 is locked for 12 months and returns only after a 60-day notice.</div></div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Review commitment</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">F2 · New commitment</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Terms are the form, not the fine print · explicit consent to the lock</div>
+    </div>
+
+    <div>
+      <div id="s-F3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">CMT-2041</span><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">ios_share</span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px;margin-bottom:14px;text-align:center">
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Principal committed</div>
+            <div style="font:700 30px/36px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;margin-bottom:14px">$2,000.00</div>
+            <div style="width:132px;height:132px;border-radius:999px;background:conic-gradient(#0E7C6B 0 33%,#EAF3F0 33% 100%);display:grid;place-items:center;margin:0 auto 12px">
+              <div style="width:104px;height:104px;border-radius:999px;background:#FFFFFF;display:grid;place-items:center">
+                <div><div style="font:700 20px/24px 'IBM Plex Mono',monospace">8 mo</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">of lock left</div></div>
+              </div>
+            </div>
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Locked 12 Apr 2026 → 12 Apr 2027</div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Interest paid</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">$108.00</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">3 months</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Rate</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">1.8%</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">per month</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Next credit</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">1 Sep</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">$36.00</div></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Cycle history</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px">
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="flex:1;padding-bottom:14px;display:flex;justify-content:space-between"><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Interest · Jul</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1 Aug · to wallet</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace;color:#1F6E42">+$36.00</span></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="flex:1;padding-bottom:14px;display:flex;justify-content:space-between"><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Interest · Jun</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1 Jul · to wallet</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace;color:#1F6E42">+$36.00</span></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="flex:1;padding-bottom:14px;display:flex;justify-content:space-between"><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Interest · May</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1 Jun · to wallet</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace;color:#1F6E42">+$36.00</span></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#0E7C6B"></span></div><div style="flex:1;display:flex;justify-content:space-between"><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Cycle opened</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">12 Apr · from wallet</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace">$2,000.00</span></div></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF;display:flex;gap:10px">
+          <button type="button" style="flex:1;height:47px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Give 60-day notice</button>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Withdraw $108.00</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">F3 · Cycle detail</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Lock as a ring · every credit traceable to a wallet entry</div>
+    </div>
+
+    <div>
+      <div id="s-F4" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;position:relative">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Withdraw interest</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;opacity:0.4">
+          <div style="height:72px;border:1px solid #CBD8D2;border-radius:14px;background:#FFFFFF;display:flex;align-items:center;padding:0 16px"><span style="font:700 32px/38px 'IBM Plex Mono',monospace">$108.00</span></div>
+          <div style="margin-top:12px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Interest available on CMT-2041 · principal unaffected</div>
+        </div>
+        <div style="position:absolute;inset:0;background:rgba(26,43,34,0.38)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFFFF;border-radius:24px 24px 40px 40px;box-shadow:0 -8px 24px rgba(26,43,34,0.16);padding:12px 20px 28px">
+          <div style="display:grid;place-items:center;margin-bottom:12px"><div style="width:44px;height:5px;border-radius:999px;background:#CBD8D2"></div></div>
+          <div style="font:700 18px/22px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Withdraw your interest</div>
+          <div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:16px">Your $2,000.00 principal stays committed until 12 Apr 2027.</div>
+          <div style="background:#F7FAF9;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Interest accrued</span><span style="font:600 14px/21px 'IBM Plex Mono',monospace">$108.00</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Admin charge · 5%</span><span style="font:600 14px/21px 'IBM Plex Mono',monospace;color:#8A4E17">−$5.40</span></div>
+            <div style="height:1px;background:#CBD8D2"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/22px 'Plus Jakarta Sans',sans-serif">Credited to wallet</span><span style="font:700 18px/23px 'IBM Plex Mono',monospace">$102.60</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet after this</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">$2,507.72</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Principal after this</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">$2,000.00 · unchanged</span></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#EAF3F0;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">restart_alt</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Accrual continues on the full principal. Next credit 1 Sep.</div></div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:8px" style-hover="background:#0A5A4E">Verify &amp; withdraw $108.00</button>
+          <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Keep it accruing</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">F4 · Withdraw interest ⧉</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Says plainly what does <em>not</em> change — the principal</div>
+    </div>
+
+    <div>
+      <div id="s-F5" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Capital return</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FBEEE2;border:1px solid #E8C9A6;border-radius:18px;padding:18px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#8A4E17">event_repeat</span><div><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#5E3810">Notice given · awaiting admin approval</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">Submitted 4 Aug 2026 · NTC-3312</div></div></div>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px"><span style="font:700 30px/36px 'IBM Plex Mono',monospace;color:#5E3810">41</span><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">days remaining</span></div>
+            <div style="height:8px;border-radius:999px;background:rgba(138,78,23,0.18);margin-bottom:8px"><div style="width:32%;height:100%;background:#C9772E;border-radius:999px"></div></div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17"><span>Day 19 of 60</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace">Capital returns 3 Oct 2026</span></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Capital to return</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace">$2,000.00</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Interest still accruing</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace;color:#1F6E42">$36.00/mo</span></div>
+            <div style="height:1px;background:#EAF3F0;margin:10px 0"></div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A"><span>Returns to</span><span style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif">CruxCare wallet</span></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">What happens next</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Lock completed</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">12 months held · 16 Jul 2026</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Notice given</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">4 Aug 2026</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#C9772E"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Admin approval</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Pending · you'll be notified</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box"></span></div><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Capital credited</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">On or after 3 Oct 2026</div></div></div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">undo</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">You can cancel this notice any time before approval and keep the cycle running.</div></div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Cancel this notice</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">F5 · 60-day notice</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Countdown, approval step and a reversible path all visible</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">G · COOPERATIVE</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Account → Contribute → Request help → Guarantors → Repayment → Transfer (5%)</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:60px">
+
+    <div>
+      <div id="s-G1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:4px 16px 12px;display:flex;align-items:center;justify-content:space-between"><div><div style="font:700 17px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Cooperative</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Weekly savings with your members</div></div><span style="padding:5px 11px;border-radius:999px;background:#EAF3F0;color:#0A5A4E;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Open savings</span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px;margin-bottom:14px;display:flex;gap:18px;align-items:center">
+            <div style="width:110px;height:110px;border-radius:999px;background:conic-gradient(#0E7C6B 0 34.6%,#EAF3F0 34.6% 100%);display:grid;place-items:center;flex:none">
+              <div style="width:86px;height:86px;border-radius:999px;background:#FFFFFF;display:grid;place-items:center"><div style="text-align:center"><div style="font:700 20px/24px 'IBM Plex Mono',monospace">18</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">of 52 weeks</div></div></div>
+            </div>
+            <div style="flex:1">
+              <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Total saved</div>
+              <div style="font:700 26px/32px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;margin-bottom:10px">$180.00</div>
+              <div style="display:flex;align-items:center;gap:6px;font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#1F6E42;margin-bottom:4px"><span style="font-family:'Material Symbols Rounded';font-size:16px">verified</span>18 consecutive weeks</div>
+              <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">$10.00 每 Friday · auto from wallet</div>
+            </div>
+          </div>
+          <div style="background:#FBEEE2;border:1px solid #E8C9A6;border-radius:16px;padding:14px;display:flex;gap:10px;align-items:center;margin-bottom:14px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">event_upcoming</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#5E3810">Week 19 due Friday 7 Aug</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">$10.00 will be taken from your wallet</div></div></div>
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Savings type</div><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Open</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Help allowed</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Help cap</div><div style="font:600 14px/20px 'IBM Plex Mono',monospace">$500.00</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">50-week limit</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Cycle ends</div><div style="font:600 14px/20px 'IBM Plex Mono',monospace">28 Mar</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2027</div></div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px;align-items:center;margin-bottom:14px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">volunteer_activism</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">You're eligible for help</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">12 weeks was the requirement; you're at 18. Up to $500.00 with three guarantors.</div></div></div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Recent weeks</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Week 18</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 Aug · auto</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace">$10.00</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Week 17</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">26 Jul · auto</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace">$10.00</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:11px 14px"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Week 16</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">19 Jul · manual top-up</div></div><span style="font:600 13px/19px 'IBM Plex Mono',monospace">$10.00</span></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF;display:flex;gap:10px">
+          <button type="button" style="flex:1;height:47px;border:1.5px solid #0E7C6B;border-radius:12px;background:#FFFFFF;color:#0E7C6B;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Request help</button>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Contribute</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">G1 · Cooperative account</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Consistency is the metric · eligibility stated as fact, not a badge</div>
+    </div>
+
+    <div>
+      <div id="s-G2" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Request help</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:16px">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:12px">Your eligibility</div>
+            <div style="display:flex;gap:10px;align-items:center;padding-bottom:9px"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">check_circle</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">18 consecutive weeks <span style="color:#61706A">· 12 required</span></div></div>
+            <div style="display:flex;gap:10px;align-items:center;padding-bottom:9px"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">check_circle</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Open savings account</div></div>
+            <div style="display:flex;gap:10px;align-items:center;padding-bottom:9px"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#2E9E5B">check_circle</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">No help outstanding</div></div>
+            <div style="display:flex;gap:10px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#C9772E">radio_button_unchecked</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Three guarantors <span style="color:#61706A">· next step</span></div></div>
+          </div>
+          <label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">How much help do you need?</label>
+          <div style="display:flex;align-items:center;height:72px;padding:0 16px;border:1.5px solid #0E7C6B;border-radius:14px;background:#FFFFFF;box-shadow:0 0 0 3px rgba(14,124,107,0.16);margin-bottom:8px">
+            <span style="font:600 18px/23px 'IBM Plex Mono',monospace;color:#61706A;margin-right:8px">$</span>
+            <span style="font:700 32px/38px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">500.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:18px"><span>Cap $500.00 · 50 weekly contributions</span><span>Min $50.00</span></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">How you'd repay it</div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Repaid from weekly savings</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace">$10.00/wk</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Weeks to clear</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace">50</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Interest charged</span><span style="font:600 14px/22px 'IBM Plex Mono',monospace;color:#1F6E42">None</span></div>
+          </div>
+          <label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">What is it for? (seen by guarantors and admin)</label>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px 14px;min-height:64px;font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">School fees for the September term</div>
+        </div>
+        <div style="padding:12px 16px 26px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:10px">Nothing is disbursed until three guarantors and an admin approve.</div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Choose guarantors</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">G2 · Request help</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Eligibility as a checklist · repayment shown before requesting</div>
+    </div>
+
+    <div>
+      <div id="s-G3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Guarantors</span><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">2/3</span></div>
+          <div style="padding:0 16px 12px"><div style="height:44px;border-radius:12px;background:#F7FAF9;border:1px solid #CBD8D2;display:flex;align-items:center;gap:8px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">search</span><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">Search members by Crux ID or name</span></div></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:14px 16px;overflow:hidden">
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">Chosen</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">IB</div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Ibrahim Bello</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI7712QP · 34 weeks</div></div><span style="padding:4px 10px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Approved</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">GA</div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Grace Adeniyi</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI8120RS · 21 weeks</div></div><span style="padding:4px 10px;border-radius:999px;background:#FBEEE2;color:#8A4E17;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Asked</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;background:#F7FAF9"><div style="width:38px;height:38px;border-radius:999px;border:1px dashed #CBD8D2;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#61706A">person_add</span></div><div style="flex:1;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">One more guarantor needed</div></div>
+          </div>
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">Suggested from your network</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">CO</div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Chinwe Okoye</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI6604LM · 48 weeks</div></div><button type="button" style="height:44px;padding:0 14px;border:1.5px solid #0E7C6B;border-radius:10px;background:#FFFFFF;color:#0E7C6B;font:600 11px/15px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Ask</button></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:38px;height:38px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">TN</div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Tunde Nwachukwu</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI9033VF · 15 weeks</div></div><button type="button" style="height:44px;padding:0 14px;border:1.5px solid #0E7C6B;border-radius:10px;background:#FFFFFF;color:#0E7C6B;font:600 11px/15px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Ask</button></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;opacity:0.55"><div style="width:38px;height:38px;border-radius:999px;background:#EDF1EF;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#61706A">SA</div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Samuel Ajayi</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Needs 12 weeks · has 6</div></div><span style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#B4C2BC">Not eligible</span></div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">groups</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Guarantors see the amount and reason, and take responsibility if repayment stops. They can decline without telling you why.</div></div>
+        </div>
+        <div style="padding:12px 16px 26px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#DCE7E3;color:#8A9A93;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:not-allowed">Submit request · 1 more guarantor</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">G3 · Nominate guarantors</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Their eligibility shown too · CTA states exactly what's missing</div>
+    </div>
+
+    <div>
+      <div id="s-G4" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Help HLP-1187</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><span style="padding:5px 11px;border-radius:999px;background:#EAF3F0;color:#0A5A4E;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Repaying</span><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Disbursed 14 Mar 2026</span></div>
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Still to repay</div>
+            <div style="font:700 30px/36px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;margin-bottom:12px">$310.00</div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px"><span>$190.00 repaid of $500.00</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace">19 of 50 weeks</span></div>
+            <div style="height:8px;border-radius:999px;background:#EAF3F0"><div style="width:38%;height:100%;background:#0E7C6B;border-radius:999px"></div></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Weekly deduction</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$10.00</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">automatic</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Clears on</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">27 Mar</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2027</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Missed weeks</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">0</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">on track</div></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Your guarantors</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid #EAF3F0"><div style="width:34px;height:34px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">IB</div><div style="flex:1;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Ibrahim Bello</div><span style="font:400 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI7712QP</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:11px 14px;border-bottom:1px solid #EAF3F0"><div style="width:34px;height:34px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">GA</div><div style="flex:1;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Grace Adeniyi</div><span style="font:400 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI8120RS</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:11px 14px"><div style="width:34px;height:34px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">CO</div><div style="flex:1;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Chinwe Okoye</div><span style="font:400 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI6604LM</span></div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">bolt</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Paying early costs nothing extra and frees you to request help again sooner.</div></div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF;display:flex;gap:10px">
+          <button type="button" style="flex:1;height:47px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Statement</button>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Repay early</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">G4 · Repayment status</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Outstanding first · guarantors named, since they carry the risk</div>
+    </div>
+
+    <div>
+      <div id="s-G5" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;position:relative">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">close</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Transfer to a member</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;opacity:0.4">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;margin-bottom:12px"><div style="width:38px;height:38px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">GA</div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Grace Adeniyi</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">CCI8120RS</div></div></div>
+          <div style="height:72px;border:1px solid #CBD8D2;border-radius:14px;background:#FFFFFF;display:flex;align-items:center;padding:0 16px"><span style="font:700 32px/38px 'IBM Plex Mono',monospace">$150.00</span></div>
+        </div>
+        <div style="position:absolute;inset:0;background:rgba(26,43,34,0.38)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFFFF;border-radius:24px 24px 40px 40px;box-shadow:0 -8px 24px rgba(26,43,34,0.16);padding:12px 20px 28px">
+          <div style="display:grid;place-items:center;margin-bottom:12px"><div style="width:44px;height:5px;border-radius:999px;background:#CBD8D2"></div></div>
+          <div style="font:700 18px/22px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Confirm transfer</div>
+          <div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:16px">Member-to-member transfers carry the same 5% admin charge as withdrawals.</div>
+          <div style="background:#F7FAF9;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">To Grace Adeniyi</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">CCI8120RS</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Amount</span><span style="font:600 14px/21px 'IBM Plex Mono',monospace">$150.00</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Admin charge · 5%</span><span style="font:600 14px/21px 'IBM Plex Mono',monospace;color:#8A4E17">−$7.50</span></div>
+            <div style="height:1px;background:#CBD8D2"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/22px 'Plus Jakarta Sans',sans-serif">Grace receives</span><span style="font:700 18px/23px 'IBM Plex Mono',monospace">$142.50</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Total leaving your wallet</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">$150.00</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet after this</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">$2,255.12</span></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:#FBE9E7;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8E2E27">warning</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#5E1F1A">Transfers cannot be reversed once approved. Check the Crux ID against your recipient.</div></div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:8px" style-hover="background:#0A5A4E">Verify &amp; transfer $150.00</button>
+          <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Cancel</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">G5 · Member transfer ⧉</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Both sides of the fee shown: what they get, what you lose</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">H · RANK &amp; NETWORK</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Rank overview → Next tier → Referral link → Downline</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:20px">
+
+    <div>
+      <div id="s-H1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%);color:#1A2B22;padding-bottom:22px">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:6px 16px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:24px">arrow_back_ios_new</span><span style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Rank</span><span style="font-family:'Material Symbols Rounded';font-size:24px">ios_share</span></div>
+            <div style="display:flex;gap:14px;align-items:center">
+              <div style="width:60px;height:60px;border-radius:20px;background:rgba(255,255,255,0.78);color:#0A5A4E;display:grid;place-items:center;flex:none"><span style="font-family:'Material Symbols Rounded';font-size:32px;color:#F3EFE6">workspace_premium</span></div>
+              <div>
+                <div style="font:700 18px/22px 'Plus Jakarta Sans',sans-serif">Gold</div>
+                <div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1">District Coordinator · level 3 of 7</div>
+                <div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#0E7C6B;margin-top:2px">CCI8804XO · since 12 May 2026</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:18px">
+              <div style="flex:1;background:rgba(255,255,255,0.78);color:#0A5A4E;border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Referrals</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">128</div></div>
+              <div style="flex:1;background:rgba(255,255,255,0.78);color:#0A5A4E;border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Monthly earning</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$10.00</div></div>
+              <div style="flex:1;background:rgba(255,255,255,0.78);color:#0A5A4E;border-radius:12px;padding:10px 12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Scope</div><div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">District</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Next: Diamond · State Coordinator</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">$50/mo</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px"><span>177 referrals to go</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace">128 / 305</span></div>
+            <div style="height:8px;border-radius:999px;background:#EAF3F0;margin-bottom:14px"><div style="width:42%;height:100%;background:#2FA36B;border-radius:999px"></div></div>
+            <div style="display:flex;gap:10px;align-items:flex-start;padding-top:12px;border-top:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#C9772E">info</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Diamond also requires at least one Crux II member in your Basic Network line. You have none yet.</div></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">What Gold gives you</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#0E7C6B">payments</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">$10.00 credited monthly to your wallet</div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#0E7C6B">videocam</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Host Point Facility sessions in your district</div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px"><span style="font-family:'Material Symbols Rounded';font-size:19px;color:#0E7C6B">badge</span><div style="flex:1;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">District Coordinator recognition and scope</div></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Where your 128 came from</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="width:64px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Network</span><div style="flex:1;height:10px;border-radius:999px;background:#EAF3F0"><div style="width:57%;height:100%;background:#0E7C6B;border-radius:999px"></div></div><span style="width:26px;text-align:right;font:600 12px/17px 'IBM Plex Mono',monospace">73</span></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="width:64px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care</span><div style="flex:1;height:10px;border-radius:999px;background:#EAF3F0"><div style="width:23%;height:100%;background:#2FA36B;border-radius:999px"></div></div><span style="width:26px;text-align:right;font:600 12px/17px 'IBM Plex Mono',monospace">29</span></div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="width:64px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Coop</span><div style="flex:1;height:10px;border-radius:999px;background:#EAF3F0"><div style="width:14%;height:100%;background:#C9772E;border-radius:999px"></div></div><span style="width:26px;text-align:right;font:600 12px/17px 'IBM Plex Mono',monospace">18</span></div>
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:64px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Commit</span><div style="flex:1;height:10px;border-radius:999px;background:#EAF3F0"><div style="width:6%;height:100%;background:#2B7DBD;border-radius:999px"></div></div><span style="width:26px;text-align:right;font:600 12px/17px 'IBM Plex Mono',monospace">8</span></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Share your referral link</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">H1 · Rank overview</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Real thresholds (115 → 305) · the extra Crux II condition surfaced</div>
+    </div>
+
+    <div>
+      <div id="s-H2" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Progression</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid #EAF3F0;opacity:0.6"><div style="width:30px;height:30px;border-radius:999px;background:#E4F4EA;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:17px;color:#2E9E5B">check</span></div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Bronze · Unit Leader</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">15 referrals · Unit</div></div><span style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">TBD</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid #EAF3F0;opacity:0.6"><div style="width:30px;height:30px;border-radius:999px;background:#E4F4EA;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:17px;color:#2E9E5B">check</span></div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Silver · Area Coordinator</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">45 referrals · Area</div></div><span style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">TBD</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:14px;border-bottom:1px solid #EAF3F0;background:#EAF3F0"><div style="width:30px;height:30px;border-radius:999px;background:#0E7C6B;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:17px;color:#FFFFFF">workspace_premium</span></div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">Gold · District Coordinator</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">115 referrals · District · you are here</div></div><span style="font:600 12px/17px 'IBM Plex Mono',monospace;color:#0A5A4E">$10/mo</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid #EAF3F0"><div style="width:30px;height:30px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box;display:grid;place-items:center;font:600 11px/15px 'IBM Plex Mono',monospace;color:#61706A">4</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Diamond · State Coordinator</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">305 referrals + 1 Crux II · State</div></div><span style="font:600 12px/17px 'IBM Plex Mono',monospace">$50/mo</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid #EAF3F0"><div style="width:30px;height:30px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box;display:grid;place-items:center;font:600 11px/15px 'IBM Plex Mono',monospace;color:#61706A">5</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Platinum · Regional Coordinator</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1,050 referrals · Regional</div></div><span style="font:600 12px/17px 'IBM Plex Mono',monospace">$100/mo</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid #EAF3F0"><div style="width:30px;height:30px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box;display:grid;place-items:center;font:600 11px/15px 'IBM Plex Mono',monospace;color:#61706A">6</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Emerald · Country Head</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">3,050 referrals · Country</div></div><span style="font:600 12px/17px 'IBM Plex Mono',monospace">$500/mo</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:13px 14px"><div style="width:30px;height:30px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box;display:grid;place-items:center;font:600 11px/15px 'IBM Plex Mono',monospace;color:#61706A">7</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Ambassador · Continent</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">5,000+ referrals · Continent</div></div><span style="font:600 12px/17px 'IBM Plex Mono',monospace">$1,000/mo</span></div>
+          </div>
+          <div style="margin-top:14px;background:#F3EFE6;border-radius:16px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">emoji_events</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#5E3810"><strong style="font-weight:600">Life Director.</strong> Continent Ambassadors who retire keep recognition and receive annual revenue-share across all platforms.</div></div>
+          <div style="margin-top:14px;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">Bronze and Silver earnings</div>
+            <div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A">Monthly figures for levels 1–2 are still to be confirmed by Crux Dynamic. Shown as "TBD" rather than guessed.</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">H2 · Full progression</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Seven tiers plus Life Director · unknowns labelled TBD, not invented</div>
+    </div>
+
+    <div>
+      <div id="s-H3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Invite &amp; downline</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px;text-align:center;margin-bottom:14px">
+            <div style="width:132px;height:132px;margin:0 auto 14px;border-radius:16px;background-image:repeating-linear-gradient(45deg,#EAF3F0 0 6px,#F7FAF9 6px 12px);display:grid;place-items:center"><span style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A">QR code</span></div>
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Your Crux ID</div>
+            <div style="font:600 18px/23px 'IBM Plex Mono',monospace;letter-spacing:0.04em;margin-bottom:12px">CCI8804XO</div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;height:44px;border-radius:12px;border:1px solid #CBD8D2;display:flex;align-items:center;padding:0 12px;font:500 11px/15px 'IBM Plex Mono',monospace;color:#61706A;overflow:hidden">cruxcintl.com/j/CCI8804XO</div>
+              <button type="button" style="width:44px;height:44px;border:none;border-radius:12px;background:#0E7C6B;cursor:pointer;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#FFFFFF">content_copy</span></button>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Direct</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">31</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Total line</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace">128</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:14px;padding:12px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">This month</div><div style="font:600 15px/21px 'IBM Plex Mono',monospace;color:#1F6E42">+12</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Your line</span><span style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Level 1</span></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:36px;height:36px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">IB</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Ibrahim Bello</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Network · Coop · 14 in line</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:36px;height:36px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">GA</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Grace Adeniyi</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care · Coop · 9 in line</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid #EAF3F0"><div style="width:36px;height:36px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">TN</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Tunde Nwachukwu</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Commitment · 6 in line</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;align-items:center;padding:12px 14px"><div style="width:36px;height:36px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 12px/17px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">SA</div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Samuel Ajayi</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Coop · 3 in line</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 20px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Share invite</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">H3 · Invite &amp; downline</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Crux ID is the link · downline shows which platform each join counts for</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

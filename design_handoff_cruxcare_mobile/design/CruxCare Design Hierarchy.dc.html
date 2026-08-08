@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block" rel="stylesheet">
+<style>
+  body { margin: 0; background: #EDF1EF; -webkit-font-smoothing: antialiased; }
+  a { color: #0E7C6B; text-decoration: none; }
+  a:hover { color: #0A5A4E; text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#1A2B22;background:#EDF1EF;padding:56px 48px 88px">
+
+  <div style="max-width:1000px;margin:0 auto">
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px">
+      <img src="assets/logo-mark.png" alt="CruxCare" style="width:34px;height:37px;display:block">
+      <span style="font:800 16px/22px 'Plus Jakarta Sans',sans-serif">CruxCare</span>
+      <span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#61706A;letter-spacing:0.08em">DESIGN HIERARCHY · AUGUST 2026</span>
+    </div>
+    <h1 style="margin:0 0 14px;font:800 32px/38px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.025em;max-width:24ch">Where every screen lives</h1>
+    <p style="margin:0 0 44px;max-width:68ch;font:400 16px/26px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;text-wrap:pretty">Eight sections across four screen files, plus the design system and the four module libraries. Client and therapist journeys stay separate end to end; shared screens are built once and read the active role. Every screen carries an ID that matches its caption in the file, so a comment like "CA3-e" points at exactly one frame.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:48px">
+      <div style="background:#0A5A4E;color:#FFFFFF;border-radius:18px;padding:18px 20px">
+        <div style="font:800 30px/36px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">125</div>
+        <div style="font:500 12px/18px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">screens across all files</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:800 30px/36px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em;color:#0A5A4E">8</div>
+        <div style="font:500 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">sections, one per journey stage</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:800 30px/36px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em;color:#0A5A4E">2</div>
+        <div style="font:500 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">separated role experiences</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:800 30px/36px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em;color:#0A5A4E">390</div>
+        <div style="font:500 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">× 844 px, one canvas size</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">FILES</span>
+      <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:52px">
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px;display:flex;gap:18px;align-items:flex-start">
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B;flex:none">tune</span>
+        <div style="flex:1">
+          <div style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:3px"><a href="CruxCare Design System.dc.html">CruxCare Design System</a></div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Tokens, type scale, components, all seven interaction states, and the documented AA colour rules. Read this before adding a screen.</div>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px;display:flex;gap:18px;align-items:flex-start">
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B;flex:none">key</span>
+        <div style="flex:1">
+          <div style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:3px"><a href="CruxCare Auth and Account.dc.html">CruxCare Auth and Account</a></div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Sections 1 to 5 · 28 screens · client auth, therapist verification, recovery, account management, profile.</div>
+        </div>
+        <span style="font:500 12px/18px 'IBM Plex Mono',monospace;color:#61706A;flex:none">CA · TA · AR · AM · PR</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px;display:flex;gap:18px;align-items:flex-start">
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B;flex:none">person</span>
+        <div style="flex:1">
+          <div style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:3px"><a href="CruxCare Client Dashboard.dc.html">CruxCare Client Dashboard</a></div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Section 6 · 8 screens · Home, Discover, Book, Sessions, Messages, Progress, Resources, Settings.</div>
+        </div>
+        <span style="font:500 12px/18px 'IBM Plex Mono',monospace;color:#61706A;flex:none">CD1 – CD8</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px;display:flex;gap:18px;align-items:flex-start">
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B;flex:none">medical_services</span>
+        <div style="flex:1">
+          <div style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:3px"><a href="CruxCare Therapist Dashboard.dc.html">CruxCare Therapist Dashboard</a></div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Section 7 · 8 screens · Today, Appointments, Availability, Clients, Notes, Earnings, Analytics, Settings.</div>
+        </div>
+        <span style="font:500 12px/18px 'IBM Plex Mono',monospace;color:#61706A;flex:none">TD1 – TD8</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px;display:flex;gap:18px;align-items:flex-start">
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B;flex:none">share</span>
+        <div style="flex:1">
+          <div style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:3px"><a href="CruxCare Shared Features.dc.html">CruxCare Shared Features</a></div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Section 8 · 7 screens · notifications, chat inbox, search, help, FAQ, legal, contact support.</div>
+        </div>
+        <span style="font:500 12px/18px 'IBM Plex Mono',monospace;color:#61706A;flex:none">SH1 – SH7</span>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px;display:flex;gap:18px;align-items:flex-start">
+        <span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B;flex:none">widgets</span>
+        <div style="flex:1">
+          <div style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:3px">Module files · <a href="CruxCare Phase 1 Screens.dc.html">Phase 1</a> · <a href="CruxCare Phase 2 Finance.dc.html">Phase 2</a> · <a href="CruxCare Phase 3 Growth.dc.html">Phase 3</a> · <a href="CruxCare Phase 4 Engagement.dc.html">Phase 4</a></div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">74 screens · marketplace and checkout, wallet, commitment, cooperative, ranking, network, earnings, point facility, admin, push notifications and state patterns. These sit beneath the client and therapist dashboards, not beside them.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">SECTION MAP</span>
+      <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:52px">
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">1 · Client authentication</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">6</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CA1</span>Welcome / Get started</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CA2</span>Create account</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CA3</span>Verify OTP</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CA3-e</span>OTP wrong code, attempts left</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CA4</span>Log in</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CA4-e</span>Log in failed, lockout warning</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">2 · Therapist authentication</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">7</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA1</span>Become a therapist (landing)</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA2</span>Verify Crux ID</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA3</span>Professional verification</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA3-r</span>Under review, work continues</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA4</span>Add or update location</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA5</span>Choose a therapist plan</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TA6</span>Onboarding complete</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">3 · Account recovery</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">5</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AR1</span>Forgot password</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AR2</span>Verify recovery OTP</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AR3</span>Reset password</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AR4</span>Password reset success</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AR5</span>Assisted account recovery</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">4 · Account management</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">4</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AM1</span>Delete account, obligations</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AM2</span>Delete confirmation</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AM3</span>Account deleted receipt</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">AM4</span>Log out confirmation</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">5 · Profile</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">6</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">PR1</span>View profile</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">PR2</span>Edit profile</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">PR3</span>Personal information</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">PR4</span>Security and privacy</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">PR5</span>Notification settings</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">PR6</span>Payment methods</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">6 · Client dashboard</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">8</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD1</span>Home</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD2</span>Discover therapists</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD3</span>Book appointment</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD4</span>Sessions</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD5</span>Messages</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD6</span>Progress tracking</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD7</span>Resources</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">CD8</span>Settings</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">7 · Therapist dashboard</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">8</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD1</span>Dashboard (Today)</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD2</span>Appointment management</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD3</span>Availability and schedule</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD4</span>Client management</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD5</span>Session notes</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD6</span>Earnings and payouts</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD7</span>Analytics</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">TD8</span>Therapist settings</div>
+        </div>
+      </div>
+
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:700 15px/21px 'Plus Jakarta Sans',sans-serif">8 · Shared features</span><span style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#61706A">7</span></div>
+        <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH1</span>Notifications</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH2</span>Chat and messaging inbox</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH3</span>Search</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH4</span>Help and support</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH5</span>FAQ</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH6</span>Terms and privacy</div>
+          <div style="display:flex;gap:10px"><span style="font:500 11px/19px 'IBM Plex Mono',monospace;color:#0E7C6B;width:56px;flex:none">SH7</span>Contact support</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">PRIMARY PATHS</span>
+      <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:20px 22px;margin-bottom:52px;display:flex;flex-direction:column;gap:16px">
+      <div>
+        <div style="font:600 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px">New client</div>
+        <div style="font:500 13px/22px 'IBM Plex Mono',monospace;color:#1A2B22">CA1 → CA2 → CA3 → CD1 → CD2 → CD3 → CD4</div>
+      </div>
+      <div style="height:1px;background:#EAF3F0"></div>
+      <div>
+        <div style="font:600 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px">Existing member becoming a therapist</div>
+        <div style="font:500 13px/22px 'IBM Plex Mono',monospace;color:#1A2B22">CA4 → TA1 → TA2 → CA3 → TA3 → TA3-r → TA4 → TA5 → TA6 → TD1</div>
+      </div>
+      <div style="height:1px;background:#EAF3F0"></div>
+      <div>
+        <div style="font:600 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px">Locked out</div>
+        <div style="font:500 13px/22px 'IBM Plex Mono',monospace;color:#1A2B22">CA4-e → AR1 → AR2 → AR3 → AR4 → CA4 · no phone: AR1 → AR5 → SH7</div>
+      </div>
+      <div style="height:1px;background:#EAF3F0"></div>
+      <div>
+        <div style="font:600 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px">Leaving</div>
+        <div style="font:500 13px/22px 'IBM Plex Mono',monospace;color:#1A2B22">CD8 → AM1 → AM2 → AM3 · reversible for 30 days via CA4</div>
+      </div>
+      <div style="height:1px;background:#EAF3F0"></div>
+      <div>
+        <div style="font:600 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px">Therapist working day</div>
+        <div style="font:500 13px/22px 'IBM Plex Mono',monospace;color:#1A2B22">TD1 → TD2 → TD4 → TD5 → TD6 · schedule changes via TD3</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">RULES THIS STRUCTURE ENFORCES</span>
+      <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:52px">
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:700 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:6px">One account, roles added</div>
+        <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">A therapist never registers twice. TA2 links the existing Crux ID; the client tabs stay available through TD8.</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:700 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:6px">Money is disclosed before it moves</div>
+        <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Fees, commission, lock periods, clearing times and resulting balances appear on the screen that takes the action, never after.</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:700 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:6px">Destructive actions are reversible or named</div>
+        <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">AM2 states the exact date deletion becomes permanent; AM3 gives a one-tap undo. Log out warns about unsynced work.</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:700 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:6px">Health data follows the booking</div>
+        <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Only a therapist with a confirmed session sees the health profile. PR4 lists who holds access and can withdraw it.</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:700 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:6px">Error states ship with their screen</div>
+        <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">CA3-e, CA4-e, TA3, TA3-r, PR6 and TD2 carry the failure, waiting and expiry cases inline rather than in a separate appendix.</div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:18px;padding:18px 20px">
+        <div style="font:700 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:6px">Accessibility is not optional</div>
+        <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Every text pair meets WCAG 2.1 AA, tap targets hold at 44px, and the three colour rules in the design system §11 govern any new screen.</div>
+      </div>
+    </div>
+
+    <div style="background:#0A5A4E;color:#FFFFFF;border-radius:20px;padding:24px 26px">
+      <div style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#9BD2C8;letter-spacing:0.08em;margin-bottom:12px">OPEN ITEMS FOR THE BUILD TEAM</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px 26px;font:400 13px/21px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1">
+        <div><span style="color:#FFFFFF;font-weight:600">Payment provider unconfirmed.</span> PR6 and CD3 assume a hosted card flow; card numbers never touch CruxCare servers.</div>
+        <div><span style="color:#FFFFFF;font-weight:600">Video provider unconfirmed.</span> CD4 and TD1 assume a join-from-app model with an audio-only fallback on mobile data.</div>
+        <div><span style="color:#FFFFFF;font-weight:600">Bronze and Silver earnings still TBD.</span> Ranking and network screens show tier positions without inventing rates.</div>
+        <div><span style="color:#FFFFFF;font-weight:600">Tablet layouts not drawn.</span> Two-pane variants at ≥768px are additive work, not required for the mobile release.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:1400}}"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<style>
+html,body,#map{margin:0;height:100%;width:100%;background:#DFEAE5}
+.leaflet-control-attribution{font:400 8px/12px system-ui,sans-serif}
+.pin{width:34px;height:34px;border-radius:999px;background:rgba(14,124,107,0.22);display:flex;align-items:center;justify-content:center}
+.pin span{width:14px;height:14px;border-radius:999px;background:#0E7C6B;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+var map = L.map('map', { zoomControl: false, attributionControl: true }).setView([6.4494, 3.4363], 15);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors', maxZoom: 19 }).addTo(map);
+L.marker([6.4494, 3.4363], { draggable: true, icon: L.divIcon({ className: '', html: '<div class="pin"><span></span></div>', iconSize: [34, 34], iconAnchor: [17, 17] }) }).addTo(map);
+</script>
+</body>
+</html>

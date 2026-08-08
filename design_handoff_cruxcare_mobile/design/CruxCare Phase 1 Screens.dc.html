@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&amp;display=block" rel="stylesheet">
+<style>
+  body { margin: 0; background: #EDF1EF; -webkit-font-smoothing: antialiased; }
+  a { color: #0E7C6B; text-decoration: none; }
+  a:hover { color: #0A5A4E; text-decoration: underline; }
+</style>
+</helmet>
+
+<div style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#1A2B22;padding:48px 48px 80px;background:#EDF1EF">
+
+  <div style="max-width:1100px;margin:0 0 48px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+      <img src="assets/logo-mark.png" alt="CruxCare" style="width:34px;height:37px;display:block">
+      <span style="font:800 16px/22px 'Plus Jakarta Sans',sans-serif">CruxCare</span>
+      <span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#61706A;letter-spacing:0.08em">PHASE 1 · CARE + COMMERCE</span>
+    </div>
+    <h1 style="margin:0 0 12px;font:800 27px/32px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Onboarding · Home · Shop · Care</h1>
+    <p style="margin:0;max-width:66ch;font:400 15px/24px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;text-wrap:pretty">Screens at 390×844, built from the design system. Flow order runs left to right; sheets and disclosures sit next to the screen that raises them.</p>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">A · ONBOARDING</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Client: Register → Verify → Health profile → Care · Member: Crux ID → Verify → Plan · one account, roles added</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:64px">
+
+    <div>
+      <div id="s-A1a" style="width:390px;height:844px;background:#0A5A4E;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;color:#FFFFFF">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="height:300px;position:relative;overflow:hidden;flex:none">
+          <img src="assets/welcome-hands.png" alt="Cupped hands holding the CruxCare leaf mark" style="position:absolute;left:-150px;top:-276px;width:690px;height:auto;display:block">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,rgba(10,90,78,0) 0%,rgba(10,90,78,0.85) 72%,#0A5A4E 100%)"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;padding:4px 24px 0">
+          <div style="display:flex;gap:6px;margin-bottom:20px"><span style="width:22px;height:4px;border-radius:999px;background:#FFFFFF"></span><span style="width:8px;height:4px;border-radius:999px;background:rgba(255,255,255,0.35)"></span><span style="width:8px;height:4px;border-radius:999px;background:rgba(255,255,255,0.35)"></span></div>
+          <h2 style="margin: 0 0 10px; font: 700 18px/22px 'Plus Jakarta Sans',sans-serif; letter-spacing: -0.02em; font-size: 22px">Natural care, in one place</h2>
+          <p style="margin: 0 0 auto; font: 400 14px/22px 'Plus Jakarta Sans',sans-serif; color: #CDE7E1; text-wrap: pretty; font-size: 16px; text-align: left">Natural products, therapist care and a supportive community — held together in one place.</p>
+          <div style="padding-bottom:22px">
+            <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#FFFFFF;color:#0A5A4E;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Get started</button>
+            <div style="text-align:center;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Skip</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A1a · Welcome · slide 1</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Brand promise · full-bleed art fading into the teal</div>
+    </div>
+
+    <div>
+      <div id="s-A1b" style="width:390px;height:844px;background:#0A5A4E;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;color:#FFFFFF">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="height:300px;position:relative;overflow:hidden;flex:none">
+          <img src="assets/welcome-leaf.png" alt="Mortar and pestle with herbs, spices and turmeric" style="position:absolute;left:-150px;top:-331px;width:690px;height:auto;display:block">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,rgba(10,90,78,0) 0%,rgba(10,90,78,0.85) 72%,#0A5A4E 100%)"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;padding:4px 24px 0">
+          <div style="display:flex;gap:6px;margin-bottom:20px"><span style="width:8px;height:4px;border-radius:999px;background:rgba(255,255,255,0.35)"></span><span style="width:22px;height:4px;border-radius:999px;background:#FFFFFF"></span><span style="width:8px;height:4px;border-radius:999px;background:rgba(255,255,255,0.35)"></span></div>
+          <h2 style="margin: 0 0 10px; font: 700 18px/22px 'Plus Jakarta Sans',sans-serif; letter-spacing: -0.02em; font-size: 22px">Remedies you can trust</h2>
+          <p style="margin: 0 0 auto; font: 400 14px/22px 'Plus Jakarta Sans',sans-serif; color: #CDE7E1; text-wrap: pretty; font-size: 16px">Blends and herbs sourced by CruxCare, and recommended by the therapist who knows your history.</p>
+          <div style="padding-bottom:22px">
+            <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#FFFFFF;color:#0A5A4E;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Next</button>
+            <div style="text-align:center;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Skip</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A1b · Welcome · slide 2</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Marketplace promise · same layout, art swapped</div>
+    </div>
+
+    <div>
+      <div id="s-A1c" style="width:390px;height:844px;background:#0A5A4E;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;color:#FFFFFF">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="height:300px;position:relative;overflow:hidden;flex:none">
+          <img src="assets/welcome-living.png" alt="Woman meditating beside herbal products, tea and fresh food" style="position:absolute;left:0;top:-325px;width:625px;height:auto;display:block">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,rgba(10,90,78,0) 0%,rgba(10,90,78,0.85) 72%,#0A5A4E 100%)"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;padding:4px 24px 0">
+          <div style="display:flex;gap:6px;margin-bottom:18px"><span style="width:8px;height:4px;border-radius:999px;background:rgba(255,255,255,0.35)"></span><span style="width:8px;height:4px;border-radius:999px;background:rgba(255,255,255,0.35)"></span><span style="width:22px;height:4px;border-radius:999px;background:#FFFFFF"></span></div>
+          <h2 style="margin: 0 0 10px; font: 700 18px/22px 'Plus Jakarta Sans',sans-serif; letter-spacing: -0.02em; font-size: 22px">Habits, care and community</h2>
+          <p style="margin: 0 0 auto; font: 400 14px/22px 'Plus Jakarta Sans',sans-serif; color: #CDE7E1; text-wrap: pretty; font-size: 16px">Book a therapist, join live sessions, and save alongside members working toward the same thing.</p>
+          <div style="padding-bottom:22px">
+            <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#FFFFFF;color:#0A5A4E;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Create an account</button>
+            <button type="button" style="width:100%;height:47px;border:1.5px solid rgba(255,255,255,0.45);border-radius:12px;background:transparent;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:12px">I already have one</button>
+            <div style="text-align:center;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8">Browse the shop as a guest</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A1c · Welcome · slide 3</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Routing slide · guest path preserved</div>
+    </div>
+
+    <div>
+      <div id="s-A2" style="width:390px;height:844px;background:#FFFFFF;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="display:flex;align-items:center;height:48px;padding:0 8px 0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="margin-left:auto;padding-right:12px;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Step 1 of 2</span></div>
+        <div style="flex:1;padding:0 16px;overflow:hidden">
+          <h2 style="margin:0 0 6px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Create your account</h2>
+          <p style="margin:0 0 14px;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">No membership needed to be a client.</p>
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1"><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">First name</label><div style="height:44px;border:1px solid #CBD8D2;border-radius:8px;padding:0 13px;display:flex;align-items:center;font:400 14px/22px 'Plus Jakarta Sans',sans-serif">Ada</div></div>
+            <div style="flex:1"><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Last name</label><div style="height:44px;border:1px solid #CBD8D2;border-radius:8px;padding:0 13px;display:flex;align-items:center;font:400 14px/22px 'Plus Jakarta Sans',sans-serif">Nwosu</div></div>
+          </div>
+          <div style="margin-bottom:10px"><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Email</label><div style="height:44px;border:1.5px solid #0E7C6B;border-radius:8px;padding:0 13px;display:flex;align-items:center;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;box-shadow:0 0 0 3px rgba(14,124,107,0.16)">ada.nwosu@mail.com</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:6px">Receipts and account notices go here.</div></div>
+          <div style="margin-bottom:10px"><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Phone</label><div style="height:44px;border:1px solid #CBD8D2;border-radius:8px;display:flex;align-items:stretch;font:400 14px/22px 'Plus Jakarta Sans',sans-serif"><div style="display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid #CBD8D2;background:#F7FAF9;border-radius:8px 0 0 8px"><span style="font:400 15px/22px 'Plus Jakarta Sans',sans-serif">🇳🇬</span><span style="font:500 14px/22px 'IBM Plex Mono',monospace;color:#2E3A33">+234</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#61706A">expand_more</span></div><div style="flex:1;display:flex;align-items:center;padding:0 12px">803 421 8821</div></div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:6px">We send your one-time code by WhatsApp to this number.</div></div>
+          <div style="margin-bottom:10px"><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Password</label><div style="height:44px;border:1px solid #CBD8D2;border-radius:8px;padding:0 13px;display:flex;align-items:center;font:500 16px/24px 'IBM Plex Mono',monospace">••••••••<span style="margin-left:auto;font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">visibility</span></div><div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="flex:1;height:4px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;height:4px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;height:4px;border-radius:999px;background:#EAF3F0"></span><span style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#1F6E42">Good</span></div></div>
+          <div style="margin-bottom:10px"><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Confirm password</label><div style="height:44px;border:1px solid #CBD8D2;border-radius:8px;padding:0 13px;display:flex;align-items:center;font:500 16px/24px 'IBM Plex Mono',monospace">••••••••<span style="margin-left:auto;display:flex;align-items:center;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#2E9E5B">check_circle</span><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">visibility</span></span></div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#1F6E42;margin-top:6px">Passwords match.</div></div>
+          <div><label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">How did you hear about us?</label><div style="height:44px;border:1px solid #CBD8D2;border-radius:8px;padding:0 13px;display:flex;align-items:center;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#61706A">Referred by a member<span style="margin-left:auto;font-family:'Material Symbols Rounded';font-size:22px">expand_more</span></div></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #EAF3F0;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Continue</button>
+          <div style="margin-top:10px;text-align:center;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">By continuing you accept our <a href="#terms">Terms</a> and <a href="#privacy">Privacy notice</a>.</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A2 · Register (client)</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Sticky CTA · country picker · match confirmed inline</div>
+    </div>
+
+    <div>
+      <div id="s-A3" style="width:390px;height:844px;background:#FFFFFF;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span></div>
+        <div style="flex:1;padding:0 16px">
+          <h2 style="margin:0 0 6px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Enter your code</h2>
+          <p style="margin:0 0 26px;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">Sent by WhatsApp to ••• 8821. It expires in 10 minutes.</p>
+          <div style="display:flex;gap:12px;margin-bottom:16px">
+            <div style="flex:1;height:46px;border:1.5px solid #0E7C6B;border-radius:8px;display:grid;place-items:center;font:500 24px/30px 'IBM Plex Mono',monospace">4</div>
+            <div style="flex:1;height:46px;border:1.5px solid #0E7C6B;border-radius:8px;display:grid;place-items:center;font:500 24px/30px 'IBM Plex Mono',monospace">1</div>
+            <div style="flex:1;height:46px;border:1.5px solid #0E7C6B;border-radius:8px;display:grid;place-items:center;font:500 24px/30px 'IBM Plex Mono',monospace">9</div>
+            <div style="flex:1;height:46px;border:1.5px solid #0E7C6B;border-radius:8px;background:#EAF3F0;display:grid;place-items:center;font:500 24px/30px 'IBM Plex Mono',monospace;color:#0E7C6B">|</div>
+            <div style="flex:1;height:46px;border:1px solid #CBD8D2;border-radius:8px"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px"><span style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 attempts left</span><span style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#8A9A93">Resend in 0:24</span></div>
+          <div style="display:flex;gap:10px;padding:14px;border-radius:12px;background:#EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">sms</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">No WhatsApp? <a href="#sms">Send by SMS instead</a> — the code is the same.</div></div>
+        </div>
+        <div style="padding:12px 16px 8px;border-top:1px solid #EAF3F0">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#DCE7E3;color:#8A9A93;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:not-allowed">Verify</button>
+        </div>
+        <div style="background:#F7FAF9;border-top:1px solid #CBD8D2;padding:8px 6px 10px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font:400 23px/32px 'Plus Jakarta Sans',sans-serif;text-align:center;color:#1A2B22">
+            <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div><div></div><div>0</div><div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">backspace</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A3 · OTP verify · serves both lanes</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Client signup, and step 2 of 3 for the therapist lane · 3 attempts · resend cooldown</div>
+    </div>
+
+    <div>
+      <div id="s-A4" style="width:390px;height:844px;background:#F7FAF9;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background:#FFFFFF">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 8px 0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="margin-left:auto;padding-right:12px;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 of 4 done</span></div>
+        </div>
+        <div style="flex:1;padding:0 16px;overflow:hidden">
+          <div style="display:flex;gap:8px;align-items:center;padding:8px 13px;border-radius:999px;background:#E4F4EA;width:fit-content;margin-bottom:14px"><span style="font-family:'Material Symbols Rounded';font-size:17px;color:#1F6E42">check_circle</span><span style="font:600 11px/16px 'Plus Jakarta Sans',sans-serif;color:#1F6E42">Account verified</span></div>
+          <h2 style="margin:0 0 6px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">One step before a therapist</h2>
+          <p style="margin:0 0 18px;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;text-wrap:pretty">A therapist can't safely advise without your history. Four short sections — you can shop and browse meanwhile.</p>
+          <div style="display:flex;justify-content:space-between;font:400 12px/17px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:5px"><span>Health profile</span><span style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#1A2B22">2 of 4</span></div>
+          <div style="height:7px;border-radius:999px;background:#EAF3F0;margin-bottom:16px"><div style="width:50%;height:100%;background:#0E7C6B;border-radius:999px"></div></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:11px;padding:12px 14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#2E9E5B;flex:none">check_circle</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Basics</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">34 yrs · 68 kg · 1.66 m</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:11px;padding:12px 14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#2E9E5B;flex:none">check_circle</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Conditions</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 recorded</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:11px;padding:12px 14px;border-bottom:1px solid #EAF3F0;align-items:center;background:#FBFDFC"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#C9772E;flex:none">radio_button_unchecked</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Allergies</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">Required · takes about a minute</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">chevron_right</span></div>
+            <div style="display:flex;gap:11px;padding:12px 14px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#C9772E;flex:none">radio_button_unchecked</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Current medication</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">Required · "none" is a valid answer</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">chevron_right</span></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:13px 14px;margin-bottom:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A;flex:none">lock</span><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Locked until this is done</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Therapist discovery, booking, chat and video. Shop, orders and wallet are open now.</div></div></div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:13px 14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B;flex:none">shield_lock</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Encrypted, and visible only to the therapist you're matched with. You can withdraw consent any time.</div></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Continue · allergies</button>
+          <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Browse the shop first</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A4 · Health profile gate (client)</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care is gated, commerce isn't · names what's locked and why</div>
+    </div>
+
+    <div>
+      <div id="s-A5" style="width:390px;height:844px;background:#FFFFFF;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="display:flex;align-items:center;height:48px;padding:0 8px 0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="margin-left:auto;padding-right:12px;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Step 1 of 3</span></div>
+        <div style="flex:1;padding:0 16px">
+          <h2 style="margin:0 0 6px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Become a therapist</h2>
+          <p style="margin:0 0 20px;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A;text-wrap:pretty">Start from your member profile — no second account. Confirm the Crux ID you already hold, verify by phone or email, then choose a plan.</p>
+          <label style="display:block;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Crux ID</label>
+          <div style="height:46px;border:1.5px solid #0E7C6B;border-radius:8px;padding:0 13px;display:flex;align-items:center;box-shadow:0 0 0 3px rgba(14,124,107,0.16);margin-bottom:6px"><span style="font:500 18px/24px 'IBM Plex Mono',monospace;letter-spacing:0.04em">CCI8804XO</span><span style="margin-left:auto;font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">qr_code_scanner</span></div>
+          <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:16px">Format CCI####XX · printed on your member card.</div>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">We'll send a code to</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #0E7C6B;border-radius:12px;background:#EAF3F0;margin-bottom:8px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">chat</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">WhatsApp</div><div style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">••• 8821</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">radio_button_checked</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #CBD8D2;border-radius:12px;margin-bottom:8px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">sms</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">SMS</div><div style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">••• 8821</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B4C2BC">radio_button_unchecked</span></div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #CBD8D2;border-radius:12px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">mail</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Email</div><div style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">a•••u@mail.com</div></div><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B4C2BC">radio_button_unchecked</span></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:14px;border-radius:12px;background:#F3EFE6"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">info</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#5E3810">Memberships are issued at an outlet or by an admin — the app links an ID you already have. Therapist sits on top of your member account, so nothing you've built is re-entered.</div></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #EAF3F0">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Send code</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A5 · Become a therapist · link Crux ID</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Entered from the member profile · WhatsApp, SMS or email · no second account</div>
+    </div>
+
+    <div>
+      <div id="s-A6" style="width:390px;height:844px;background:#F7FAF9;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="display:flex;align-items:center;height:48px;padding:0 8px 0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="margin-left:auto;padding-right:12px;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Step 3 of 3</span></div>
+        <div style="flex:1;padding:0 16px;overflow:hidden">
+          <h2 style="margin:0 0 6px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Choose a therapist plan</h2>
+          <p style="margin:0 0 20px;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">Purchases stay unlimited on every plan — only clients and case files are limited.</p>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;background:#FFFFFF;padding:16px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Free trial</div><div style="font:700 18px/23px 'IBM Plex Mono',monospace">$0</div></div>
+            <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:4px">1 client · 1 case file · unlimited purchases</div>
+          </div>
+          <div style="border:2px solid #0E7C6B;border-radius:16px;background:#FFFFFF;padding:16px;margin-bottom:12px;position:relative">
+            <span style="position:absolute;top:-11px;left:16px;padding:3px 10px;border-radius:999px;background:#0E7C6B;color:#FFFFFF;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Most chosen</span>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Monthly</div><div style="font:700 18px/23px 'IBM Plex Mono',monospace">$15<span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">/mo</span></div></div>
+            <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:4px">25 clients · unlimited case files · Point Facility hosting</div>
+          </div>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;background:#FFFFFF;padding:16px;margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Yearly</div><div style="font:700 18px/23px 'IBM Plex Mono',monospace">$200<span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">/yr</span></div></div>
+            <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:4px">Everything monthly · save $40 · priority assignment</div>
+          </div>
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">What you get on Monthly</div>
+          <div style="display:flex;flex-direction:column;gap:7px;font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">
+            <div style="display:flex;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#2E9E5B">check_circle</span>Case files with notes and attachments</div>
+            <div style="display:flex;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#2E9E5B">check_circle</span>Chat and video with your clients</div>
+            <div style="display:flex;gap:8px"><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#2E9E5B">check_circle</span>Recommend products and order on their behalf</div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Activate Monthly · $15</button>
+          <div style="margin-top:8px;text-align:center;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Downgrades keep your data — limits apply again.</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A6 · Therapist plan</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">After the Crux ID is verified · limits honest up front</div>
+    </div>
+
+    <div>
+      <div id="s-A7" style="width:390px;height:844px;background:#FFFFFF;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="flex:1;padding:32px 24px 0;display:flex;flex-direction:column;text-align:center">
+          <div style="width:96px;height:96px;border-radius:32px;background:#EAF3F0;display:grid;place-items:center;margin:24px auto 24px"><span style="font-family:'Material Symbols Rounded';font-size:48px;color:#0E7C6B">fingerprint</span></div>
+          <h2 style="margin:0 0 10px;font:700 18px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.02em">Unlock with your face or finger</h2>
+          <p style="margin:0 0 24px;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#61706A;text-wrap:pretty">Faster sign-in, and your token stays in the device keychain. Your password always works as a fallback.</p>
+          <div style="text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:auto">
+            <div style="display:flex;gap:10px;padding:14px;border-radius:12px;background:#F7FAF9"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">lock</span><div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Money actions still ask for a code or biometrics again.</div></div>
+            <div style="display:flex;gap:10px;padding:14px;border-radius:12px;background:#F7FAF9"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">devices</span><div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">You can revoke this device any time from Settings.</div></div>
+          </div>
+          <div style="padding:0 0 28px">
+            <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Turn on biometrics</button>
+            <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Not now</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A7 · Biometric opt-in</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Post-login · explains step-up still applies</div>
+    </div>
+
+    <div>
+      <div id="s-A8" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Roles</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:14px 16px;overflow:hidden">
+          <div style="display:flex;gap:11px;align-items:center;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:12px 14px;margin-bottom:14px">
+            <div style="width:42px;height:42px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 14px/20px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">EO</div>
+            <div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Emeka Obi</div><div style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#61706A">CCI8804XO · one account</div></div>
+          </div>
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">You have</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:16px">
+            <div style="display:flex;gap:11px;padding:12px 14px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B;flex:none">card_membership</span><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Member</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Gold · network, rank, coop, commitment</div></div><span style="padding:4px 10px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Active</span></div>
+          </div>
+          <div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;margin-bottom:8px">You can add</div>
+          <div style="background:#FFFFFF;border:1.5px solid #0E7C6B;border-radius:16px;padding:14px;margin-bottom:10px">
+            <div style="display:flex;gap:11px;align-items:center;margin-bottom:10px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B;flex:none">person_add</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Client</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">See a therapist yourself. Added instantly — you'll complete a health profile before your first booking.</div></div></div>
+            <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Add client role</button>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;margin-bottom:10px">
+            <div style="display:flex;gap:11px;align-items:center;margin-bottom:10px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B;flex:none">medical_services</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Therapist</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Verify your Crux ID, choose a plan, and take clients. Three steps, no new account.</div></div></div>
+            <button type="button" style="width:100%;height:44px;border:1.5px solid #0E7C6B;border-radius:12px;background:#FFFFFF;color:#0E7C6B;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Start · verify Crux ID</button>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;gap:11px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A;flex:none">admin_panel_settings</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Administrator</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A">Granted by CruxCare, never self-service.</div></div></div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:13px 14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B;flex:none">switch_account</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Roles stack on one login. Your wallet, Crux ID and history stay shared — only the tab bar and permissions change when you switch.</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">A8 · Add a role (existing member)</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">No second signup · client added instantly, therapist needs verify + plan, admin is granted</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">B · HOME DASHBOARDS</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Composed from the capability set · one job per role</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:64px">
+
+    <div>
+      <div id="s-B1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:6px 16px 16px;display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 16px/22px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">AN</div>
+            <div style="flex:1"><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Good morning</div><div style="font:700 14px/19px 'Plus Jakarta Sans',sans-serif">Ada</div></div>
+            <span style="position:relative;display:inline-block"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#2E3A33;display:block">notifications</span><span style="position:absolute;top:-2px;left:calc(100% - 8px);min-width:18px;height:18px;box-sizing:border-box;border-radius:999px;background:#C1443B;border:2px solid #FFFFFF;color:#FFFFFF;font:600 11px/14px 'Plus Jakarta Sans',sans-serif;text-align:center;padding:0 4px">2</span></span>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:linear-gradient(158deg,#128975 0%,#0A5A4E 58%,#084A40 100%);border-radius:16px;padding:16px;color:#FFFFFF;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#B9DED6">event_available</span><span style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1">Next appointment</span></div>
+            <div style="font:700 16px/22px 'Plus Jakarta Sans',sans-serif;margin-bottom:2px">Thu 7 Aug · 10:30</div>
+            <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1;margin-bottom:14px">Video visit with Mrs. Okoye</div>
+            <div style="display:flex;gap:8px"><button type="button" style="flex:1;height:44px;border:none;border-radius:12px;background:#FFFFFF;color:#0A5A4E;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Join</button><button type="button" style="flex:1;height:44px;border:1.5px solid rgba(255,255,255,0.4);border-radius:12px;background:transparent;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Reschedule</button></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">storefront</span><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-top:8px">Shop products</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">chat_bubble</span><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-top:8px">Message therapist</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">event</span><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-top:8px">Book a visit</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">medical_information</span><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-top:8px">Health profile</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:600 18px/24px 'Plus Jakarta Sans',sans-serif">Recommended for you</span><a href="#care" style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Care plan</a></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:12px;display:flex;gap:12px;align-items:center">
+            <div style="width:56px;height:56px;border-radius:12px;background:#F7FAF9;padding:5px;box-sizing:border-box"><img src="assets/p-gim-powder.jpg" alt="Gim Powder" style="width:100%;height:100%;object-fit:contain;display:block"></div>
+            <div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Gim Powder · 500g</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">From Mrs. Okoye · 2 Aug</div></div>
+            <span style="font:700 16px/22px 'IBM Plex Mono',monospace">$22.00</span>
+          </div>
+          <div style="margin-top:12px;background:#F3EFE6;border-radius:16px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">card_membership</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#5E3810">Are you a member?</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">Link your Crux ID to unlock rank, savings and earnings.</div></div></div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">home</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">storefront</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Shop</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">health_and_safety</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">account_balance_wallet</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">B1 · Client home</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Next visit first · four quick actions · upsell is soft</div>
+    </div>
+
+    <div>
+      <div id="s-B2" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:6px 16px 16px;display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 16px/22px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">EO</div>
+            <div style="flex:1"><div style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">CCI8804XO</div><div style="font:700 14px/19px 'Plus Jakarta Sans',sans-serif">Emeka</div></div>
+            <span style="font-family:'Material Symbols Rounded';font-size:26px;color:#2E3A33">notifications</span>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:linear-gradient(158deg,#128975 0%,#0A5A4E 58%,#084A40 100%);border-radius:16px;padding:16px;color:#FFFFFF;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#F3EFE6">workspace_premium</span><div><div style="font:700 16px/22px 'Plus Jakarta Sans',sans-serif">Gold · District Coordinator</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#B9DED6">Level 3 of 7 · District · $10/mo</div></div></div>
+            <div style="display:flex;justify-content:space-between;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1;margin-bottom:6px"><span>To Diamond · State Coordinator</span><span style="font:500 13px/18px 'IBM Plex Mono',monospace">128 / 305</span></div>
+            <div style="height:8px;border-radius:999px;background:rgba(255,255,255,0.22);overflow:hidden"><div style="width:42%;height:100%;background:#2FA36B;border-radius:999px"></div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet</div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">$2,480</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">available</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">This month</div><div style="font:700 20px/26px 'IBM Plex Mono',monospace;color:#2E9E5B">+$46</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">rank + interest</div></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px"><span style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Your money at work</span><a href="#grow" style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Grow</a></div>
+            <div style="display:flex;gap:12px;align-items:center;padding-bottom:12px;border-bottom:1px solid #EAF3F0"><div style="width:40px;height:40px;border-radius:12px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">handshake</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Commitment</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Locked to 12 Jun 2027</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$2,000</div><div style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#1F6E42">+$108 int.</div></div></div>
+            <div style="display:flex;gap:12px;align-items:center;padding-top:12px"><div style="width:40px;height:40px;border-radius:12px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">savings</span></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Cooperative</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Week 18 of 52 · open</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$180</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">due Fri</div></div></div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">ios_share</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Invite with your Crux ID</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">2 referrals this week · every join counts toward Diamond.</div></div></div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">home</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">storefront</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Shop</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">trending_up</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Grow</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">account_balance_wallet</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">B2 · Member home</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Rank snapshot · money at work · referral nudge</div>
+    </div>
+
+    <div>
+      <div id="s-B3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:6px 16px 14px;display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:999px;background:#EAF3F0;display:grid;place-items:center;font:700 16px/22px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">CO</div>
+            <div style="flex:1"><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Tuesday 5 Aug</div><div style="font:700 14px/19px 'Plus Jakarta Sans',sans-serif">Mrs. Okoye</div></div>
+            <span style="padding:5px 12px;border-radius:999px;background:#EAF3F0;color:#0A5A4E;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Therapist</span>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Today</div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">4</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">appointments</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Requests</div><div style="font:700 20px/26px 'IBM Plex Mono',monospace;color:#C9772E">3</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">awaiting you</div></div>
+            <div style="flex:1;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Clients</div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">8<span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">/25</span></div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">monthly plan</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font:600 18px/24px 'Plus Jakarta Sans',sans-serif">Today's agenda</span><a href="#calendar" style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Calendar</a></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><div style="text-align:center;width:52px"><div style="font:700 15px/20px 'IBM Plex Mono',monospace">10:30</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">30 min</div></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Ada Nwosu</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Video · follow-up</div></div><button type="button" style="height:44px;padding:0 13px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Join</button></div>
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><div style="text-align:center;width:52px"><div style="font:700 15px/20px 'IBM Plex Mono',monospace">12:00</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">45 min</div></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Ibrahim Bello</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">In person · first visit</div></div><span style="padding:5px 10px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Confirmed</span></div>
+            <div style="display:flex;gap:12px;padding:14px;align-items:center"><div style="text-align:center;width:52px"><div style="font:700 15px/20px 'IBM Plex Mono',monospace">15:30</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">30 min</div></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Grace Adeniyi</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Video · plan review</div></div><span style="padding:5px 10px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Confirmed</span></div>
+          </div>
+          <div style="background:#FBEEE2;border:1px solid #E8C9A6;border-radius:16px;padding:14px;margin-bottom:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#8A4E17">pending_actions</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#5E3810">3 requests need a reply</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">2 new bookings and 1 client assigned by admin.</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#8A4E17">chevron_right</span></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px">
+            <div style="display:flex;justify-content:space-between;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px"><span>Plan usage · case files</span><span style="font:500 14px/20px 'IBM Plex Mono',monospace;color:#1A2B22">14 of ∞</span></div>
+            <div style="height:8px;border-radius:999px;background:#EAF3F0"><div style="width:32%;height:100%;background:#0E7C6B;border-radius:999px"></div></div>
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:8px">8 of 25 client slots used · renews 1 Sep</div>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">home</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="position:relative;display:inline-block"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A;display:block">groups</span><span style="position:absolute;top:-5px;left:calc(100% - 6px);min-width:18px;height:18px;box-sizing:border-box;border-radius:999px;background:#C1443B;border:2px solid #FFFFFF;color:#FFFFFF;font:600 11px/14px 'Plus Jakarta Sans',sans-serif;text-align:center;padding:0 4px">3</span></span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Clients</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">health_and_safety</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">trending_up</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Grow</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">B3 · Therapist home</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Agenda first · requests surfaced · plan usage visible</div>
+    </div>
+
+    <div>
+      <div id="s-B4" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:6px 16px 14px"><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Operations</div><div style="font:700 17px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Today's queue</div></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Payouts</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#C9772E">payments</span></div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">7</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">$4,180 total</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Help requests</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#0E7C6B">volunteer_activism</span></div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">3</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">guarantors ready</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">60-day notices</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#C9772E">event_repeat</span></div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">2</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">maturing this week</div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Unassigned</span><span style="font-family:'Material Symbols Rounded';font-size:18px;color:#0E7C6B">person_add</span></div><div style="font:700 20px/26px 'IBM Plex Mono',monospace">5</div><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">clients waiting</div></div>
+          </div>
+          <div style="font:600 18px/24px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Needs a decision</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="padding:14px;border-bottom:1px solid #EAF3F0">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Withdrawal · Emeka O.</span><span style="font:700 16px/22px 'IBM Plex Mono',monospace">$240.00</span></div>
+              <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin:2px 0 10px">Fee $12.00 · wallet balance covers it · <span style="font:500 13px/18px 'IBM Plex Mono',monospace">CCI8804XO</span></div>
+              <div style="display:flex;gap:8px"><button type="button" style="flex:1;height:44px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Approve</button><button type="button" style="flex:1;height:44px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Hold</button></div>
+            </div>
+            <div style="padding:14px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Coop help · Grace A.</span><span style="font:700 16px/22px 'IBM Plex Mono',monospace">$500.00</span></div>
+              <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin:2px 0 10px">14 weeks consistent · 3 of 3 guarantors approved · cap $500</div>
+              <div style="display:flex;gap:8px"><button type="button" style="flex:1;height:44px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Approve</button><button type="button" style="flex:1;height:44px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Review</button></div>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;display:flex;gap:10px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E9E5B">monitor_heart</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">System healthy</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Queues clear · last payout batch 08:15</div></div></div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">home</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="position:relative;display:inline-block"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A;display:block">fact_check</span><span style="position:absolute;top:-5px;left:calc(100% - 6px);min-width:18px;height:18px;box-sizing:border-box;border-radius:999px;background:#C1443B;border:2px solid #FFFFFF;color:#FFFFFF;font:600 11px/14px 'Plus Jakarta Sans',sans-serif;text-align:center;padding:0 4px">12</span></span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Approvals</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">manage_accounts</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">People</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">account_balance_wallet</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">B4 · Admin home</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Queue counts → decisions inline · figures from server</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">C · MARKETPLACE</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Catalog → Product → Cart → Checkout ⧉ summary → Confirmation → Orders</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:64px">
+
+    <div>
+      <div id="s-C1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:4px 16px 12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font:700 17px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Shop</div><span style="position:relative;display:inline-block"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#2E3A33;display:block">shopping_cart</span><span style="position:absolute;top:-4px;left:calc(100% - 8px);min-width:18px;height:18px;box-sizing:border-box;border-radius:999px;background:#0E7C6B;border:2px solid #FFFFFF;color:#FFFFFF;font:600 11px/14px 'Plus Jakarta Sans',sans-serif;text-align:center;padding:0 4px">3</span></span></div>
+            <div style="height:44px;border-radius:12px;background:#F7FAF9;border:1px solid #CBD8D2;display:flex;align-items:center;gap:8px;padding:0 12px;margin-bottom:12px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">search</span><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">Search products &amp; services</span></div>
+            <div style="display:flex;gap:8px;overflow:hidden"><span style="padding:6px 13px;border-radius:999px;background:#0E7C6B;color:#FFFFFF;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">All</span><span style="padding:6px 13px;border-radius:999px;border:1px solid #CBD8D2;background:#FFFFFF;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">Powders</span><span style="padding:6px 13px;border-radius:999px;border:1px solid #CBD8D2;background:#FFFFFF;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">Teas</span><span style="padding:6px 13px;border-radius:999px;border:1px solid #CBD8D2;background:#FFFFFF;font:500 13px/19px 'Plus Jakarta Sans',sans-serif;white-space:nowrap">Devices</span></div>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:14px 16px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden"><div style="height:118px;padding:8px;box-sizing:border-box"><img src="assets/p-cayenmis.jpg" alt="Cayenmis red powder 500g" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="padding:12px"><div style="font:600 15px/20px 'Plus Jakarta Sans',sans-serif">Cayenmis</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:8px">Red powder · 500g</div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font:700 16px/22px 'IBM Plex Mono',monospace">$24.00</span><span style="width:36px;height:36px;border-radius:10px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">add</span></span></div></div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden"><div style="height:118px;padding:8px;box-sizing:border-box"><img src="assets/p-green-tea.jpg" alt="Green Tea herbal blend" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="padding:12px"><div style="font:600 15px/20px 'Plus Jakarta Sans',sans-serif">Green Tea</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:8px">17 herbs · 150g</div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font:700 16px/22px 'IBM Plex Mono',monospace">$19.50</span><span style="width:36px;height:36px;border-radius:10px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">add</span></span></div></div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden"><div style="height:118px;padding:8px;box-sizing:border-box;position:relative"><img src="assets/p-capsicum-plaster.jpg" alt="Capsicum plaster pain patch" style="width:100%;height:100%;object-fit:contain;display:block"><span style="position:absolute;top:8px;left:8px;padding:4px 10px;border-radius:999px;background:#EDF1EF;color:#4A5A53;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Out of stock</span></div><div style="padding:12px"><div style="font:600 15px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Capsicum Plaster</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:8px">Pain patch · 8 pcs</div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font:700 16px/22px 'IBM Plex Mono',monospace;color:#61706A">$8.00</span><span style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Notify me</span></div></div></div>
+            <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden"><div style="height:118px;padding:8px;box-sizing:border-box"><img src="assets/p-lumbar-stretcher.jpg" alt="Heated lumbar stretcher" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="padding:12px"><div style="font:600 15px/20px 'Plus Jakarta Sans',sans-serif">Lumbar Stretcher</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:8px">Heated · device</div><div style="display:flex;align-items:center;justify-content:space-between"><span style="font:700 16px/22px 'IBM Plex Mono',monospace">$65.00</span><span style="width:36px;height:36px;border-radius:10px;background:#EAF3F0;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">add</span></span></div></div></div>
+          </div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">home</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">storefront</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Shop</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">health_and_safety</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">account_balance_wallet</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">C1 · Catalog</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Search + chips · 2-up grid · stock stated honestly</div>
+    </div>
+
+    <div>
+      <div id="s-C2" style="width:390px;height:844px;background-color:#FFFFFF;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="height:300px;background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%);position:relative;display:grid;place-items:center">
+          <div style="position:absolute;top:0;left:0;right:0;height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="position:absolute;top:56px;left:12px;width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,0.9);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#1A2B22">arrow_back_ios_new</span></div>
+          <div style="position:absolute;top:56px;right:12px;display:flex;gap:8px"><div style="width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,0.9);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#1A2B22">favorite_border</span></div><div style="width:40px;height:40px;border-radius:999px;background:rgba(255,255,255,0.9);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#1A2B22">ios_share</span></div></div>
+          <img src="assets/p-cayenmis.jpg" alt="Cayenmis red powder 500g" style="width:248px;height:248px;object-fit:contain;display:block">
+          <div style="position:absolute;bottom:14px;left:0;right:0;display:flex;justify-content:center;gap:6px"><span style="width:18px;height:5px;border-radius:999px;background:#0E7C6B"></span><span style="width:5px;height:5px;border-radius:999px;background:#CBD8D2"></span><span style="width:5px;height:5px;border-radius:999px;background:#CBD8D2"></span></div>
+        </div>
+        <div style="background:#FFFFFF;flex:1;padding:18px 16px 0;overflow:hidden">
+          <div style="display:flex;gap:8px;margin-bottom:10px"><span style="padding:5px 12px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">In stock</span><span style="padding:5px 12px;border-radius:999px;background:#EAF3F0;color:#0A5A4E;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Therapist favourite</span></div>
+          <h2 style="margin:0 0 4px;font:700 17px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Cayenmis Red Powder</h2>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:14px">500g · over 30 ingredients · CruxCare</div>
+          <div style="font:700 28px/34px 'IBM Plex Mono',monospace;margin-bottom:16px">$24.00</div>
+          <p style="margin:0 0 16px;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;text-wrap:pretty">A cayenne-based blend used in CruxCare plans to support digestion and circulation. 100% natural, with no additives or preservatives.</p>
+          <div style="border-top:1px solid #EAF3F0;padding-top:14px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>How to use</span><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">expand_more</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;border-top:1px solid #EAF3F0;padding-top:10px"><span>Ingredients</span><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">expand_more</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;border-top:1px solid #EAF3F0;padding-top:10px"><span>Delivery &amp; pickup</span><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">expand_more</span></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #EAF3F0;display:flex;gap:10px;align-items:center;background:#FFFFFF">
+          <div style="display:flex;align-items:center;gap:6px;height:47px;padding:0 10px;border:1px solid #CBD8D2;border-radius:12px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">remove</span><span style="min-width:20px;text-align:center;font:600 16px/22px 'IBM Plex Mono',monospace">1</span><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">add</span></div>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Add to cart · $24.00</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">C2 · Product detail</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Sticky CTA with live total · collapsible detail</div>
+    </div>
+
+    <div>
+      <div id="s-C3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Your cart</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #EAF3F0;align-items:center"><div style="width:56px;height:56px;border-radius:12px;background:#F7FAF9;padding:5px;box-sizing:border-box"><img src="assets/p-cayenmis.jpg" alt="Cayenmis" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Cayenmis</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Red powder · 500g</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$48.00</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 × $24.00</div></div></div>
+            <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #EAF3F0;align-items:center"><div style="width:56px;height:56px;border-radius:12px;background:#F7FAF9;padding:5px;box-sizing:border-box"><img src="assets/p-green-tea.jpg" alt="Green Tea" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Green Tea</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">17 herbs · 150g</div></div><div style="text-align:right"><div style="font:600 15px/21px 'IBM Plex Mono',monospace">$19.50</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1 × $19.50</div></div></div>
+            <div style="padding:12px;display:flex;gap:10px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">local_offer</span><span style="flex:1;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">Add a promo code</span><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Subtotal</span><span style="font:500 15px/24px 'IBM Plex Mono',monospace">$67.50</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Delivery</span><span style="font:500 15px/24px 'IBM Plex Mono',monospace">$4.00</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Tax</span><span style="font:500 15px/24px 'IBM Plex Mono',monospace">$3.38</span></div>
+            <div style="height:1px;background:#CBD8D2;margin:10px 0"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/22px 'Plus Jakarta Sans',sans-serif">Total</span><span style="font:700 20px/26px 'IBM Plex Mono',monospace">$74.88</span></div>
+            <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:6px">Totals and stock are re-checked by CruxCare at checkout.</div>
+          </div>
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#0E7C6B">medical_services</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Ordering for a client? Switch to your therapist context to attribute this order.</div></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Checkout · $74.88</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">C3 · Cart</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Line items · server re-check disclosed · on-behalf hint</div>
+    </div>
+
+    <div>
+      <div id="s-C4" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;position:relative">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Checkout</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden;opacity:0.45">
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Delivery</div>
+          <div style="background:#FFFFFF;border:1.5px solid #0E7C6B;border-radius:16px;padding:14px;margin-bottom:10px"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Home delivery · 2–3 days</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A">14 Awolowo Road, Ikoyi, Lagos</div></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;margin-bottom:18px"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Pick up at an outlet</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A">Crux Care Centre, Surulere · free</div></div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Payment</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">account_balance_wallet</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">CruxCare wallet</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">$2,480.00 available</div></div></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">credit_card</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Card ending 4821</div></div></div>
+        </div>
+        <div style="position:absolute;inset:0;background:rgba(26,43,34,0.38)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFFFF;border-radius:24px 24px 40px 40px;box-shadow:0 -8px 24px rgba(26,43,34,0.16);padding:12px 20px 28px">
+          <div style="display:grid;place-items:center;margin-bottom:12px"><div style="width:44px;height:5px;border-radius:999px;background:#CBD8D2"></div></div>
+          <div style="font:700 16px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:4px">Confirm your order</div>
+          <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:16px">Priced by CruxCare just now · stock reserved for 10 minutes.</div>
+          <div style="background:#F7FAF9;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">3 items</span><span style="font:600 15px/22px 'IBM Plex Mono',monospace">$67.50</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Delivery · Ikoyi</span><span style="font:600 15px/22px 'IBM Plex Mono',monospace">$4.00</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Tax</span><span style="font:600 15px/22px 'IBM Plex Mono',monospace">$3.38</span></div>
+            <div style="height:1px;background:#CBD8D2"></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 14px/22px 'Plus Jakarta Sans',sans-serif">Paying from wallet</span><span style="font:700 18px/23px 'IBM Plex Mono',monospace">$74.88</span></div>
+            <div style="display:flex;justify-content:space-between"><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet after payment</span><span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#61706A">$2,405.12</span></div>
+          </div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:8px">Place order</button>
+          <button type="button" style="width:100%;height:44px;border:none;border-radius:12px;background:transparent;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Back to cart</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">C4 · Checkout ⧉ summary sheet</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Server-priced totals · resulting balance shown before paying</div>
+    </div>
+
+    <div>
+      <div id="s-C5" style="width:390px;height:844px;background-color:#FFFFFF;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%);height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="background:#FFFFFF;flex:1;padding:24px 20px 0;display:flex;flex-direction:column">
+          <div style="text-align:center;padding-top:24px">
+            <div style="width:88px;height:88px;border-radius:999px;background:#E4F4EA;display:grid;place-items:center;margin:0 auto 20px"><span style="font-family:'Material Symbols Rounded';font-size:46px;color:#2E9E5B">check</span></div>
+            <h2 style="margin:0 0 8px;font:700 19px/23px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Order confirmed</h2>
+            <p style="margin:0 0 6px;font:400 14px/22px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">CruxCare has your order and payment.</p>
+            <div style="font:500 14px/20px 'IBM Plex Mono',monospace;color:#61706A;margin-bottom:24px">REF-90412 · 5 Aug, 09:41</div>
+          </div>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Paid from wallet</span><span style="font:600 15px/24px 'IBM Plex Mono',monospace">$74.88</span></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>New wallet balance</span><span style="font:600 15px/24px 'IBM Plex Mono',monospace">$2,405.12</span></div>
+            <div style="height:1px;background:#EAF3F0;margin:10px 0"></div>
+            <div style="display:flex;justify-content:space-between;font:400 14px/23px 'Plus Jakarta Sans',sans-serif;color:#2E3A33"><span>Arrives</span><span style="font:600 15px/24px 'Plus Jakarta Sans',sans-serif">Thu 7 – Fri 8 Aug</span></div>
+          </div>
+          <div style="border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:auto">
+            <div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-bottom:12px">What happens next</div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Confirmed</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Payment received</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:14px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Packed</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">You'll get a push notification</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box"></span></div><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">On the way</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Track from Orders</div></div></div>
+          </div>
+          <div style="padding:16px 0 28px">
+            <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer;margin-bottom:9px">Track this order</button>
+            <button type="button" style="width:100%;height:44px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Keep shopping</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">C5 · Order confirmed</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Reference + receipt + next step · restrained celebration</div>
+    </div>
+
+    <div>
+      <div id="s-C6" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Order REF-90412</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><span style="padding:5px 12px;border-radius:999px;background:#EAF3F0;color:#0A5A4E;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Packed</span><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Updated 11:20</span></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#2E9E5B"></span></div><div style="padding-bottom:16px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Order placed</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">5 Aug · 09:41 · paid from wallet</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;background:#2E9E5B"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:16px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Packed at Surulere</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">5 Aug · 11:20</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box"></span><span style="flex:1;width:2px;background:#CBD8D2"></span></div><div style="padding-bottom:16px"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Out for delivery</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Expected Thu 7 Aug</div></div></div>
+            <div style="display:flex;gap:12px"><div style="width:22px;display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:999px;border:2px solid #CBD8D2;box-sizing:border-box"></span></div><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">Delivered</div></div></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;padding:12px;border-bottom:1px solid #EAF3F0;align-items:center"><div style="width:48px;height:44px;border-radius:12px;background:#F7FAF9;padding:4px;box-sizing:border-box"><img src="assets/p-cayenmis.jpg" alt="Cayenmis" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="flex:1;font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Cayenmis <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">× 2</span></div><span style="font:600 15px/21px 'IBM Plex Mono',monospace">$48.00</span></div>
+            <div style="display:flex;gap:12px;padding:12px;align-items:center"><div style="width:48px;height:44px;border-radius:12px;background:#F7FAF9;padding:4px;box-sizing:border-box"><img src="assets/p-green-tea.jpg" alt="Green Tea" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="flex:1;font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Green Tea <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">× 1</span></div><span style="font:600 15px/21px 'IBM Plex Mono',monospace">$19.50</span></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;display:flex;gap:10px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">receipt_long</span><span style="flex:1;font:600 14px/20px 'Plus Jakarta Sans',sans-serif">View receipt</span><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF;display:flex;gap:10px">
+          <button type="button" style="flex:1;height:47px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;color:#2E3A33;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Get help</button>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Reorder</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">C6 · Order detail &amp; timeline</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Status timeline · receipt · reorder</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <span style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#0E7C6B;letter-spacing:0.08em">D · CLIENT CARE</span>
+    <span style="flex:1;height:1px;background:#CBD8D2"></span>
+    <span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Care hub → Find therapist → Book ⧉ confirm → Health profile → Chat → Video</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px;margin-bottom:64px">
+
+    <div>
+      <div id="s-D1" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="padding:4px 16px 14px"><div style="font:700 17px/22px 'Plus Jakarta Sans',sans-serif;letter-spacing:-0.01em">Care</div><div style="font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A">1×/week plan · 3 visits left this month</div></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:16px;margin-bottom:14px">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+              <div style="width:56px;height:56px;border-radius:999px;background-image:repeating-linear-gradient(45deg,#EAF3F0 0 6px,#F7FAF9 6px 12px)"></div>
+              <div style="flex:1"><div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Mrs. Chinwe Okoye</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Your therapist · naturopathy, 9 yrs</div></div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="button" style="flex:1;height:44px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Message</button>
+              <button type="button" style="flex:1;height:44px;border:1.5px solid #0E7C6B;border-radius:12px;background:#FFFFFF;color:#0E7C6B;font:600 13px/19px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Book</button>
+              <button type="button" style="width:44px;height:44px;border:1.5px solid #CBD8D2;border-radius:12px;background:#FFFFFF;cursor:pointer;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#2E3A33">videocam</span></button>
+            </div>
+          </div>
+          <div style="background:#0A5A4E;border-radius:16px;padding:16px;color:#FFFFFF;margin-bottom:14px">
+            <div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#9BD2C8;margin-bottom:6px">NEXT VISIT</div>
+            <div style="font:700 16px/22px 'Plus Jakarta Sans',sans-serif">Thu 7 Aug · 10:30</div>
+            <div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#CDE7E1">Video visit · 30 minutes</div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Your care</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">medical_information</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Health profile</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">2 sections need updating</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;padding:14px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">assignment</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Therapy plan</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">1×/week · ends 30 Aug</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Recommended by your therapist</div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:12px;display:flex;gap:12px;align-items:center"><div style="width:52px;height:47px;border-radius:12px;background:#F7FAF9;padding:5px;box-sizing:border-box"><img src="assets/p-cayenmis.jpg" alt="Cayenmis" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Cayenmis Red Powder</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Daily, morning · 2 Aug</div></div><button type="button" style="height:44px;padding:0 11px;border:1.5px solid #0E7C6B;border-radius:10px;background:#FFFFFF;color:#0E7C6B;font:600 11px/15px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Add</button></div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:8px 8px 22px;display:flex;justify-content:space-between">
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">home</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Home</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">storefront</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Shop</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">health_and_safety</span><div style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Care</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">account_balance_wallet</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Wallet</div></div>
+          <div style="text-align:center;width:20%"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#61706A">more_horiz</span><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">More</div></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">D1 · Care hub</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Therapist first · profile gaps flagged · recommendations flow to shop</div>
+    </div>
+
+    <div>
+      <div id="s-D2" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Book a visit</span><span style="width:24px"></span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="display:flex;gap:12px;align-items:center;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:12px;margin-bottom:16px"><div style="width:44px;height:44px;border-radius:999px;background-image:repeating-linear-gradient(45deg,#EAF3F0 0 6px,#F7FAF9 6px 12px)"></div><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Mrs. Chinwe Okoye</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Naturopathy · Lagos</div></div></div>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <div style="flex:1;padding:10px 0;border-radius:12px;border:1.5px solid #0E7C6B;background:#EAF3F0;text-align:center"><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">THU</div><div style="font:700 18px/24px 'IBM Plex Mono',monospace;color:#0A5A4E">7</div></div>
+            <div style="flex:1;padding:10px 0;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;text-align:center"><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">FRI</div><div style="font:700 18px/24px 'IBM Plex Mono',monospace">8</div></div>
+            <div style="flex:1;padding:10px 0;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;text-align:center"><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">SAT</div><div style="font:700 18px/24px 'IBM Plex Mono',monospace">9</div></div>
+            <div style="flex:1;padding:10px 0;border-radius:12px;border:1px solid #DCE7E3;background:#F7FAF9;text-align:center"><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#B4C2BC">SUN</div><div style="font:700 18px/24px 'IBM Plex Mono',monospace;color:#B4C2BC">10</div></div>
+            <div style="flex:1;padding:10px 0;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;text-align:center"><div style="font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">MON</div><div style="font:700 18px/24px 'IBM Plex Mono',monospace">11</div></div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Thursday 7 August</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+            <div style="height:44px;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;display:grid;place-items:center;font:600 15px/21px 'IBM Plex Mono',monospace">09:00</div>
+            <div style="height:44px;border-radius:12px;border:1.5px solid #0E7C6B;background:#0E7C6B;display:grid;place-items:center;font:600 15px/21px 'IBM Plex Mono',monospace;color:#FFFFFF">10:30</div>
+            <div style="height:44px;border-radius:12px;border:1px solid #DCE7E3;background:#F7FAF9;display:grid;place-items:center;font:600 15px/21px 'IBM Plex Mono',monospace;color:#B4C2BC">11:00</div>
+            <div style="height:44px;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;display:grid;place-items:center;font:600 15px/21px 'IBM Plex Mono',monospace">14:00</div>
+            <div style="height:44px;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF;display:grid;place-items:center;font:600 15px/21px 'IBM Plex Mono',monospace">15:30</div>
+            <div style="height:44px;border-radius:12px;border:1px solid #DCE7E3;background:#F7FAF9;display:grid;place-items:center;font:600 15px/21px 'IBM Plex Mono',monospace;color:#B4C2BC">16:30</div>
+          </div>
+          <div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif;margin-bottom:10px">Visit type</div>
+          <div style="display:flex;gap:10px;margin-bottom:16px">
+            <div style="flex:1;padding:14px;border-radius:12px;border:1.5px solid #0E7C6B;background:#EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">videocam</span><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-top:4px">Video</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Included in plan</div></div>
+            <div style="flex:1;padding:14px;border-radius:12px;border:1px solid #CBD8D2;background:#FFFFFF"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">store</span><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;margin-top:4px">In person</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A">Surulere centre</div></div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:12px;padding:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#61706A">edit_note</span><span style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#61706A">Add a note for your therapist (optional)</span></div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A"><span>Thu 7 Aug · 10:30 · video</span><span style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif;color:#1A2B22">Visit 2 of 4</span></div>
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Request this slot</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">D2 · Appointment booking</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Day strip → slots → type · plan usage stated on the CTA</div>
+    </div>
+
+    <div>
+      <div id="s-D3" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Health profile</span><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Save</span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#EAF3F0;border-radius:16px;padding:14px;display:flex;gap:10px;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#0E7C6B">shield_lock</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#2E3A33">Encrypted and visible only to your assigned therapist and authorised admins. Consent v2.1 · <a href="#consent">review</a>.</div></div>
+          <div style="display:flex;justify-content:space-between;font:400 13px/19px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-bottom:6px"><span>Profile completeness</span><span style="font:500 14px/20px 'IBM Plex Mono',monospace;color:#1A2B22">6 of 8</span></div>
+          <div style="height:8px;border-radius:999px;background:#EAF3F0;margin-bottom:18px"><div style="width:75%;height:100%;background:#0E7C6B;border-radius:999px"></div></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden">
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Basics</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">34 yrs · 68 kg · 1.66 m</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Conditions</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 recorded</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#C9772E">error</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Allergies</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">Needed before your next visit</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#C9772E">error</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Current medication</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#8A4E17">Not provided</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;padding:14px;border-bottom:1px solid #EAF3F0;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Lifestyle &amp; diet</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Updated 12 Jul</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+            <div style="display:flex;gap:12px;padding:14px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E9E5B">check_circle</span><div style="flex:1"><div style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Attachments</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 lab results · add a PDF or photo</div></div><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#61706A">chevron_right</span></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF">
+          <button type="button" style="width:100%;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 15px/21px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Complete allergies</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">D3 · Health profile</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Consent up top · sectioned form · gaps named, not scolded</div>
+    </div>
+
+    <div>
+      <div id="s-D4" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;gap:10px;height:56px;padding:0 12px;border-bottom:1px solid #EAF3F0"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><div style="width:36px;height:36px;border-radius:999px;background-image:repeating-linear-gradient(45deg,#EAF3F0 0 6px,#F7FAF9 6px 12px)"></div><div style="flex:1"><div style="font:600 15px/20px 'Plus Jakarta Sans',sans-serif">Mrs. Chinwe Okoye</div><div style="display:flex;align-items:center;gap:5px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#1F6E42"><span style="width:7px;height:7px;border-radius:999px;background:#2E9E5B"></span>Online</div></div><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">videocam</span></div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden;display:flex;flex-direction:column;gap:12px">
+          <div style="text-align:center;font:500 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Today</div>
+          <div style="align-self:flex-start;max-width:78%;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px 16px 16px 4px;padding:12px 14px"><div style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#1A2B22">Good morning Ada. How has the joint stiffness been since we changed the blend?</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:4px">09:12</div></div>
+          <div style="align-self:flex-end;max-width:78%;background:#0E7C6B;border-radius:16px 16px 4px 16px;padding:12px 14px;color:#FFFFFF"><div style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif">Much better in the mornings. Still stiff after sitting long at work.</div><div style="display:flex;justify-content:flex-end;align-items:center;gap:4px;font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#F2F7F5;margin-top:4px">09:20<span style="font-family:'Material Symbols Rounded';font-size:14px">done_all</span></div></div>
+          <div style="align-self:flex-end;max-width:78%;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:10px;display:flex;gap:10px;align-items:center"><div style="width:40px;height:40px;border-radius:8px;background-image:repeating-linear-gradient(45deg,#EAF3F0 0 6px,#F7FAF9 6px 12px)"></div><div><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">lab-result-jul.pdf</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">248 KB</div></div></div>
+          <div style="align-self:flex-start;max-width:78%;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px 16px 16px 4px;padding:12px 14px"><div style="font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#1A2B22">Thank you — I've added a recommendation to your care plan and booked Thursday.</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A;margin-top:4px">09:31</div></div>
+          <div style="align-self:flex-start;display:flex;gap:4px;padding:12px 16px;background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px 16px 16px 4px"><span style="width:7px;height:7px;border-radius:999px;background:#B4C2BC"></span><span style="width:7px;height:7px;border-radius:999px;background:#CBD8D2"></span><span style="width:7px;height:7px;border-radius:999px;background:#DCE7E3"></span></div>
+        </div>
+        <div style="background:#FFFFFF;border-top:1px solid #CBD8D2;padding:10px 12px 26px;display:flex;gap:8px;align-items:center">
+          <span style="width:44px;height:44px;border-radius:12px;background:#F7FAF9;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#2E3A33">attach_file</span></span>
+          <div style="flex:1;height:44px;border-radius:999px;background:#F7FAF9;border:1px solid #CBD8D2;display:flex;align-items:center;padding:0 14px;font:400 12px/18px 'Plus Jakarta Sans',sans-serif;color:#61706A">Message</div>
+          <span style="width:44px;height:44px;border-radius:999px;background:#0E7C6B;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:22px;color:#FFFFFF">send</span></span>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">D4 · Chat thread</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Presence · receipts · attachments · typing indicator</div>
+    </div>
+
+    <div>
+      <div id="s-D5" style="width:390px;height:844px;background:#1A2B22;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column;position:relative">
+        <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(45deg,#22332C 0 12px,#1E2E27 12px 24px)"></div>
+        <div style="position:relative;height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#FFFFFF"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+        <div style="position:relative;padding:8px 16px;display:flex;align-items:center;gap:10px">
+          <span style="padding:5px 12px;border-radius:999px;background:rgba(193,68,59,0.9);color:#FFFFFF;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">REC</span>
+          <span style="padding:5px 12px;border-radius:999px;background:rgba(255,255,255,0.16);color:#FFFFFF;font:500 12px/16px 'IBM Plex Mono',monospace">12:04</span>
+          <span style="margin-left:auto;font-family:'Material Symbols Rounded';font-size:24px;color:#FFFFFF">flip_camera_ios</span>
+        </div>
+        <div style="position:relative;flex:1;display:grid;place-items:center"><span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#8A9A93">therapist video feed</span></div>
+        <div style="position:absolute;top:110px;right:16px;width:104px;height:150px;border-radius:16px;background-image:repeating-linear-gradient(45deg,#2E3A33 0 8px,#26332E 8px 16px);border:1px solid rgba(255,255,255,0.2);display:grid;place-items:center"><span style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#8A9A93">you</span></div>
+        <div style="position:relative;padding:0 16px 16px">
+          <div style="background:rgba(255,255,255,0.12);border-radius:16px;padding:12px 14px;display:flex;gap:10px;margin-bottom:16px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#F3EFE6">info</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#F2F7F5">This session is being recorded with your consent. Ask your therapist to stop at any time.</div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:22px">
+            <div style="width:56px;height:56px;border-radius:999px;background:rgba(255,255,255,0.16);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#FFFFFF">mic</span></div>
+            <div style="width:56px;height:56px;border-radius:999px;background:rgba(255,255,255,0.16);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#FFFFFF">videocam</span></div>
+            <div style="width:56px;height:56px;border-radius:999px;background:rgba(255,255,255,0.16);display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#FFFFFF">chat_bubble</span></div>
+            <div style="width:56px;height:56px;border-radius:999px;background:#C1443B;display:grid;place-items:center"><span style="font-family:'Material Symbols Rounded';font-size:26px;color:#FFFFFF">call_end</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">D5 · Video visit</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Recording consent persistent · 56px controls · dark surface</div>
+    </div>
+
+    <div>
+      <div id="s-D6" style="width:390px;height:844px;background-color:#F7FAF9;background-image:url('assets/screen-bg.png');background-size:cover;background-position:top center;background-repeat:no-repeat;border-radius:40px;overflow:hidden;box-shadow:0 10px 30px rgba(26,43,34,0.14);display:flex;flex-direction:column">
+        <div style="background-image:linear-gradient(180deg,rgba(255,255,255,0.80) 0%,rgba(255,255,255,0.62) 55%,rgba(247,250,249,0.92) 100%)">
+          <div style="height:50px;padding:0 26px 6px;display:flex;align-items:flex-end;justify-content:space-between;font:600 13px/17px 'Plus Jakarta Sans',sans-serif;color:#1A2B22"><span>9:41</span><span style="display:flex;gap:5px;align-items:center"><span style="font-family:'Material Symbols Rounded';font-size:16px">signal_cellular_alt</span><span style="font-family:'Material Symbols Rounded';font-size:16px">wifi</span><span style="font-family:'Material Symbols Rounded';font-size:16px">battery_full</span></span></div>
+          <div style="display:flex;align-items:center;height:48px;padding:0 12px"><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">arrow_back_ios_new</span><span style="flex:1;text-align:center;font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Ada Nwosu</span><span style="font-family:'Material Symbols Rounded';font-size:24px;color:#0E7C6B">more_horiz</span></div>
+          <div style="display:flex;padding:0 16px;gap:20px;border-bottom:1px solid #EAF3F0">
+            <div style="padding:8px 0;border-bottom:2px solid #0E7C6B;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;color:#0A5A4E">Case file</div>
+            <div style="padding:8px 0;font:500 15px/21px 'Plus Jakarta Sans',sans-serif;color:#61706A">Visits</div>
+            <div style="padding:8px 0;font:500 15px/21px 'Plus Jakarta Sans',sans-serif;color:#61706A">Orders</div>
+          </div>
+        </div>
+        <div style="background:#F7FAF9;flex:1;padding:16px;overflow:hidden">
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48px;border-radius:999px;background-image:repeating-linear-gradient(45deg,#EAF3F0 0 6px,#F7FAF9 6px 12px)"></div><div style="flex:1"><div style="font:600 15px/21px 'Plus Jakarta Sans',sans-serif">Ada Nwosu · 34</div><div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Case opened 12 Jun · 1×/week plan</div></div><span style="padding:5px 10px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Active</span></div>
+          </div>
+          <div style="background:#FBEEE2;border:1px solid #E8C9A6;border-radius:16px;padding:14px;margin-bottom:14px;display:flex;gap:10px"><span style="font-family:'Material Symbols Rounded';font-size:20px;color:#8A4E17">warning</span><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#5E3810">Allergies and current medication are still blank in her health profile.</div></div>
+          <div style="background:#FFFFFF;border:1px solid #CBD8D2;border-radius:16px;overflow:hidden;margin-bottom:14px">
+            <div style="padding:14px;border-bottom:1px solid #EAF3F0"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Session notes</span><span style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">Add</span></div><div style="font:400 13px/20px 'Plus Jakarta Sans',sans-serif;color:#2E3A33;margin-top:8px">2 Aug — Reports morning stiffness reduced. Continue blend, add evening stretch routine. Review in 1 week.</div></div>
+            <div style="padding:14px;border-bottom:1px solid #EAF3F0"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Recommendations</span><span style="font:600 11px/15px 'Plus Jakarta Sans',sans-serif;color:#0E7C6B">New</span></div><div style="display:flex;gap:10px;align-items:center;margin-top:10px"><div style="width:40px;height:40px;border-radius:10px;background:#F7FAF9;padding:3px;box-sizing:border-box"><img src="assets/p-cayenmis.jpg" alt="Cayenmis" style="width:100%;height:100%;object-fit:contain;display:block"></div><div style="flex:1"><div style="font:600 13px/19px 'Plus Jakarta Sans',sans-serif">Cayenmis Red Powder</div><div style="font:400 11px/16px 'Plus Jakarta Sans',sans-serif;color:#61706A">Daily, morning · sent 2 Aug</div></div><span style="padding:4px 10px;border-radius:999px;background:#E4F4EA;color:#1F6E42;font:600 11px/15px 'Plus Jakarta Sans',sans-serif">Ordered</span></div></div>
+            <div style="padding:14px;display:flex;justify-content:space-between;align-items:center"><span style="font:600 14px/20px 'Plus Jakarta Sans',sans-serif">Attachments</span><span style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">2 files</span></div>
+          </div>
+        </div>
+        <div style="padding:11px 14px 25px;border-top:1px solid #CBD8D2;background:#FFFFFF;display:flex;gap:10px">
+          <button type="button" style="flex:1;height:47px;border:1.5px solid #0E7C6B;border-radius:12px;background:#FFFFFF;color:#0E7C6B;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Recommend</button>
+          <button type="button" style="flex:1;height:47px;border:none;border-radius:12px;background:#0E7C6B;color:#FFFFFF;font:600 14px/20px 'Plus Jakarta Sans',sans-serif;cursor:pointer">Add note</button>
+        </div>
+      </div>
+      <div style="margin-top:12px;font:600 13px/19px 'Plus Jakarta Sans',sans-serif">D6 · Case file (therapist)</div>
+      <div style="font:400 11px/15px 'Plus Jakarta Sans',sans-serif;color:#61706A">Notes → recommendation → order on behalf · profile gaps flagged</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
