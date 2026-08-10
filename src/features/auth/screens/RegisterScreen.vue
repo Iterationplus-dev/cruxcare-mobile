@@ -1,12 +1,14 @@
 <template>
   <ion-page>
-    <ion-content class="cc-screen">
+    <ion-header class="cc-register__header">
       <div class="cc-register__topbar">
         <button type="button" class="cc-register__back" aria-label="Back" @click="router.back()">
           <AppIcon name="arrow_back_ios_new" :size="24" color="var(--cc-color-primary)" />
         </button>
         <span class="cc-text-body-strong" style="font-size: 14.5px">Create account</span>
       </div>
+    </ion-header>
+    <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 4px">Start with the basics</h2>
         <p class="cc-text-subtitle" style="margin: 0 0 16px">
@@ -138,7 +140,9 @@
 
         <p v-if="formError" class="cc-field__error" role="alert" style="margin-top: 12px">{{ formError }}</p>
       </div>
+    </ion-content>
 
+    <ion-footer class="cc-register__footer">
       <div class="cc-screen__footer">
         <AppButton :loading="submitting" @click="onSubmit">Create account</AppButton>
         <div class="cc-text-body" style="text-align: center; font-size: 12.5px">
@@ -146,7 +150,7 @@
           <a href="#" @click.prevent="router.push({ name: 'login' })">Log in</a>
         </div>
       </div>
-    </ion-content>
+    </ion-footer>
 
     <AppSheet v-model="referralSheetOpen" title="How did you hear about CruxCare?">
       <div class="cc-referral-options">
@@ -173,7 +177,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { IonContent, IonPage } from '@ionic/vue';
+import { IonContent, IonFooter, IonHeader, IonPage } from '@ionic/vue';
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useRouter } from 'vue-router';
@@ -267,6 +271,13 @@ const onSubmit = handleSubmit(async (values) => {
 <style scoped>
 .cc-screen {
   --background: var(--cc-surface-app);
+}
+.cc-register__header,
+.cc-register__footer {
+  box-shadow: none;
+}
+.cc-register__header {
+  background: var(--cc-surface-app);
 }
 .cc-register__topbar {
   display: flex;
@@ -418,6 +429,7 @@ const onSubmit = handleSubmit(async (values) => {
   background: var(--cc-color-mist);
 }
 .cc-screen__footer {
+  background: var(--cc-surface-app);
   padding: 11px 16px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--cc-divider);
   display: flex;
