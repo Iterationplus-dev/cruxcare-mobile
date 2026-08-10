@@ -5,7 +5,9 @@
       <template v-else-if="product">
         <div class="cc-pd__gallery">
           <ion-buttons class="cc-pd__back">
-            <ion-back-button default-href="/tabs/shop" text="" />
+            <button type="button" class="cc-pd__back-btn" aria-label="Back" @click="goBack">
+              <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
+            </button>
           </ion-buttons>
           <img :src="product.media[0]?.url" :alt="product.media[0]?.alt ?? product.name" />
         </div>
@@ -41,18 +43,26 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { IonBackButton, IonButtons, IonContent, IonPage } from '@ionic/vue';
+import { IonButtons, IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppBadge, AppButton, AppIcon, MoneyAmount } from '@/components/ui';
 import { LoadingState } from '@/components/state';
 import { useProduct } from '@/composables/useProducts';
 import { useCartStore } from '@/stores/cart';
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
 const cart = useCartStore();
 const toast = useToast();
+const auth = useAuthStore();
+
+/** Guests arrive here from /shop/guest, so fall back there rather than the tab. */
+function goBack() {
+  if (window.history.state?.back) router.back();
+  else router.replace(auth.isAuthenticated ? '/tabs/shop' : '/shop/guest');
+}
 
 const { data: product, isPending } = useProduct(route.params.id as string);
 const quantity = ref(1);
@@ -60,6 +70,11 @@ const adding = ref(false);
 
 async function onAdd() {
   if (!product.value) return;
+  // Guests can browse this screen but need an account to hold a cart.
+  if (!auth.isAuthenticated) {
+    router.push({ name: 'login' });
+    return;
+  }
   adding.value = true;
   try {
     await cart.addItem(product.value.id, quantity.value);
@@ -84,8 +99,18 @@ async function onAdd() {
 }
 .cc-pd__back {
   position: absolute;
-  top: 6px;
+  top: calc(env(safe-area-inset-top) + 6px);
   left: 4px;
+}
+.cc-pd__back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-touch-min);
+  height: var(--cc-touch-min);
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .cc-pd__gallery img {
   width: 248px;

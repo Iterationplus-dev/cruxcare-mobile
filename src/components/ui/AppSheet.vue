@@ -1,8 +1,6 @@
 <template>
   <ion-modal
     :is-open="modelValue"
-    :initial-breakpoint="1"
-    :breakpoints="[0, 1]"
     :handle="false"
     class="cc-sheet"
     @did-dismiss="emit('update:modelValue', false)"
@@ -25,7 +23,17 @@ const emit = defineEmits<{ 'update:modelValue': [boolean] }>();
 <style>
 /* Not scoped: ion-modal renders its content in a shadow-root-adjacent
    overlay outside this component's normal DOM tree. */
+/* Height follows the content instead of Ionic's breakpoint sheet (which
+   always filled the viewport), capped so a long sheet still stops short of
+   the status bar and scrolls internally. */
 .cc-sheet::part(content) {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+  max-height: 85vh;
   border-radius: var(--cc-radius-sheet) var(--cc-radius-sheet) 0 0;
   background: var(--cc-surface-0);
 }
@@ -37,6 +45,8 @@ const emit = defineEmits<{ 'update:modelValue': [boolean] }>();
 <style scoped>
 .cc-sheet__content {
   padding: 8px 16px calc(16px + env(safe-area-inset-bottom));
+  max-height: 85vh;
+  overflow-y: auto;
 }
 .cc-sheet__grabber {
   width: 36px;

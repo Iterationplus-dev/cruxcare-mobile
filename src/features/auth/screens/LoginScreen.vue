@@ -89,7 +89,7 @@
           New to CruxCare? <a href="#" @click.prevent="router.push({ name: 'register' })">Create an account</a>
         </div>
         <div v-if="!formError" class="cc-text-body" style="text-align: center; font-size: 12.5px">
-          Are you a therapist?
+          Are you a member?
           <a href="#" @click.prevent="router.push({ name: 'become-therapist' })">Become a therapist</a>
         </div>
       </div>

@@ -46,7 +46,7 @@
           :key="p.id"
           type="button"
           class="cc-product-card"
-          @click="router.push({ name: guestMode ? 'login' : 'product-detail', params: { id: p.id } })"
+          @click="router.push({ name: 'product-detail', params: { id: p.id } })"
         >
           <div class="cc-product-card__media">
             <img :src="p.media[0]?.url" :alt="p.media[0]?.alt ?? p.name" />

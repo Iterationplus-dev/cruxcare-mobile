@@ -11,7 +11,7 @@
           <AppIcon name="check_circle" :size="17" color="var(--cc-color-success-text)" />
           <span>Account verified</span>
         </div>
-        <h2 class="cc-text-h1" style="margin: 0 0 6px">One step before a therapist</h2>
+        <h2 class="cc-text-h1" style="margin: 0 0 6px">One step before meeting therapist</h2>
         <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12.5px">
           A therapist can't safely advise without your history. A few short sections — you can shop and
           browse meanwhile.
@@ -51,7 +51,7 @@
       </div>
       <div class="cc-screen__footer">
         <AppButton style="margin-bottom: 9px" @click="router.push({ name: 'health-profile' })">Continue</AppButton>
-        <AppButton variant="text" @click="router.replace({ name: 'tabs-home' })">Browse the shop first</AppButton>
+        <AppButton variant="text" class="cc-skip-btn" @click="goBrowseShop">Browse the shop first</AppButton>
       </div>
     </ion-content>
   </ion-page>
@@ -81,6 +81,11 @@ const sections = computed(() => {
 });
 const filledCount = computed(() => sections.value.filter((s) => s.value).length);
 const completion = computed(() => Math.round((filledCount.value / sections.value.length) * 100));
+
+/** Shop stays open while care is gated (A4) — this is the escape hatch. */
+function goBrowseShop() {
+  router.replace({ name: 'catalog' });
+}
 </script>
 
 <style scoped>
@@ -153,5 +158,12 @@ const completion = computed(() => Math.round((filledCount.value / sections.value
 .cc-screen__footer {
   padding: 11px 14px calc(25px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--cc-divider);
+}
+/* Text buttons collapse to their label width, leaving a tap target far
+   smaller than the row it appears to occupy. Specificity has to beat
+   AppButton's own `.cc-btn--text { width: auto }`. */
+.cc-screen__footer .cc-skip-btn.cc-btn {
+  display: flex;
+  width: 100%;
 }
 </style>

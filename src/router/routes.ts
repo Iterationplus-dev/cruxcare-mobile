@@ -125,7 +125,8 @@ const routes: RouteRecordRaw[] = [
     path: '/shop/product/:id',
     name: 'product-detail',
     component: () => import('@/features/marketplace/screens/ProductDetailScreen.vue'),
-    meta: { requiresAuth: true },
+    // Guests may browse product detail (PRD Guest capability); the
+    // add-to-cart action is what routes them to login, not the page itself.
   },
   {
     path: '/shop/cart',

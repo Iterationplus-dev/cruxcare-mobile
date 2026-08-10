@@ -2,7 +2,11 @@
   <ion-page>
     <ion-header class="cc-plain-header">
       <ion-toolbar class="cc-plain-header__bar">
-        <ion-buttons slot="start"><ion-back-button default-href="/auth/login" text="" /></ion-buttons>
+        <ion-buttons slot="start">
+          <button type="button" class="cc-plain-header__back" aria-label="Back" @click="goBack">
+            <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
+          </button>
+        </ion-buttons>
         <ion-title>Forgot password</ion-title>
       </ion-toolbar>
     </ion-header>
@@ -59,20 +63,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import {
-  IonBackButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/vue';
+import { IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppIcon, AppInput } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
 
 const router = useRouter();
+
+/** ion-back-button did nothing here when login was reached via replace(). */
+function goBack() {
+  if (window.history.state?.back) router.back();
+  else router.replace({ name: 'login' });
+}
 const channel = ref<'sms' | 'email'>('sms');
 const identifier = ref('');
 const submitting = ref(false);
@@ -94,6 +96,16 @@ async function onSubmit() {
 <style scoped>
 .cc-plain-header {
   box-shadow: none;
+}
+.cc-plain-header__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-touch-min);
+  height: var(--cc-touch-min);
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .cc-plain-header__bar {
   --background: var(--cc-surface-0);

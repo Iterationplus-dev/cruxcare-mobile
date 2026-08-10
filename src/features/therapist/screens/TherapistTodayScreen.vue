@@ -154,7 +154,7 @@ function goCalendar() {
   --background: var(--cc-surface-app);
 }
 .cc-td__header {
-  padding: 6px 16px 0;
+  padding: calc(env(safe-area-inset-top) + 6px) 16px 0;
   display: flex;
   align-items: center;
   gap: 11px;

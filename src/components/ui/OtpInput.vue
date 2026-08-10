@@ -94,11 +94,18 @@ onBeforeUnmount(() => {
 <style scoped>
 .cc-otp {
   display: flex;
+  justify-content: center;
   gap: 10px;
 }
 .cc-otp__digit {
-  width: 44px;
-  height: 52px;
+  /* Flexible so any code length divides the row evenly and stays on screen,
+     capped so short codes don't stretch into slabs. */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 56px;
+  height: 56px;
+  padding: 0;
+  box-sizing: border-box;
   text-align: center;
   border: 1px solid var(--cc-line);
   border-radius: var(--cc-radius-sm);
@@ -120,9 +127,11 @@ onBeforeUnmount(() => {
   line-height: 17px;
   color: var(--cc-error-surface-text);
   margin: 8px 0 0;
+  text-align: center;
 }
 .cc-otp__resend {
   margin-top: 16px;
+  text-align: center;
 }
 .cc-otp__resend-btn {
   background: none;
