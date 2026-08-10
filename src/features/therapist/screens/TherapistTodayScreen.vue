@@ -28,17 +28,17 @@
           <AppCard v-if="pendingRequests.length" tint class="cc-td__banner" @click="goRequests">
             <AppIcon name="pending_actions" :size="20" color="#9A5B15" />
             <div class="cc-td__banner-body">
-              <div class="cc-text-body-strong" style="font-size: 13px">
+              <div class="cc-text-body-strong" style="font-size: 13.5px">
                 {{ pendingRequests.length }} booking request{{ pendingRequests.length === 1 ? '' : 's' }} waiting
               </div>
               <div class="cc-text-caption">Review to accept or decline</div>
             </div>
-            <span class="cc-text-body-strong" style="font-size: 12px; color: var(--cc-color-primary)">Review</span>
+            <span class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-color-primary)">Review</span>
           </AppCard>
 
           <div class="cc-home__section-head">
-            <span class="cc-text-body-strong" style="font-size: 14px">Today's schedule</span>
-            <a href="#" class="cc-text-body-strong" style="font-size: 12px" @click.prevent="goCalendar">Calendar</a>
+            <span class="cc-text-body-strong" style="font-size: 14.5px">Today's schedule</span>
+            <a href="#" class="cc-text-body-strong" style="font-size: 12.5px" @click.prevent="goCalendar">Calendar</a>
           </div>
 
           <EmptyState
@@ -165,7 +165,7 @@ function goCalendar() {
 }
 .cc-td__date {
   font-family: var(--cc-font-interface);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--cc-color-primary);
 }
 .cc-td__stats {
@@ -185,13 +185,13 @@ function goCalendar() {
 }
 .cc-td__stat-label {
   font-family: var(--cc-font-interface);
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--cc-ink-400);
 }
 .cc-td__stat-value {
   font-family: var(--cc-font-interface);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 17px;
 }
 .cc-td__body {
   padding: 14px 16px 24px;

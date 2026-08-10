@@ -3,7 +3,7 @@
     <AppHeader title="Availability" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
-        <p class="cc-text-body" style="font-size: 12px">
+        <p class="cc-text-body" style="font-size: 12.5px">
           Toggle the days you're bookable. Pausing a day hides new requests without cancelling what's already confirmed.
         </p>
         <AppCard style="padding: 0">

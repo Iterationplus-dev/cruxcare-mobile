@@ -10,7 +10,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Verify your Crux ID</h2>
-        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12px">
+        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12.5px">
           Start from your member profile — no second account. Confirm the Crux ID you already hold, then we
           send a code to the record on file.
         </p>
@@ -20,13 +20,13 @@
         <AppCard v-if="cruxId.length >= 9">
           <div class="cc-match">
             <AppIcon name="check_circle" :size="20" color="var(--cc-color-success)" />
-            <span class="cc-text-body-strong" style="font-size: 13px">Match found</span>
+            <span class="cc-text-body-strong" style="font-size: 13.5px">Match found</span>
           </div>
-          <div class="cc-match-row"><span class="cc-text-caption">Name on record</span><span class="cc-text-body-strong" style="font-size: 12px">{{ auth.user ? `${auth.user.firstName} ${auth.user.lastName}` : '' }}</span></div>
+          <div class="cc-match-row"><span class="cc-text-caption">Name on record</span><span class="cc-text-body-strong" style="font-size: 12.5px">{{ auth.user ? `${auth.user.firstName} ${auth.user.lastName}` : '' }}</span></div>
         </AppCard>
 
         <AppCard>
-          <div class="cc-text-body-strong" style="font-size: 13px; margin-bottom: 10px">We'll send a code to</div>
+          <div class="cc-text-body-strong" style="font-size: 13.5px; margin-bottom: 10px">We'll send a code to</div>
           <div class="cc-channels">
             <button
               v-for="c in channels"
@@ -38,8 +38,8 @@
             >
               <AppIcon :name="c.icon" :size="22" :color="channel === c.key ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
               <div class="cc-channel-row__body">
-                <div class="cc-text-body-strong" style="font-size: 13px">{{ c.label }}</div>
-                <div class="cc-text-mono" style="font-size: 12px; color: var(--cc-ink-400)">{{ c.masked }}</div>
+                <div class="cc-text-body-strong" style="font-size: 13.5px">{{ c.label }}</div>
+                <div class="cc-text-mono" style="font-size: 12.5px; color: var(--cc-ink-400)">{{ c.masked }}</div>
               </div>
             </button>
           </div>

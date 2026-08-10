@@ -45,8 +45,8 @@ function onChange(e: Event) {
 .cc-field__label {
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
-  line-height: 19px;
+  font-size: 13.5px;
+  line-height: 20px;
   color: var(--cc-ink-900);
   margin-bottom: 4px;
 }
@@ -71,15 +71,15 @@ function onChange(e: Event) {
   background: transparent;
   appearance: none;
   font-family: var(--cc-font-interface);
-  font-size: 14px;
+  font-size: 14.5px;
   color: var(--cc-ink-900);
   min-width: 0;
 }
 .cc-field__error {
   font-family: var(--cc-font-interface);
   font-weight: 500;
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-error-surface-text);
   margin: 5px 0 0;
 }

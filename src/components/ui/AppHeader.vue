@@ -31,6 +31,9 @@ withDefaults(
 </script>
 
 <style scoped>
+.cc-header {
+  box-shadow: none;
+}
 .cc-header--botanical {
   background-image: url('@/assets/images/screen-bg.png');
   background-size: cover;

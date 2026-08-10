@@ -15,7 +15,7 @@
               <span v-if="i < timeline.length - 1" class="cc-od__line" />
             </div>
             <div>
-              <div class="cc-text-body-strong" :style="{ fontSize: '13px', color: event.done ? undefined : 'var(--cc-ink-400)' }">
+              <div class="cc-text-body-strong" :style="{ fontSize: '13.5px', color: event.done ? undefined : 'var(--cc-ink-400)' }">
                 {{ event.label }}
               </div>
               <div class="cc-text-caption">{{ event.detail }}</div>

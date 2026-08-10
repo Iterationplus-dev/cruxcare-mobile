@@ -8,7 +8,7 @@
           You're signed out. Log in before {{ completesAtLabel }} to stop it and everything comes back.
         </p>
         <AppCard class="cc-summary">
-          <div class="cc-row"><span class="cc-text-caption">Deletion completes</span><span class="cc-text-body-strong" style="font-size: 12px">{{ completesAtLabel }}</span></div>
+          <div class="cc-row"><span class="cc-text-caption">Deletion completes</span><span class="cc-text-body-strong" style="font-size: 12.5px">{{ completesAtLabel }}</span></div>
         </AppCard>
       </div>
       <div class="cc-screen__footer">

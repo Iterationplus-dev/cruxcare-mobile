@@ -22,8 +22,8 @@ import AppIcon from '../ui/AppIcon.vue';
 .cc-lock-notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-ink-600);
 }
 </style>

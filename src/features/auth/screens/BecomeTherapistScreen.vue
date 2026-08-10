@@ -12,7 +12,7 @@
         </p>
       </div>
       <div class="cc-screen__pad">
-        <div class="cc-text-mono" style="font-size: 11px; color: var(--cc-ink-400)">WHAT YOU WILL NEED</div>
+        <div class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">WHAT YOU WILL NEED</div>
         <AppCard style="padding: 0">
           <AppListRow title="Your Crux ID" subtitle="Issued when you joined the cooperative" icon="badge" />
           <AppListRow title="Practice licence or certificate" subtitle="PDF or photo, plus the issuing body" icon="workspace_premium" />
@@ -41,6 +41,8 @@ import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppCard, AppIcon, AppListRow } from '@/components/ui';
 
+// Dark teal hero sits directly under the status bar — white icons are set
+// via this route's `darkStatusBar` meta (see router/index.ts).
 const router = useRouter();
 </script>
 
@@ -62,7 +64,7 @@ const router = useRouter();
   background: rgba(255, 255, 255, 0.16);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.04em;
   margin-bottom: 14px;
 }
@@ -70,15 +72,15 @@ const router = useRouter();
   margin: 0 0 8px;
   font-family: var(--cc-font-interface);
   font-weight: 800;
-  font-size: 24px;
-  line-height: 29px;
+  font-size: 25px;
+  line-height: 30.5px;
   letter-spacing: -0.02em;
 }
 .cc-hero__body {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 14px;
-  line-height: 21px;
+  font-size: 14.5px;
+  line-height: 22px;
   color: #cde7e1;
 }
 .cc-screen__pad {
@@ -101,8 +103,8 @@ const router = useRouter();
 .cc-notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

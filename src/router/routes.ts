@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
     path: '/auth/welcome',
     name: 'welcome',
     component: () => import('@/features/auth/screens/WelcomeScreen.vue'),
-    meta: { requiresGuest: true },
+    meta: { requiresGuest: true, darkStatusBar: true },
   },
   {
     path: '/auth/register',
@@ -76,7 +76,7 @@ const routes: RouteRecordRaw[] = [
     path: '/become-therapist',
     name: 'become-therapist',
     component: () => import('@/features/auth/screens/BecomeTherapistScreen.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, darkStatusBar: true },
   },
   {
     path: '/become-therapist/link-crux-id',
@@ -94,7 +94,7 @@ const routes: RouteRecordRaw[] = [
     path: '/become-therapist/complete',
     name: 'therapist-onboarding-complete',
     component: () => import('@/features/auth/screens/TherapistOnboardingCompleteScreen.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, darkStatusBar: true },
   },
 
   // ---- Client tabs shell ----
@@ -197,7 +197,7 @@ const routes: RouteRecordRaw[] = [
     path: '/video/:id',
     name: 'video-visit',
     component: () => import('@/features/shared/screens/VideoVisitScreen.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, darkStatusBar: true },
   },
   {
     path: '/notifications',

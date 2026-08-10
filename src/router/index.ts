@@ -1,10 +1,21 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { applyDarkScreenIcons, applyLightScreenIcons } from '@/services/statusBar';
 import routes from './routes';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+});
+
+/**
+ * Blur whatever triggered this navigation (e.g. the button just tapped)
+ * before the outgoing ion-page gets marked aria-hidden — otherwise the
+ * browser blocks that aria-hidden and warns, since a hidden subtree can't
+ * contain the focused element.
+ */
+router.beforeEach(() => {
+  if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
 });
 
 /**
@@ -30,6 +41,17 @@ router.beforeEach(async (to) => {
   }
 
   return true;
+});
+
+/**
+ * Centralized here (rather than per-screen onMounted/onBeforeUnmount) so it
+ * fires on every navigation regardless of how a screen is left — Ionic's
+ * page-transition/view-caching timing made the per-screen lifecycle hooks
+ * unreliable (icons could stay white after leaving a dark screen).
+ */
+router.afterEach((to) => {
+  if (to.meta.darkStatusBar) applyDarkScreenIcons();
+  else applyLightScreenIcons();
 });
 
 export default router;

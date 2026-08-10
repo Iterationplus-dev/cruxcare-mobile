@@ -12,7 +12,7 @@
         <span class="cc-text-mono" style="color: #8a9a93">{{ joined ? 'therapist video feed' : 'Connecting…' }}</span>
       </div>
       <div class="cc-video__self">
-        <span class="cc-text-mono" style="color: #8a9a93; font-size: 11px">you</span>
+        <span class="cc-text-mono" style="color: #8a9a93; font-size: 11.5px">you</span>
       </div>
       <div class="cc-video__bottom">
         <div class="cc-video__consent">
@@ -45,7 +45,9 @@ import { useRoute, useRouter } from 'vue-router';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import { videoProvider, type VideoRoomHandle } from '@/services/video/VideoProvider';
 
-/** D5 · Video visit — dark surface, 56px controls, recording consent persistent. */
+/** D5 · Video visit — dark surface, 56px controls, recording consent
+ * persistent. (White status bar icons set via this route's `darkStatusBar`
+ * meta — see router/index.ts.) */
 const route = useRoute();
 const router = useRouter();
 
@@ -112,7 +114,7 @@ async function leave() {
   border-radius: 999px;
   background: rgba(193, 68, 59, 0.9);
   color: #fff;
-  font: 600 11px/15px var(--cc-font-interface);
+  font: 600 11.5px/16px var(--cc-font-interface);
 }
 .cc-video__timer {
   padding: 5px 12px;
@@ -158,8 +160,8 @@ async function leave() {
 .cc-video__consent p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: #f2f7f5;
 }
 .cc-video__controls {

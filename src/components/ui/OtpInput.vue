@@ -103,7 +103,7 @@ onBeforeUnmount(() => {
   border: 1px solid var(--cc-line);
   border-radius: var(--cc-radius-sm);
   font-family: var(--cc-font-mono);
-  font-size: 20px;
+  font-size: 21px;
   color: var(--cc-ink-900);
   background: var(--cc-surface-0);
 }
@@ -116,8 +116,8 @@ onBeforeUnmount(() => {
   background: var(--cc-error-surface);
 }
 .cc-otp__error {
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-error-surface-text);
   margin: 8px 0 0;
 }
@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
   color: var(--cc-color-primary);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 14.5px;
   cursor: pointer;
   min-height: var(--cc-touch-min);
 }

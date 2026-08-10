@@ -13,7 +13,7 @@
           <img :src="logoMark" alt="" width="38" height="41" />
         </div>
         <h2 class="cc-text-h1" style="margin: 0 0 5px; text-align: center">Welcome back</h2>
-        <p class="cc-text-body" style="margin: 0 0 20px; font-size: 13px; text-align: center">
+        <p class="cc-text-body" style="margin: 0 0 20px; font-size: 13.5px; text-align: center">
           Log in with the email or phone on your account.
         </p>
 
@@ -28,7 +28,12 @@
           </div>
         </div>
 
-        <AppInput v-model="identifier" label="Email or phone" autocomplete="username" />
+        <AppInput
+          v-model="identifier"
+          label="Email or phone"
+          placeholder="amara.okafor@gmail.com"
+          autocomplete="username"
+        />
 
         <AppInput
           v-model="password"
@@ -47,10 +52,10 @@
         <div class="cc-login-row">
           <label v-if="!formError" class="cc-login-remember">
             <input v-model="keepLoggedIn" type="checkbox" class="cc-consent__box" />
-            <span class="cc-text-body" style="font-size: 13px">Keep me logged in</span>
+            <span class="cc-text-body" style="font-size: 13.5px">Keep me logged in</span>
           </label>
           <span v-else />
-          <a href="#" class="cc-text-body-strong" style="font-size: 13px" @click.prevent="goForgotPassword">
+          <a href="#" class="cc-text-body-strong" style="font-size: 13.5px" @click.prevent="goForgotPassword">
             Forgot password?
           </a>
         </div>
@@ -80,10 +85,10 @@
       </div>
 
       <div class="cc-screen__footer">
-        <div class="cc-text-body" style="text-align: center; font-size: 12px">
+        <div class="cc-text-body" style="text-align: center; font-size: 12.5px">
           New to CruxCare? <a href="#" @click.prevent="router.push({ name: 'register' })">Create an account</a>
         </div>
-        <div v-if="!formError" class="cc-text-body" style="text-align: center; font-size: 12px">
+        <div v-if="!formError" class="cc-text-body" style="text-align: center; font-size: 12.5px">
           Are you a therapist?
           <a href="#" @click.prevent="router.push({ name: 'become-therapist' })">Become a therapist</a>
         </div>
@@ -191,13 +196,13 @@ function goForgotPassword() {
 .cc-login-error__title {
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--cc-error-surface-text);
   margin-bottom: 2px;
 }
 .cc-login-error__subtitle {
   font-family: var(--cc-font-interface);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--cc-ink-600);
 }
 .cc-login-row {
@@ -245,8 +250,8 @@ function goForgotPassword() {
 .cc-login-recovery p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

@@ -24,13 +24,13 @@
         <div class="cc-wallet__actions">
           <button v-for="a in actions" :key="a.label" type="button" class="cc-wallet__action" @click="a.onClick">
             <span class="cc-wallet__action-icon"><AppIcon :name="a.icon" :size="22" color="var(--cc-color-primary)" /></span>
-            <span class="cc-text-body" style="font-size: 11px">{{ a.label }}</span>
+            <span class="cc-text-body" style="font-size: 11.5px">{{ a.label }}</span>
           </button>
         </div>
 
         <div class="cc-wallet__section-head">
-          <span class="cc-text-body-strong" style="font-size: 15px">Recent activity</span>
-          <a href="#" class="cc-text-body-strong" style="font-size: 13px" @click.prevent="router.push({ name: 'ledger' })">
+          <span class="cc-text-body-strong" style="font-size: 16px">Recent activity</span>
+          <a href="#" class="cc-text-body-strong" style="font-size: 13.5px" @click.prevent="router.push({ name: 'ledger' })">
             Full ledger
           </a>
         </div>
@@ -49,7 +49,7 @@
               <AppIcon :name="iconFor(txn.type)" :size="19" :color="iconColor(txn.amount)" />
             </div>
             <div class="cc-ledger-row__body">
-              <div class="cc-text-body-strong" style="font-size: 14px">{{ txn.description }}</div>
+              <div class="cc-text-body-strong" style="font-size: 14.5px">{{ txn.description }}</div>
               <div class="cc-text-caption">{{ formatDate(txn.createdAt) }}</div>
             </div>
             <div class="cc-ledger-row__end">
@@ -120,7 +120,7 @@ function formatDate(iso: string) {
 
 <style scoped>
 .cc-wallet__header {
-  padding: 6px 16px 20px;
+  padding: calc(env(safe-area-inset-top) + 6px) 16px 20px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
 }
 .cc-wallet__title-row {
@@ -128,8 +128,8 @@ function formatDate(iso: string) {
 }
 .cc-wallet__balance {
   display: block;
-  font-size: 34px !important;
-  line-height: 40px !important;
+  font-size: 35.5px !important;
+  line-height: 42px !important;
 }
 .cc-wallet__updated {
   display: flex;
@@ -137,7 +137,7 @@ function formatDate(iso: string) {
   gap: 6px;
   margin-top: 6px;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
+  font-size: 11.5px;
   color: #4a5a53;
 }
 .cc-wallet__pending-tile {

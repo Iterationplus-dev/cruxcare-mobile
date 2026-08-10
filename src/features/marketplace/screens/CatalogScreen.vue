@@ -2,6 +2,15 @@
   <ion-page>
     <div class="cc-catalog__header">
       <div class="cc-catalog__title-row">
+        <button
+          v-if="guestMode"
+          type="button"
+          class="cc-catalog__back"
+          aria-label="Back"
+          @click="router.back()"
+        >
+          <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
+        </button>
         <h1 class="cc-text-h1" style="margin: 0">Shop</h1>
         <button type="button" class="cc-catalog__cart" aria-label="Cart" @click="goCart">
           <AppIcon name="shopping_cart" :size="26" color="var(--cc-ink-600)" />
@@ -44,7 +53,7 @@
             <span v-if="p.stock === 0" class="cc-product-card__oos">Out of stock</span>
           </div>
           <div class="cc-product-card__body">
-            <div class="cc-text-body-strong" style="font-size: 15px">{{ p.name }}</div>
+            <div class="cc-text-body-strong" style="font-size: 16px">{{ p.name }}</div>
             <div class="cc-text-caption" style="margin-bottom: 8px">{{ p.category }}</div>
             <div class="cc-product-card__foot">
               <MoneyAmount :value="p.price" :currency="p.currency" />
@@ -57,7 +66,7 @@
               >
                 <AppIcon name="add" :size="20" color="var(--cc-color-primary)" />
               </button>
-              <span v-else class="cc-text-body-strong" style="font-size: 11px; color: var(--cc-color-primary)"
+              <span v-else class="cc-text-body-strong" style="font-size: 11.5px; color: var(--cc-color-primary)"
                 >Notify me</span
               >
             </div>
@@ -89,7 +98,7 @@ const toast = useToast();
 
 const search = ref('');
 const category = ref('');
-const categories = ['Spices & Capsules', 'Teas', 'Topicals', 'Devices', 'Extracts'];
+const categories = ['Spices', 'Capsules', 'Teas', 'Topicals', 'Devices', 'Extracts'];
 
 const query = computed(() => ({ search: search.value || undefined, category: category.value || undefined }));
 const { data, isPending } = useProducts(query);
@@ -111,14 +120,26 @@ function goCart() {
 
 <style scoped>
 .cc-catalog__header {
-  padding: 4px 16px 12px;
+  padding: calc(env(safe-area-inset-top) + 4px) 16px 12px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
 }
 .cc-catalog__title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   margin-bottom: 12px;
+}
+.cc-catalog__title-row .cc-text-h1 {
+  flex: 1;
+}
+.cc-catalog__back {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  margin-left: -6px;
+  cursor: pointer;
 }
 .cc-catalog__cart {
   position: relative;
@@ -137,7 +158,7 @@ function goCart() {
   background: var(--cc-color-primary);
   border: 2px solid var(--cc-surface-0);
   color: #fff;
-  font: 600 11px/14px var(--cc-font-interface);
+  font: 600 11.5px/14.5px var(--cc-font-interface);
   text-align: center;
 }
 .cc-catalog__search {
@@ -157,12 +178,18 @@ function goCart() {
   outline: none;
   flex: 1;
   font-family: var(--cc-font-interface);
-  font-size: 13px;
+  font-size: 13.5px;
 }
 .cc-catalog__chips {
   display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
   overflow-x: auto;
+}
+.cc-catalog__chips :deep(.cc-chip) {
+  flex-shrink: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 .cc-screen {
   --background: var(--cc-surface-app);
@@ -202,7 +229,7 @@ function goCart() {
   border-radius: 999px;
   background: #edf1ef;
   color: #4a5a53;
-  font: 600 11px/15px var(--cc-font-interface);
+  font: 600 11.5px/16px var(--cc-font-interface);
 }
 .cc-product-card__body {
   padding: 12px;

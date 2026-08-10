@@ -16,11 +16,11 @@
           />
         </AppCard>
 
-        <div class="cc-text-body-strong" style="font-size: 14px">Still need help?</div>
+        <div class="cc-text-body-strong" style="font-size: 14.5px">Still need help?</div>
         <AppCard class="cc-contact">
           <AppIcon name="support_agent" :size="22" color="var(--cc-color-primary)" />
           <div class="cc-contact__body">
-            <div class="cc-text-body-strong" style="font-size: 14px">Contact support</div>
+            <div class="cc-text-body-strong" style="font-size: 14.5px">Contact support</div>
             <div class="cc-text-caption">Typical reply within a few hours</div>
           </div>
           <AppButton variant="secondary" @click="toast.show('Support request queued.', 'success')">Message</AppButton>

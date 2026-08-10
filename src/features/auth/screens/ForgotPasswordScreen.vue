@@ -9,7 +9,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Let's get you back in</h2>
-        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 13px">
+        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 13.5px">
           Tell us where to send a reset code. It has to be the email or phone already on the account.
         </p>
 
@@ -21,7 +21,7 @@
             @click="channel = 'sms'"
           >
             <AppIcon name="sms" :size="20" color="var(--cc-color-primary)" />
-            <div class="cc-text-body-strong" style="font-size: 13px">Text me</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Text me</div>
           </button>
           <button
             type="button"
@@ -30,11 +30,16 @@
             @click="channel = 'email'"
           >
             <AppIcon name="mail" :size="20" color="var(--cc-ink-400)" />
-            <div class="cc-text-body-strong" style="font-size: 13px">Email me</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Email me</div>
           </button>
         </div>
 
-        <AppInput v-model="identifier" label="Email or phone" autocomplete="username" />
+        <AppInput
+          v-model="identifier"
+          label="Email or phone"
+          placeholder="amara.okafor@gmail.com"
+          autocomplete="username"
+        />
 
         <div class="cc-notice">
           <AppIcon name="shield" :size="20" color="var(--cc-color-primary)" />
@@ -138,8 +143,8 @@ async function onSubmit() {
 .cc-notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

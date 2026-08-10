@@ -3,6 +3,12 @@ import type { Cart, Order, Product } from '@/types/marketplace';
 import type { AppNotification } from '@/types/notifications';
 import type { User } from '@/types/user';
 import type { Transaction, Wallet } from '@/types/wallet';
+import pCayenmis from '@/assets/images/p-cayenmis.jpg';
+import pGreenTea from '@/assets/images/p-green-tea.jpg';
+import pGimPowder from '@/assets/images/p-gim-powder.jpg';
+import pCapsicumPlaster from '@/assets/images/p-capsicum-plaster.jpg';
+import pLumbarStretcher from '@/assets/images/p-lumbar-stretcher.jpg';
+import pCaccigart from '@/assets/images/p-caccigart.jpg';
 
 /**
  * In-memory fixture "database" for MSW. Resets on every page reload —
@@ -66,8 +72,8 @@ export const products: Product[] = [
     price: 18.5,
     currency: 'USD',
     stock: 42,
-    category: 'Spices & Capsules',
-    media: [{ url: '/src/assets/images/p-cayenmis.jpg', alt: 'Cayenne Miracle Capsules' }],
+    category: 'Capsules',
+    media: [{ url: pCayenmis, alt: 'Cayenne Miracle Capsules' }],
   },
   {
     id: 'prod-2',
@@ -77,7 +83,7 @@ export const products: Product[] = [
     currency: 'USD',
     stock: 76,
     category: 'Teas',
-    media: [{ url: '/src/assets/images/p-green-tea.jpg', alt: 'Green Tea Wellness Blend' }],
+    media: [{ url: pGreenTea, alt: 'Green Tea Wellness Blend' }],
   },
   {
     id: 'prod-3',
@@ -86,8 +92,8 @@ export const products: Product[] = [
     price: 9.75,
     currency: 'USD',
     stock: 0,
-    category: 'Spices & Capsules',
-    media: [{ url: '/src/assets/images/p-gim-powder.jpg', alt: 'Ginger Powder' }],
+    category: 'Spices',
+    media: [{ url: pGimPowder, alt: 'Ginger Powder' }],
   },
   {
     id: 'prod-4',
@@ -97,7 +103,7 @@ export const products: Product[] = [
     currency: 'USD',
     stock: 120,
     category: 'Topicals',
-    media: [{ url: '/src/assets/images/p-capsicum-plaster.jpg', alt: 'Capsicum Plaster' }],
+    media: [{ url: pCapsicumPlaster, alt: 'Capsicum Plaster' }],
   },
   {
     id: 'prod-5',
@@ -107,7 +113,7 @@ export const products: Product[] = [
     currency: 'USD',
     stock: 15,
     category: 'Devices',
-    media: [{ url: '/src/assets/images/p-lumbar-stretcher.jpg', alt: 'Lumbar Stretcher' }],
+    media: [{ url: pLumbarStretcher, alt: 'Lumbar Stretcher' }],
   },
   {
     id: 'prod-6',
@@ -117,7 +123,7 @@ export const products: Product[] = [
     currency: 'USD',
     stock: 8,
     category: 'Extracts',
-    media: [{ url: '/src/assets/images/p-caccigart.jpg', alt: 'Cacci-Gart Root Extract' }],
+    media: [{ url: pCaccigart, alt: 'Cacci-Gart Root Extract' }],
   },
 ];
 

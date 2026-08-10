@@ -50,8 +50,8 @@ import AppIcon from '@/components/ui/AppIcon.vue';
   font-family: var(--cc-font-interface);
 }
 .cc-tabbar__btn ion-label {
-  font-size: 10px;
-  line-height: 14px;
+  font-size: 10.5px;
+  line-height: 14.5px;
   font-weight: 500;
   margin-top: 2px;
 }

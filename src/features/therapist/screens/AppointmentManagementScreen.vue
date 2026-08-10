@@ -9,11 +9,11 @@
           <div class="cc-req__head">
             <AppAvatar :name="a.clientName" :size="40" />
             <div class="cc-req__body">
-              <div class="cc-text-body-strong" style="font-size: 14px">{{ a.clientName }}</div>
+              <div class="cc-text-body-strong" style="font-size: 14.5px">{{ a.clientName }}</div>
               <div class="cc-text-caption">{{ formatSlot(a.slot) }} · {{ a.type }}</div>
             </div>
           </div>
-          <p v-if="a.reason" class="cc-text-body" style="font-size: 12px">{{ a.reason }}</p>
+          <p v-if="a.reason" class="cc-text-body" style="font-size: 12.5px">{{ a.reason }}</p>
           <div class="cc-req__actions">
             <AppButton :loading="pendingId === a.id" @click="respond(a.id, 'confirmed')">Accept</AppButton>
             <AppButton variant="secondary" :loading="pendingId === a.id" @click="respond(a.id, 'cancelled')">Decline</AppButton>

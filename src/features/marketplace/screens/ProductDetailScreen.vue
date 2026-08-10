@@ -128,6 +128,6 @@ async function onAdd() {
 .cc-pd__stepper span {
   min-width: 20px;
   text-align: center;
-  font-size: 16px;
+  font-size: 17px;
 }
 </style>

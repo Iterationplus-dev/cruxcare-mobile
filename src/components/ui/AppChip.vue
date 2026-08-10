@@ -23,7 +23,7 @@ const emit = defineEmits<{ click: [] }>();
   padding: 8px 14px;
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
   background: var(--cc-surface-0);
   border: 1px solid var(--cc-line);
   color: var(--cc-ink-600);

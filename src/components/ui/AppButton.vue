@@ -68,8 +68,8 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
   background: var(--cc-color-primary);
   color: #ffffff;
   font-weight: 600;
-  font-size: 15px;
-  line-height: 21px;
+  font-size: 16px;
+  line-height: 22px;
 }
 .cc-btn--primary:active:not(:disabled) {
   background: var(--cc-color-primary-dark);
@@ -85,8 +85,8 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
   border: 1px solid var(--cc-line);
   color: var(--cc-ink-900);
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 14.5px;
+  line-height: 21px;
 }
 .cc-btn--secondary:disabled {
   color: var(--cc-ink-300);
@@ -98,8 +98,8 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
   border: none;
   color: var(--cc-color-primary);
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 14.5px;
+  line-height: 21px;
   width: auto;
 }
 
@@ -109,8 +109,8 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
   border: none;
   color: var(--cc-error-surface-text);
   font-weight: 600;
-  font-size: 13px;
-  line-height: 19px;
+  font-size: 13.5px;
+  line-height: 20px;
   width: auto;
 }
 

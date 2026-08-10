@@ -12,13 +12,13 @@
           <span>Account verified</span>
         </div>
         <h2 class="cc-text-h1" style="margin: 0 0 6px">One step before a therapist</h2>
-        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12px">
+        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12.5px">
           A therapist can't safely advise without your history. A few short sections — you can shop and
           browse meanwhile.
         </p>
 
         <div class="cc-progress-row">
-          <span class="cc-text-body" style="font-size: 12px">Health profile</span>
+          <span class="cc-text-body" style="font-size: 12.5px">Health profile</span>
           <span class="cc-text-mono">{{ filledCount }} of {{ sections.length }}</span>
         </div>
         <div class="cc-progress"><div class="cc-progress__fill" :style="{ width: `${completion}%` }" /></div>
@@ -40,7 +40,7 @@
         <div class="cc-locked">
           <AppIcon name="lock" :size="20" color="var(--cc-ink-400)" />
           <div>
-            <div class="cc-text-body-strong" style="font-size: 13px">Locked until this is done</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Locked until this is done</div>
             <div class="cc-text-caption">Therapist discovery, booking, chat and video. Shop and wallet are open now.</div>
           </div>
         </div>
@@ -110,7 +110,7 @@ const completion = computed(() => Math.round((filledCount.value / sections.value
   color: var(--cc-color-success-text);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 11.5px;
   width: fit-content;
   margin-bottom: 4px;
 }
@@ -146,8 +146,8 @@ const completion = computed(() => Math.round((filledCount.value / sections.value
 .cc-consent-note p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

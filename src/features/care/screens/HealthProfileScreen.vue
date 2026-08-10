@@ -39,7 +39,12 @@
     </ion-content>
 
     <AppSheet v-model="sheetOpen" :title="editing?.label">
-      <textarea v-model="draftValue" class="cc-hp__textarea" rows="4" :placeholder="`Add ${editing?.label.toLowerCase()}`" />
+      <textarea
+        v-model="draftValue"
+        class="cc-hp__textarea"
+        rows="4"
+        :placeholder="editing ? sectionPlaceholders[editing.key] : ''"
+      />
       <AppButton style="margin-top: 12px" @click="saveSection">Done</AppButton>
     </AppSheet>
   </ion-page>
@@ -58,6 +63,14 @@ import type { HealthProfileSection } from '@/types/care';
 /** D3 · Health profile — consent up top, sections named not scolded when empty. */
 const { data: profile, isPending, refetch } = useHealthProfile();
 const toast = useToast();
+
+const sectionPlaceholders: Record<HealthProfileSection['key'], string> = {
+  basics: '34 yrs · 68 kg · 1.66 m',
+  conditions: 'e.g. Mild scoliosis, managed with physiotherapy',
+  allergies: 'e.g. Penicillin, shellfish',
+  medications: 'e.g. Metformin 500mg, twice daily',
+  lifestyle: 'e.g. Mostly vegetarian, exercises 3x a week',
+};
 
 const defaultSections: HealthProfileSection[] = [
   { key: 'basics', label: 'Basics', value: null },
@@ -110,7 +123,7 @@ async function onSave() {
   color: var(--cc-color-primary);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 14.5px;
   cursor: pointer;
 }
 .cc-screen {
@@ -132,8 +145,8 @@ async function onSave() {
 .cc-hp__consent p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-ink-600);
 }
 .cc-hp__progress-row {
@@ -156,7 +169,7 @@ async function onSave() {
   border-radius: var(--cc-radius-sm);
   padding: 10px 12px;
   font-family: var(--cc-font-interface);
-  font-size: 14px;
+  font-size: 14.5px;
   box-sizing: border-box;
   resize: vertical;
 }

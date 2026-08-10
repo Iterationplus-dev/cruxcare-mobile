@@ -17,7 +17,7 @@
             <div v-for="item in cart.cart.items" :key="item.id" class="cc-cart-row">
               <img :src="item.product.media[0]?.url" :alt="item.product.name" />
               <div class="cc-cart-row__body">
-                <div class="cc-text-body-strong" style="font-size: 14px">{{ item.product.name }}</div>
+                <div class="cc-text-body-strong" style="font-size: 14.5px">{{ item.product.name }}</div>
                 <div class="cc-text-caption">{{ item.quantity }} × <MoneyAmount :value="item.product.price" :currency="item.product.currency" size="mono" /></div>
               </div>
               <div class="cc-cart-row__end">
@@ -126,8 +126,8 @@ onMounted(() => cart.load());
 .cc-cart-onbehalf p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

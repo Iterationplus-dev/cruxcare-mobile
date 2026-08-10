@@ -3,14 +3,14 @@
     <AppHeader title="Checkout" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
-        <div class="cc-text-body-strong" style="font-size: 15px">Delivery</div>
+        <div class="cc-text-body-strong" style="font-size: 16px">Delivery</div>
         <button
           type="button"
           class="cc-option"
           :class="{ 'cc-option--selected': delivery === 'home' }"
           @click="delivery = 'home'"
         >
-          <div class="cc-text-body-strong" style="font-size: 14px">Home delivery · 2-3 days</div>
+          <div class="cc-text-body-strong" style="font-size: 14.5px">Home delivery · 2-3 days</div>
           <div class="cc-text-caption">Delivery address on file</div>
         </button>
         <button
@@ -19,11 +19,11 @@
           :class="{ 'cc-option--selected': delivery === 'pickup' }"
           @click="delivery = 'pickup'"
         >
-          <div class="cc-text-body-strong" style="font-size: 14px">Pick up at an outlet</div>
+          <div class="cc-text-body-strong" style="font-size: 14.5px">Pick up at an outlet</div>
           <div class="cc-text-caption">CruxCare Centre · free</div>
         </button>
 
-        <div class="cc-text-body-strong" style="font-size: 15px; margin-top: 8px">Payment</div>
+        <div class="cc-text-body-strong" style="font-size: 16px; margin-top: 8px">Payment</div>
         <button
           type="button"
           class="cc-option cc-option--row"
@@ -32,7 +32,7 @@
         >
           <AppIcon name="account_balance_wallet" :size="22" color="var(--cc-color-primary)" />
           <div class="cc-option__body">
-            <div class="cc-text-body-strong" style="font-size: 14px">CruxCare wallet</div>
+            <div class="cc-text-body-strong" style="font-size: 14.5px">CruxCare wallet</div>
             <div class="cc-text-caption">
               <MoneyAmount v-if="wallet" :value="wallet.available" :currency="wallet.currency" size="mono" />
               available

@@ -18,7 +18,7 @@
           <AppCard style="padding: 0; margin-bottom: 14px">
             <div v-for="txn in group.items" :key="txn.id" class="cc-ledger-row">
               <div class="cc-ledger-row__body">
-                <div class="cc-text-body-strong" style="font-size: 14px">{{ txn.description }}</div>
+                <div class="cc-text-body-strong" style="font-size: 14.5px">{{ txn.description }}</div>
                 <div class="cc-text-caption">{{ txn.reference }}</div>
               </div>
               <MoneyAmount :value="txn.amount" :currency="txn.currency" show-sign />
@@ -76,7 +76,7 @@ const grouped = computed(() => {
   padding: 14px 16px;
 }
 .cc-ledger__day {
-  font-size: 13px;
+  font-size: 13.5px;
   margin-bottom: 8px;
 }
 .cc-ledger-row {

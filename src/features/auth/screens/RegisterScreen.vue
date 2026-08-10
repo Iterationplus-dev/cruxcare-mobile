@@ -1,7 +1,12 @@
 <template>
   <ion-page>
-    <AppHeader title="Create account" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <div class="cc-register__topbar">
+        <button type="button" class="cc-register__back" aria-label="Back" @click="router.back()">
+          <AppIcon name="arrow_back_ios_new" :size="24" color="var(--cc-color-primary)" />
+        </button>
+        <span class="cc-text-body-strong" style="font-size: 14.5px">Create account</span>
+      </div>
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 4px">Start with the basics</h2>
         <p class="cc-text-subtitle" style="margin: 0 0 16px">
@@ -9,20 +14,40 @@
         </p>
 
         <div class="cc-form-row">
-          <AppInput v-model="firstName" label="First name" autocomplete="given-name" :error="errors.firstName" />
-          <AppInput v-model="lastName" label="Last name" autocomplete="family-name" :error="errors.lastName" />
+          <AppInput
+            v-model="firstName"
+            label="First name"
+            placeholder="Amara"
+            autocomplete="given-name"
+            :error="errors.firstName"
+          />
+          <AppInput
+            v-model="lastName"
+            label="Last name"
+            placeholder="Okafor"
+            autocomplete="family-name"
+            :error="errors.lastName"
+          />
         </div>
 
         <AppInput
           v-model="email"
           label="Email"
           type="email"
+          placeholder="amara.okafor@gmail.com"
           inputmode="email"
           autocomplete="email"
           :error="errors.email"
         />
 
-        <AppInput v-model="phone" label="Phone" inputmode="tel" autocomplete="tel" :error="errors.phone">
+        <AppInput
+          v-model="phone"
+          label="Phone"
+          placeholder="803 214 8890"
+          inputmode="tel"
+          autocomplete="tel"
+          :error="errors.phone"
+        >
           <template #leading>
             <span class="cc-phone-prefix">+234</span>
           </template>
@@ -35,13 +60,21 @@
           disrupting the drawn layout's density — see CLAUDE.md guidance on
           documenting and resolving spec conflicts.
         -->
-        <AppSelect
-          v-model="referredBySource"
-          label="How did you hear about CruxCare?"
-          placeholder="Select one"
-          :options="referredByOptions"
-          :error="errors.referredBySource"
-        />
+        <div class="cc-field">
+          <label class="cc-field__label">How did you hear about CruxCare?</label>
+          <button
+            type="button"
+            class="cc-referral-trigger"
+            :class="{ 'cc-referral-trigger--error': !!errors.referredBySource }"
+            @click="referralSheetOpen = true"
+          >
+            <span :class="referredBySource ? 'cc-text-body' : 'cc-referral-trigger__placeholder'" style="font-size: 14.5px">
+              {{ selectedReferralLabel ?? 'Select one' }}
+            </span>
+            <AppIcon name="expand_more" :size="18" color="var(--cc-ink-400)" />
+          </button>
+          <p v-if="errors.referredBySource" class="cc-field__error" role="alert">{{ errors.referredBySource }}</p>
+        </div>
 
         <AppInput
           v-model="password"
@@ -96,7 +129,7 @@
 
         <label class="cc-consent">
           <input v-model="consent" type="checkbox" class="cc-consent__box" />
-          <span class="cc-text-body" style="font-size: 12px; line-height: 18px">
+          <span class="cc-text-body" style="font-size: 12.5px; line-height: 19px">
             I agree to the <a href="#" @click.prevent>Terms of Service</a> and
             <a href="#" @click.prevent>Privacy Policy</a>.
           </span>
@@ -108,26 +141,46 @@
 
       <div class="cc-screen__footer">
         <AppButton :loading="submitting" @click="onSubmit">Create account</AppButton>
-        <div class="cc-text-body" style="text-align: center; font-size: 12px">
+        <div class="cc-text-body" style="text-align: center; font-size: 12.5px">
           Already have an account?
           <a href="#" @click.prevent="router.push({ name: 'login' })">Log in</a>
         </div>
       </div>
     </ion-content>
+
+    <AppSheet v-model="referralSheetOpen" title="How did you hear about CruxCare?">
+      <div class="cc-referral-options">
+        <button
+          v-for="opt in referredByOptions"
+          :key="opt.value"
+          type="button"
+          class="cc-referral-option"
+          :class="{ 'cc-referral-option--selected': referredBySource === opt.value }"
+          @click="selectReferral(opt.value)"
+        >
+          <span class="cc-text-body" style="font-size: 14.5px">{{ opt.label }}</span>
+          <AppIcon
+            v-if="referredBySource === opt.value"
+            name="check_circle"
+            :size="20"
+            color="var(--cc-color-primary)"
+          />
+        </button>
+      </div>
+    </AppSheet>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
-import AppHeader from '@/components/ui/AppHeader.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
-import AppSelect from '@/components/ui/AppSelect.vue';
+import AppSheet from '@/components/ui/AppSheet.vue';
 import { useAuthStore } from '@/stores/auth';
 import { ApiError } from '@/types/api';
 import {
@@ -173,6 +226,15 @@ const referredByOptions: { value: string; label: string }[] = referredBySourceOp
   label: o.label,
 }));
 
+const referralSheetOpen = ref(false);
+const selectedReferralLabel = computed(
+  () => referredByOptions.find((o) => o.value === referredBySource.value)?.label,
+);
+function selectReferral(value: string) {
+  referredBySource.value = value as ReferredBySource;
+  referralSheetOpen.value = false;
+}
+
 const strength = ref(passwordStrength(''));
 watch(password, (v) => (strength.value = passwordStrength(v ?? '')));
 
@@ -206,6 +268,25 @@ const onSubmit = handleSubmit(async (values) => {
 .cc-screen {
   --background: var(--cc-surface-app);
 }
+.cc-register__topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: calc(env(safe-area-inset-top) + 0px) 8px 0 12px;
+  box-sizing: content-box;
+}
+.cc-register__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
 .cc-screen__pad {
   padding: 0 16px 16px;
   display: flex;
@@ -218,10 +299,11 @@ const onSubmit = handleSubmit(async (values) => {
 }
 .cc-form-row > * {
   flex: 1;
+  min-width: 0;
 }
 .cc-phone-prefix {
   font-family: var(--cc-font-interface);
-  font-size: 14px;
+  font-size: 14.5px;
   color: var(--cc-ink-900);
   padding-right: 8px;
   border-right: 1px solid var(--cc-line);
@@ -251,7 +333,7 @@ const onSubmit = handleSubmit(async (values) => {
   align-items: center;
   gap: 4px;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--cc-error-surface-text);
   margin-top: -4px;
 }
@@ -275,9 +357,65 @@ const onSubmit = handleSubmit(async (values) => {
 .cc-field__error {
   font-family: var(--cc-font-interface);
   font-weight: 500;
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--cc-error-surface-text);
   margin: 4px 0 0;
+}
+.cc-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cc-field__label {
+  font-family: var(--cc-font-interface);
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--cc-ink-900);
+  margin-bottom: 4px;
+}
+.cc-referral-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--cc-input-height);
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-sm);
+  padding: 0 12px;
+  background: var(--cc-surface-0);
+  cursor: pointer;
+  text-align: left;
+}
+.cc-referral-trigger--error {
+  border: 1.5px solid var(--cc-input-error-border);
+  background: var(--cc-error-surface);
+}
+.cc-referral-trigger__placeholder {
+  font-family: var(--cc-font-interface);
+  color: var(--cc-ink-300);
+}
+.cc-referral-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.cc-referral-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: var(--cc-radius-md);
+  border: 1px solid var(--cc-line);
+  background: var(--cc-surface-0);
+  cursor: pointer;
+}
+.cc-referral-option--selected {
+  border: 1.5px solid var(--cc-color-primary);
+  background: var(--cc-color-mist);
 }
 .cc-screen__footer {
   padding: 11px 16px calc(16px + env(safe-area-inset-bottom));

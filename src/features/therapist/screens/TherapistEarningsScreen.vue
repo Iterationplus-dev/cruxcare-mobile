@@ -10,13 +10,13 @@
     </div>
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
-        <div class="cc-text-body-strong" style="font-size: 15px">Recent activity</div>
+        <div class="cc-text-body-strong" style="font-size: 16px">Recent activity</div>
         <LoadingState v-if="ledgerPending" label="Loading activity…" />
         <EmptyState v-else-if="!ledger?.data.length" icon="payments" title="No earnings yet" message="Session and rank earnings will post here." />
         <AppCard v-else style="padding: 0">
           <div v-for="txn in ledger.data" :key="txn.id" class="cc-row">
             <div class="cc-row__body">
-              <div class="cc-text-body-strong" style="font-size: 14px">{{ txn.description }}</div>
+              <div class="cc-text-body-strong" style="font-size: 14.5px">{{ txn.description }}</div>
               <div class="cc-text-caption">{{ formatDate(txn.createdAt) }}</div>
             </div>
             <MoneyAmount :value="txn.amount" :currency="txn.currency" show-sign />

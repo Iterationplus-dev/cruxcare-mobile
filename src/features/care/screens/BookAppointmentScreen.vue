@@ -6,7 +6,7 @@
         <AppCard v-if="therapist" class="cc-book__therapist">
           <AppAvatar :name="therapist.name" :size="44" />
           <div>
-            <div class="cc-text-body-strong" style="font-size: 14px">{{ therapist.name }}</div>
+            <div class="cc-text-body-strong" style="font-size: 14.5px">{{ therapist.name }}</div>
             <div class="cc-text-caption">{{ therapist.specialties.join(', ') }}</div>
           </div>
         </AppCard>
@@ -25,7 +25,7 @@
           </button>
         </div>
 
-        <div class="cc-text-body-strong" style="font-size: 15px">{{ selectedDayFull }}</div>
+        <div class="cc-text-body-strong" style="font-size: 16px">{{ selectedDayFull }}</div>
         <div class="cc-book__slots">
           <button
             v-for="s in slots"
@@ -40,7 +40,7 @@
           </button>
         </div>
 
-        <div class="cc-text-body-strong" style="font-size: 15px">Visit type</div>
+        <div class="cc-text-body-strong" style="font-size: 16px">Visit type</div>
         <div class="cc-book__types">
           <button
             type="button"
@@ -49,7 +49,7 @@
             @click="type = 'video'"
           >
             <AppIcon name="videocam" :size="22" color="var(--cc-color-primary)" />
-            <div class="cc-text-body-strong" style="font-size: 14px">Video</div>
+            <div class="cc-text-body-strong" style="font-size: 14.5px">Video</div>
           </button>
           <button
             type="button"
@@ -58,7 +58,7 @@
             @click="type = 'in-person'"
           >
             <AppIcon name="store" :size="22" color="var(--cc-ink-600)" />
-            <div class="cc-text-body-strong" style="font-size: 14px">In person</div>
+            <div class="cc-text-body-strong" style="font-size: 14.5px">In person</div>
           </button>
         </div>
       </div>
@@ -165,13 +165,13 @@ async function onSubmit() {
 }
 .cc-book__day-label {
   font-family: var(--cc-font-interface);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--cc-ink-400);
 }
 .cc-book__day-num {
   font-family: var(--cc-font-mono);
   font-weight: 700;
-  font-size: 18px;
+  font-size: 19px;
 }
 .cc-book__slots {
   display: grid;
@@ -185,7 +185,7 @@ async function onSubmit() {
   background: var(--cc-surface-0);
   font-family: var(--cc-font-mono);
   font-weight: 600;
-  font-size: 15px;
+  font-size: 16px;
   cursor: pointer;
 }
 .cc-book__slot--selected {

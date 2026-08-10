@@ -8,7 +8,7 @@
         <div class="cc-thread-header__title">
           <AppAvatar :name="other?.name ?? ''" :size="36" />
           <div>
-            <div class="cc-text-body-strong" style="font-size: 15px">{{ other?.name }}</div>
+            <div class="cc-text-body-strong" style="font-size: 16px">{{ other?.name }}</div>
             <div v-if="other?.online" class="cc-thread-header__online">
               <span class="cc-thread-header__dot" /> Online
             </div>
@@ -113,7 +113,7 @@ function goVideo() {
   align-items: center;
   gap: 5px;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--cc-color-success-text);
 }
 .cc-thread-header__dot {
@@ -154,12 +154,12 @@ function goVideo() {
 }
 .cc-bubble__body {
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
 }
 .cc-bubble__meta {
   font-family: var(--cc-font-interface);
-  font-size: 11px;
+  font-size: 11.5px;
   margin-top: 4px;
   opacity: 0.75;
 }
@@ -189,7 +189,7 @@ function goVideo() {
   border: 1px solid var(--cc-line);
   padding: 0 14px;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
+  font-size: 12.5px;
 }
 .cc-thread__send {
   width: 44px;
