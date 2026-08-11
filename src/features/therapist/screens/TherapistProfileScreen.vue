@@ -4,7 +4,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <AppCard class="cc-identity">
-          <AppAvatar :name="fullName" :size="56" />
+          <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="56" />
           <div>
             <div class="cc-text-h2" style="margin: 0">{{ fullName }}</div>
             <div class="cc-text-caption">{{ auth.user?.therapistProfile?.plan }} plan</div>
@@ -13,6 +13,8 @@
 
         <AppCard style="padding: 0">
           <AppListRow title="Manage availability" icon="event_available" chevron clickable @click="router.push({ name: 'therapist-availability' })" />
+          <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
+          <AppListRow title="Profile photo" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Help clients recognise you'" icon="photo_camera" chevron clickable @click="router.push({ name: 'personal-info', query: { focus: 'profile-photo' } })" />
           <AppListRow title="Switch to client context" icon="switch_account" chevron clickable :divider="false" @click="roleSheetOpen = true" />
         </AppCard>
 
@@ -28,8 +30,10 @@
     <RoleSwitchSheet v-model="roleSheetOpen" />
     <AppSheet v-model="logoutSheetOpen" title="Log out?">
       <p class="cc-text-body" style="margin: 0 0 16px">You can log back in any time.</p>
-      <AppButton variant="destructive-text" style="margin-bottom: 8px; color: var(--cc-error-surface-text)" @click="onLogout">Log out</AppButton>
-      <AppButton variant="text" @click="logoutSheetOpen = false">Cancel</AppButton>
+      <div class="cc-logout-sheet__actions">
+        <AppButton variant="secondary" class="cc-logout-sheet__confirm" @click="onLogout">Log out</AppButton>
+        <AppButton variant="secondary" @click="logoutSheetOpen = false">Cancel</AppButton>
+      </div>
     </AppSheet>
   </ion-page>
 </template>
@@ -83,5 +87,14 @@ async function onLogout() {
   font-size: 13.5px;
   padding: 6px 0;
   cursor: pointer;
+}
+.cc-logout-sheet__actions {
+  display: grid;
+  gap: 10px;
+}
+.cc-logout-sheet__actions :deep(.cc-logout-sheet__confirm) {
+  border-color: rgba(184, 58, 42, 0.28);
+  background: var(--cc-error-surface);
+  color: var(--cc-error-surface-text);
 }
 </style>

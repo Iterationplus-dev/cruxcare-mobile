@@ -1,6 +1,6 @@
-import { apiClient } from './client';
+import { apiClient, idempotencyHeader, newIdempotencyKey } from './client';
 import type { CursorPage } from '@/types/api';
-import type { Transaction, Wallet } from '@/types/wallet';
+import type { MoneyQuote, MoneyQuoteRequest, MoneySubmission, Transaction, Wallet } from '@/types/wallet';
 
 /** Read-only surface for this build — withdraw/transfer land in the Finance phase. */
 export const walletApi = {
@@ -13,6 +13,20 @@ export const walletApi = {
     const { data } = await apiClient.get<CursorPage<Transaction>>('/wallet/ledger', {
       params: { cursor },
     });
+    return data;
+  },
+
+  async quoteMoneyAction(payload: MoneyQuoteRequest): Promise<MoneyQuote> {
+    const { data } = await apiClient.post<MoneyQuote>('/wallet/quotes', payload, idempotencyHeader(newIdempotencyKey()));
+    return data;
+  },
+
+  async verifyMoneyStepUp(quoteId: string, code: string): Promise<void> {
+    await apiClient.post('/wallet/quotes/' + quoteId + '/step-up', { code }, idempotencyHeader(newIdempotencyKey()));
+  },
+
+  async submitMoneyAction(quoteId: string): Promise<MoneySubmission> {
+    const { data } = await apiClient.post<MoneySubmission>('/wallet/actions', { quoteId }, idempotencyHeader(newIdempotencyKey()));
     return data;
   },
 };

@@ -19,9 +19,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value);
   const roles = computed<Role[]>(() => user.value?.roles ?? []);
-  /** Contexts with their own dashboard per README IA — "member" surfaces inside client, not its own. */
+  /** Contexts with their own dashboard per the product information architecture. */
   const availableRoleContexts = computed<Role[]>(() =>
-    (['client', 'therapist', 'admin'] as Role[]).filter((r) => roles.value.includes(r)),
+    (['member', 'client', 'therapist', 'admin'] as Role[]).filter((r) => roles.value.includes(r)),
   );
 
   function hasCapability(capability: Capability): boolean {

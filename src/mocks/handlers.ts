@@ -484,14 +484,15 @@ const careHandlers: HttpHandler[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Wallet (read-only) & notifications
+// Wallet, server-quoted money actions, and notifications
 // ---------------------------------------------------------------------------
+const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string }; stepUpVerified: boolean }>();
 const walletHandlers: HttpHandler[] = [
   http.get(url('/wallet'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
     return HttpResponse.json(
-      db.wallets.get(user.id) ?? { available: 0, pending: 0, currency: 'USD', lastUpdatedAt: new Date().toISOString() },
+      db.wallets.get(user.id) ?? { available: 0, pending: 0, committed: 0, cooperativeSaved: 0, currency: 'USD', lastUpdatedAt: new Date().toISOString() },
     );
   }),
 
@@ -499,6 +500,66 @@ const walletHandlers: HttpHandler[] = [
     const user = currentUser(request);
     if (!user) return unauthorized();
     return HttpResponse.json(paginate(db.ledgers.get(user.id) ?? []));
+  }),
+
+  http.post(url('/wallet/quotes'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const body = await request.json() as { kind?: 'withdrawal' | 'transfer'; amount?: number; recipient?: string };
+    const wallet = db.wallets.get(user.id);
+    const amount = Number(body.amount);
+    if (!wallet || !body.kind || !Number.isFinite(amount) || amount <= 0 || amount > wallet.available) {
+      return HttpResponse.json({ message: 'This amount is not available for an action.' }, { status: 422 });
+    }
+    if (body.kind === 'transfer' && !body.recipient?.trim()) {
+      return HttpResponse.json({ message: 'Choose the member receiving this transfer.' }, { status: 422 });
+    }
+    const fee = Math.round(amount * 0.05 * 100) / 100;
+    const quote = {
+      id: db.nextId('quote'),
+      kind: body.kind,
+      amount,
+      fee,
+      recipientReceives: Math.round((amount - fee) * 100) / 100,
+      balanceAfter: Math.round((wallet.available - amount) * 100) / 100,
+      currency: wallet.currency,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      recipient: body.recipient?.trim(),
+    };
+    moneyQuotes.set(quote.id, { userId: user.id, quote, stepUpVerified: false });
+    return HttpResponse.json(quote);
+  }),
+
+  http.post(url('/wallet/quotes/:id/step-up'), async ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const saved = moneyQuotes.get(String(params.id));
+    const body = await request.json() as { code?: string };
+    if (!saved || saved.userId !== user.id) return HttpResponse.json({ message: 'This quote is no longer available.' }, { status: 404 });
+    if (body.code !== db.otpCode) return HttpResponse.json({ message: 'That security code is not correct.' }, { status: 422 });
+    saved.stepUpVerified = true;
+    return HttpResponse.json({ ok: true });
+  }),
+
+  http.post(url('/wallet/actions'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const body = await request.json() as { quoteId?: string };
+    const saved = moneyQuotes.get(String(body.quoteId));
+    if (!saved || saved.userId !== user.id || !saved.stepUpVerified) {
+      return HttpResponse.json({ message: 'Step-up verification is required before submitting.' }, { status: 422 });
+    }
+    const wallet = db.wallets.get(user.id);
+    if (!wallet || saved.quote.amount > wallet.available) return HttpResponse.json({ message: 'Your available balance changed. Request a new quote.' }, { status: 422 });
+    wallet.available = saved.quote.balanceAfter;
+    wallet.pending += saved.quote.amount;
+    wallet.lastUpdatedAt = new Date().toISOString();
+    const reference = `REF-${Math.floor(90000 + Math.random() * 9999)}`;
+    const ledger = db.ledgers.get(user.id) ?? [];
+    ledger.unshift({ id: db.nextId('txn'), reference, type: saved.quote.kind, amount: -saved.quote.amount, fee: saved.quote.fee, currency: saved.quote.currency, description: saved.quote.kind === 'withdrawal' ? 'Withdrawal processing' : `Transfer to ${saved.quote.recipient}`, createdAt: new Date().toISOString() });
+    db.ledgers.set(user.id, ledger);
+    moneyQuotes.delete(saved.quote.id);
+    return HttpResponse.json({ reference, status: 'processing', quote: saved.quote });
   }),
 
   http.get(url('/notifications'), () => HttpResponse.json(db.notifications)),

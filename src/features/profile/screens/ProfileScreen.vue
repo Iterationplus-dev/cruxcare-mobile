@@ -10,7 +10,7 @@
           </button>
         </div>
         <div class="cc-profile__identity">
-          <AppAvatar :name="fullName" :size="64" />
+          <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="64" />
           <div class="cc-profile__identity-body">
             <div class="cc-text-h1" style="color: #fff; margin: 0">{{ fullName }}</div>
             <div class="cc-text-mono" style="color: #cde7e1">{{ auth.user?.membership?.cruxId ?? '' }}</div>
@@ -49,6 +49,12 @@
           <AppListRow title="Payment methods" icon="credit_card" chevron clickable :divider="false" @click="router.push({ name: 'payment-methods' })" />
         </AppCard>
 
+        <AppCard v-if="auth.roles.includes('therapist')" style="padding: 0">
+          <AppListRow title="Therapist availability" subtitle="Open time clients can book" icon="event_available" chevron clickable @click="router.push({ name: 'therapist-availability' })" />
+          <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
+          <AppListRow title="Profile photo" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Help clients recognise you'" icon="photo_camera" chevron clickable :divider="false" @click="router.push({ name: 'personal-info', query: { focus: 'profile-photo' } })" />
+        </AppCard>
+
         <AppCard style="padding: 0">
           <AppListRow
             v-if="!auth.roles.includes('therapist')"
@@ -80,10 +86,10 @@
       <p class="cc-text-body" style="margin: 0 0 16px">
         Any unsynced drafts on this device won't be saved. You can log back in any time.
       </p>
-      <AppButton variant="destructive-text" style="margin-bottom: 8px; color: var(--cc-error-surface-text)" @click="onLogout">
-        Log out
-      </AppButton>
-      <AppButton variant="text" @click="logoutSheetOpen = false">Cancel</AppButton>
+      <div class="cc-logout-sheet__actions">
+        <AppButton variant="secondary" class="cc-logout-sheet__confirm" @click="onLogout">Log out</AppButton>
+        <AppButton variant="secondary" @click="logoutSheetOpen = false">Cancel</AppButton>
+      </div>
     </AppSheet>
   </ion-page>
 </template>
@@ -218,5 +224,14 @@ async function onLogout() {
   font-size: 13.5px;
   padding: 6px 0;
   cursor: pointer;
+}
+.cc-logout-sheet__actions {
+  display: grid;
+  gap: 10px;
+}
+.cc-logout-sheet__actions :deep(.cc-logout-sheet__confirm) {
+  border-color: rgba(184, 58, 42, 0.28);
+  background: var(--cc-error-surface);
+  color: var(--cc-error-surface-text);
 }
 </style>
