@@ -74,7 +74,7 @@ export const authApi = {
     return data;
   },
 
-  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'avatarUrl'>>) {
+  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'avatarUrl' | 'payoutAccount'>>) {
     const { data } = await apiClient.patch<User>('/me', patch);
     return data;
   },

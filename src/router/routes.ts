@@ -112,6 +112,9 @@ const routes: RouteRecordRaw[] = [
       { path: 'care', name: 'care-hub', component: () => import('@/features/care/screens/CareHubScreen.vue') },
       { path: 'wallet', name: 'wallet-home', component: () => import('@/features/wallet/screens/WalletHomeScreen.vue') },
       { path: 'profile', name: 'profile', component: () => import('@/features/profile/screens/ProfileScreen.vue') },
+      { path: 'member-home', name: 'tabs-member-home', component: () => import('@/features/member/screens/MemberHomeScreen.vue'), meta: { requiresRole: 'member' } },
+      { path: 'grow', name: 'grow-hub', component: () => import('@/features/member/screens/GrowHubScreen.vue'), meta: { requiresRole: 'member' } },
+      { path: 'more', name: 'member-more', component: () => import('@/features/member/screens/MemberMoreScreen.vue'), meta: { requiresRole: 'member' } },
     ],
   },
 
@@ -188,6 +191,84 @@ const routes: RouteRecordRaw[] = [
     name: 'ledger',
     component: () => import('@/features/wallet/screens/LedgerScreen.vue'),
     meta: { requiresAuth: true },
+  },
+  {
+    path: '/wallet/withdraw',
+    name: 'wallet-withdraw',
+    component: () => import('@/features/wallet/screens/MoneyActionScreen.vue'),
+    props: { action: 'withdrawal' },
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/wallet/transfer',
+    name: 'wallet-transfer',
+    component: () => import('@/features/wallet/screens/MoneyActionScreen.vue'),
+    props: { action: 'transfer' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+
+  // ---- Member programmes: Finance and Grow ----
+  {
+    path: '/member/commitment',
+    name: 'member-commitment',
+    component: () => import('@/features/member/screens/MemberProgramScreen.vue'),
+    props: { program: 'commitment' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+  {
+    path: '/member/cooperative',
+    name: 'member-cooperative',
+    component: () => import('@/features/member/screens/MemberProgramScreen.vue'),
+    props: { program: 'cooperative' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+  {
+    path: '/member/rank',
+    name: 'member-rank',
+    component: () => import('@/features/member/screens/MemberProgramScreen.vue'),
+    props: { program: 'rank' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+  {
+    path: '/member/network',
+    name: 'member-network',
+    component: () => import('@/features/member/screens/MemberProgramScreen.vue'),
+    props: { program: 'network' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+  {
+    path: '/member/earnings',
+    name: 'member-earnings',
+    component: () => import('@/features/member/screens/MemberProgramScreen.vue'),
+    props: { program: 'earnings' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+  {
+    path: '/point-facility',
+    name: 'point-facility',
+    component: () => import('@/features/member/screens/PointFacilityScreen.vue'),
+    props: { view: 'home' },
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/point-facility/session',
+    name: 'point-facility-session',
+    component: () => import('@/features/member/screens/PointFacilityScreen.vue'),
+    props: { view: 'session' },
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/point-facility/live',
+    name: 'point-facility-live',
+    component: () => import('@/features/member/screens/PointFacilityScreen.vue'),
+    props: { view: 'live' },
+    meta: { requiresAuth: true, darkStatusBar: true },
+  },
+  {
+    path: '/admin/approvals',
+    name: 'admin-approvals',
+    component: () => import('@/features/admin/screens/AdminApprovalsScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'admin' },
   },
 
   // ---- Shared: chat, video, notifications, help ----
@@ -301,6 +382,12 @@ const routes: RouteRecordRaw[] = [
     path: '/therapist/availability',
     name: 'therapist-availability',
     component: () => import('@/features/therapist/screens/TherapistAvailabilityScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'therapist' },
+  },
+  {
+    path: '/therapist/payout-account',
+    name: 'therapist-payout-account',
+    component: () => import('@/features/therapist/screens/TherapistPayoutAccountScreen.vue'),
     meta: { requiresAuth: true, requiresRole: 'therapist' },
   },
 ];

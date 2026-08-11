@@ -31,8 +31,12 @@
         </div>
       </div>
       <div class="cc-screen__footer">
+        <p v-if="!auth.isAuthenticated" class="cc-verification-auth-hint">
+          Sign in with your existing member account to begin verification. We’ll bring you straight back to the
+          Crux ID step.
+        </p>
         <AppButton style="margin-bottom: 10px" @click="startVerification">
-          Start verification
+          {{ auth.isAuthenticated ? 'Start verification' : 'Log in to start verification' }}
         </AppButton>
       </div>
     </ion-content>
@@ -145,5 +149,13 @@ function startVerification() {
 .cc-screen__footer {
   padding: 11px 16px calc(25px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--cc-divider);
+}
+.cc-verification-auth-hint {
+  margin: 0 0 10px;
+  font-family: var(--cc-font-interface);
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: var(--cc-ink-600);
 }
 </style>

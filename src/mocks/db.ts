@@ -290,6 +290,8 @@ export const wallets = new Map<string, Wallet>();
 wallets.set('user-1', {
   available: 248.5,
   pending: 0,
+  committed: 2000,
+  cooperativeSaved: 180,
   currency: 'USD',
   lastUpdatedAt: new Date().toISOString(),
 });

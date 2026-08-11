@@ -12,9 +12,16 @@
           <AppIcon name="cloud_done" :size="15" color="#cde7e1" />
           From CruxCare · updated {{ relativeUpdated }}
         </div>
-        <div v-if="wallet.pending > 0" class="cc-wallet__pending-tile">
-          <div class="cc-text-caption" style="color: var(--cc-color-primary)">Pending out</div>
-          <MoneyAmount :value="wallet.pending" :currency="wallet.currency" />
+        <div class="cc-wallet__allocations">
+          <button v-if="wallet.pending > 0" type="button" class="cc-wallet__allocation" @click="router.push({ name: 'ledger' })">
+            <span>Pending out</span><MoneyAmount :value="wallet.pending" :currency="wallet.currency" />
+          </button>
+          <button type="button" class="cc-wallet__allocation" @click="router.push({ name: 'member-commitment' })">
+            <span>Committed</span><MoneyAmount :value="wallet.committed ?? 0" :currency="wallet.currency" />
+          </button>
+          <button type="button" class="cc-wallet__allocation" @click="router.push({ name: 'member-cooperative' })">
+            <span>Coop saved</span><MoneyAmount :value="wallet.cooperativeSaved ?? 0" :currency="wallet.currency" />
+          </button>
         </div>
       </template>
     </div>
@@ -70,7 +77,6 @@ import { useRouter } from 'vue-router';
 import { AppCard, AppIcon, MoneyAmount } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useLedger, useWallet } from '@/composables/useWallet';
-import { useToast } from '@/composables/useToast';
 import { formatRelativeTime } from '@/utils/formatTime';
 import type { TransactionType } from '@/types/wallet';
 
@@ -78,20 +84,15 @@ import type { TransactionType } from '@/types/wallet';
  * module (Commitment/Cooperative) — showing them now would fabricate
  * figures from a system that doesn't exist yet in this build. */
 const router = useRouter();
-const toast = useToast();
 const { data: wallet, isPending } = useWallet();
 const { data: ledger, isPending: ledgerPending } = useLedger();
 
 const relativeUpdated = computed(() => (wallet.value ? formatRelativeTime(wallet.value.lastUpdatedAt) : ''));
 
-function comingSoon() {
-  return toast.show('Coming soon — ships with the Finance module.', 'info');
-}
-
 const actions = [
-  { icon: 'arrow_outward', label: 'Withdraw', onClick: comingSoon },
-  { icon: 'swap_horiz', label: 'Transfer', onClick: comingSoon },
-  { icon: 'savings', label: 'Contribute', onClick: comingSoon },
+  { icon: 'arrow_outward', label: 'Withdraw', onClick: () => router.push({ name: 'wallet-withdraw' }) },
+  { icon: 'swap_horiz', label: 'Transfer', onClick: () => router.push({ name: 'wallet-transfer' }) },
+  { icon: 'savings', label: 'Contribute', onClick: () => router.push({ name: 'member-cooperative' }) },
   { icon: 'receipt_long', label: 'Statements', onClick: () => router.push({ name: 'ledger' }) },
 ];
 
@@ -140,12 +141,31 @@ function formatDate(iso: string) {
   font-size: 11.5px;
   color: #4a5a53;
 }
-.cc-wallet__pending-tile {
+.cc-wallet__allocations {
+  display: flex;
+  gap: 8px;
   margin-top: 18px;
+}
+.cc-wallet__allocation {
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+  border: none;
+  border-radius: var(--cc-radius-md);
   background: rgba(255, 255, 255, 0.78);
-  border-radius: 12px;
-  padding: 10px 12px;
-  display: inline-block;
+  color: var(--cc-ink-900);
+  text-align: left;
+  cursor: pointer;
+}
+.cc-wallet__allocation > span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--cc-color-primary);
+  font-family: var(--cc-font-interface);
+  font-size: 10.5px;
+}
+.cc-wallet__allocation :deep(.cc-money) {
+  font-size: 13px;
 }
 .cc-screen {
   --background: var(--cc-surface-app);

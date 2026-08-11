@@ -22,6 +22,36 @@ export interface Transaction {
 export interface Wallet {
   available: number;
   pending: number;
+  /** Server-reported allocations. They are not derived from the available balance in the UI. */
+  committed?: number;
+  cooperativeSaved?: number;
   currency: string;
   lastUpdatedAt: string;
+}
+
+export type MoneyActionKind = 'withdrawal' | 'transfer';
+
+export interface MoneyQuoteRequest {
+  kind: MoneyActionKind;
+  amount: number;
+  recipient?: string;
+}
+
+/** Returned by the server. Never derive fees or resulting balances in a view. */
+export interface MoneyQuote {
+  id: string;
+  kind: MoneyActionKind;
+  amount: number;
+  fee: number;
+  recipientReceives: number;
+  balanceAfter: number;
+  currency: string;
+  expiresAt: string;
+  recipient?: string;
+}
+
+export interface MoneySubmission {
+  reference: string;
+  status: 'processing';
+  quote: MoneyQuote;
 }

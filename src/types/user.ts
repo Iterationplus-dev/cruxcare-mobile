@@ -33,6 +33,12 @@ export interface TherapistProfile {
   caseFileCount: number;
 }
 
+export interface PayoutAccount {
+  accountHolder: string;
+  institution: string;
+  accountNumber: string;
+}
+
 export interface Membership {
   cruxId: string;
   /** e.g. "CCI8804XO" — three letters, four digits, two letters. */
@@ -52,6 +58,7 @@ export interface User {
   referredBySource: ReferredBySource | null;
   membership: Membership | null;
   therapistProfile: TherapistProfile | null;
+  payoutAccount?: PayoutAccount | null;
   biometricEnabled: boolean;
   createdAt: string;
 }

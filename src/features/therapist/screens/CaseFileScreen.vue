@@ -19,17 +19,55 @@
         <textarea v-model="draftNote" class="cc-textarea" rows="3" placeholder="Add a session note" />
         <AppButton variant="secondary" :loading="savingNote" @click="onAddNote">Save note</AppButton>
 
-        <div class="cc-section-head">
-          <span class="cc-text-body-strong" style="font-size: 16px">Recommendations</span>
-        </div>
-        <AppCard v-for="r in caseFile.recommendations" :key="r.id" class="cc-reco">
-          <div class="cc-reco__body">
-            <div class="cc-text-body-strong" style="font-size: 13.5px">{{ r.productName }}</div>
-            <div class="cc-text-caption">{{ r.note }}</div>
+        <section class="cc-recommendations" aria-labelledby="recommendations-title">
+          <div class="cc-recommendations__heading">
+            <div>
+              <h2 id="recommendations-title">Recommendations</h2>
+              <p>Products suggested for this client’s care.</p>
+            </div>
+            <button type="button" class="cc-recommendations__add" @click="router.push({ name: 'catalog' })">
+              <AppIcon name="add" :size="18" />
+              Add
+            </button>
           </div>
-          <AppButton variant="secondary" @click="router.push({ name: 'product-detail', params: { id: r.productId } })">View</AppButton>
-        </AppCard>
-        <AppButton variant="secondary" @click="router.push({ name: 'catalog' })">Recommend a product</AppButton>
+
+          <div v-if="!caseFile.recommendations.length" class="cc-recommendations__empty">
+            <AppIcon name="spa" :size="22" color="var(--cc-color-primary)" />
+            <span>No products recommended yet.</span>
+          </div>
+
+          <AppCard v-for="r in caseFile.recommendations" :key="r.id" class="cc-reco">
+            <div class="cc-reco__top">
+              <div class="cc-reco__product-icon">
+                <AppIcon name="local_pharmacy" :size="22" color="var(--cc-color-primary)" />
+              </div>
+              <div class="cc-reco__product">
+                <span class="cc-text-mono">CARE RECOMMENDATION</span>
+                <h3>{{ r.productName }}</h3>
+              </div>
+              <AppBadge :label="r.orderId ? 'ORDERED' : 'SUGGESTED'" :tone="r.orderId ? 'success' : 'default'" />
+            </div>
+
+            <div v-if="r.note" class="cc-reco__guidance">
+              <AppIcon name="info" :size="18" color="var(--cc-color-primary)" />
+              <div>
+                <span>Suggested use</span>
+                <p>{{ r.note }}</p>
+              </div>
+            </div>
+
+            <div class="cc-reco__footer">
+              <span>{{ r.orderId ? 'Added to an order' : 'Awaiting client order' }}</span>
+              <AppButton
+                variant="secondary"
+                :full-width="false"
+                @click="router.push({ name: 'product-detail', params: { id: r.productId } })"
+              >
+                View product
+              </AppButton>
+            </div>
+          </AppCard>
+        </section>
       </div>
     </ion-content>
   </ion-page>
@@ -39,7 +77,7 @@
 import { ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
-import { AppButton, AppCard, AppHeader } from '@/components/ui';
+import { AppBadge, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
 import { LoadingState } from '@/components/state';
 import { caseFilesApi } from '@/api/case-files.api';
 import { useCaseFile } from '@/composables/useCaseFiles';
@@ -98,12 +136,141 @@ function formatDate(iso: string) {
   box-sizing: border-box;
   resize: vertical;
 }
-.cc-reco {
+.cc-recommendations {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
 }
-.cc-reco__body {
+.cc-recommendations__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cc-recommendations__heading h2 {
+  margin: 0;
+  color: var(--cc-ink-900);
+  font-family: var(--cc-font-interface);
+  font-size: 16px;
+  line-height: 22px;
+}
+.cc-recommendations__heading p {
+  margin: 2px 0 0;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 11.5px;
+  line-height: 16px;
+}
+.cc-recommendations__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: none;
+  border-radius: var(--cc-radius-sm);
+  background: var(--cc-color-mist);
+  color: var(--cc-color-primary-dark);
+  font-family: var(--cc-font-interface);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cc-recommendations__empty {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px;
+  border: 1px dashed var(--cc-line);
+  border-radius: var(--cc-radius-md);
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+}
+.cc-reco {
+  padding: 14px;
+}
+.cc-reco__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cc-reco__product-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  flex: none;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--cc-color-mist);
+}
+.cc-reco__product {
+  min-width: 0;
   flex: 1;
+}
+.cc-reco__product .cc-text-mono {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--cc-ink-400);
+  font-size: 9.5px;
+  line-height: 14px;
+  letter-spacing: 0.06em;
+}
+.cc-reco__product h3 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--cc-ink-900);
+  font-family: var(--cc-font-interface);
+  font-size: 14px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cc-reco__guidance {
+  display: flex;
+  gap: 8px;
+  margin-top: 13px;
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--cc-surface-1);
+}
+.cc-reco__guidance > div {
+  min-width: 0;
+}
+.cc-reco__guidance span {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.cc-reco__guidance p {
+  margin: 0;
+  color: var(--cc-ink-900);
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+.cc-reco__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--cc-divider);
+}
+.cc-reco__footer > span {
+  color: var(--cc-ink-400);
+  font-family: var(--cc-font-interface);
+  font-size: 10.5px;
+  line-height: 15px;
+}
+.cc-reco__footer :deep(.cc-btn) {
+  min-height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
 }
 </style>
