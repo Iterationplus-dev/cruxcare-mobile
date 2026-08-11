@@ -6,5 +6,7 @@ declare module 'vue-router' {
     requiresGuest?: boolean;
     requiresRole?: string;
     requiresHealthProfile?: boolean;
+    /** White status bar icons for this screen's dark background (default: dark icons). */
+    darkStatusBar?: boolean;
   }
 }

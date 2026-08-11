@@ -12,7 +12,7 @@
       >
         <AppIcon name="health_and_safety" :size="22" :color="auth.activeRole === 'client' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
         <div class="cc-role__body">
-          <div class="cc-text-body-strong" style="font-size: 14px">Client</div>
+          <div class="cc-text-body-strong" style="font-size: 14.5px">Client</div>
           <div class="cc-text-caption">Shop, care and wallet</div>
         </div>
         <AppIcon v-if="auth.activeRole === 'client'" name="check_circle" :size="20" color="var(--cc-color-primary)" />
@@ -26,7 +26,7 @@
       >
         <AppIcon name="medical_services" :size="22" :color="hasTherapist ? (auth.activeRole === 'therapist' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)') : 'var(--cc-ink-300)'" />
         <div class="cc-role__body">
-          <div class="cc-text-body-strong" :style="{ fontSize: '14px', color: hasTherapist ? undefined : 'var(--cc-ink-300)' }">Therapist</div>
+          <div class="cc-text-body-strong" :style="{ fontSize: '14.5px', color: hasTherapist ? undefined : 'var(--cc-ink-300)' }">Therapist</div>
           <div class="cc-text-caption">{{ hasTherapist ? 'Clients, calendar and earnings' : 'No active plan on this account' }}</div>
         </div>
         <AppIcon v-if="auth.activeRole === 'therapist'" name="check_circle" :size="20" color="var(--cc-color-primary)" />
@@ -101,7 +101,7 @@ function goActivate() {
 .cc-role__activate {
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--cc-color-primary);
 }
 .cc-roles__notice {
@@ -115,8 +115,8 @@ function goActivate() {
 .cc-roles__notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-ink-600);
 }
 </style>

@@ -15,7 +15,7 @@
           <AppCard v-for="m in methods" :key="m.label" class="cc-pm">
             <AppIcon name="credit_card" :size="22" :color="m.expired ? 'var(--cc-color-warning)' : 'var(--cc-ink-600)'" />
             <div class="cc-pm__body">
-              <div class="cc-text-body-strong" style="font-size: 14px">{{ m.label }}</div>
+              <div class="cc-text-body-strong" style="font-size: 14.5px">{{ m.label }}</div>
               <div v-if="m.expired" class="cc-text-caption" style="color: var(--cc-color-warning-text)">Expired</div>
             </div>
           </AppCard>

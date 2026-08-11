@@ -10,7 +10,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Choose a therapist plan</h2>
-        <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12px">
+        <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12.5px">
           Purchases stay unlimited on every plan — only clients and case files are limited.
         </p>
 
@@ -24,16 +24,16 @@
         >
           <div class="cc-plan__head">
             <div>
-              <span class="cc-text-body-strong" style="font-size: 15px">{{ p.name }}</span>
+              <span class="cc-text-body-strong" style="font-size: 16px">{{ p.name }}</span>
               <AppBadge v-if="p.tag" :label="p.tag" />
             </div>
-            <span class="cc-text-mono" style="font-size: 18px; font-weight: 700">{{ p.price }}</span>
+            <span class="cc-text-mono" style="font-size: 19px; font-weight: 700">{{ p.price }}</span>
           </div>
-          <div class="cc-text-body" style="font-size: 12px">{{ p.detail }}</div>
+          <div class="cc-text-body" style="font-size: 12.5px">{{ p.detail }}</div>
         </button>
 
         <AppCard>
-          <div class="cc-text-body-strong" style="font-size: 13px; margin-bottom: 9px">What you get</div>
+          <div class="cc-text-body-strong" style="font-size: 13.5px; margin-bottom: 9px">What you get</div>
           <div class="cc-feature"><AppIcon name="check_circle" :size="18" color="var(--cc-color-success)" />Case files with notes and attachments</div>
           <div class="cc-feature"><AppIcon name="check_circle" :size="18" color="var(--cc-color-success)" />Chat and video with your clients</div>
           <div class="cc-feature"><AppIcon name="check_circle" :size="18" color="var(--cc-color-success)" />Recommend products and order on their behalf</div>
@@ -137,7 +137,7 @@ async function onActivate() {
   gap: 8px;
   align-items: center;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--cc-ink-600);
   margin-bottom: 7px;
 }

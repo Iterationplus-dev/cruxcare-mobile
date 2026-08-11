@@ -2,6 +2,9 @@
   <ion-page>
     <ion-content class="cc-screen">
       <div class="cc-hero">
+        <button type="button" class="cc-hero__back" aria-label="Back" @click="goBack">
+          <AppIcon name="arrow_back" :size="24" color="#fff" />
+        </button>
         <div class="cc-hero__pill">
           <AppIcon name="verified_user" :size="17" color="#fff" />
           <span>FOR PRACTITIONERS</span>
@@ -12,7 +15,7 @@
         </p>
       </div>
       <div class="cc-screen__pad">
-        <div class="cc-text-mono" style="font-size: 11px; color: var(--cc-ink-400)">WHAT YOU WILL NEED</div>
+        <div class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">WHAT YOU WILL NEED</div>
         <AppCard style="padding: 0">
           <AppListRow title="Your Crux ID" subtitle="Issued when you joined the cooperative" icon="badge" />
           <AppListRow title="Practice licence or certificate" subtitle="PDF or photo, plus the issuing body" icon="workspace_premium" />
@@ -28,7 +31,7 @@
         </div>
       </div>
       <div class="cc-screen__footer">
-        <AppButton style="margin-bottom: 10px" @click="router.push({ name: 'link-crux-id', query: { forTherapist: 'true' } })">
+        <AppButton style="margin-bottom: 10px" @click="startVerification">
           Start verification
         </AppButton>
       </div>
@@ -40,8 +43,28 @@
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppCard, AppIcon, AppListRow } from '@/components/ui';
+import { useAuthStore } from '@/stores/auth';
 
+// Dark teal hero sits directly under the status bar — white icons are set
+// via this route's `darkStatusBar` meta (see router/index.ts).
 const router = useRouter();
+const auth = useAuthStore();
+
+function goBack() {
+  if (window.history.state?.back) router.back();
+  else router.replace({ name: 'login' });
+}
+
+function startVerification() {
+  if (auth.isAuthenticated) {
+    router.push({ name: 'link-crux-id', query: { forTherapist: 'true' } });
+    return;
+  }
+
+  // Linking a therapist role changes an existing account, so sign in first
+  // and then return directly to the first verification step.
+  router.push({ name: 'login', query: { redirect: 'link-crux-id' } });
+}
 </script>
 
 <style scoped>
@@ -49,9 +72,23 @@ const router = useRouter();
   --background: var(--cc-surface-app);
 }
 .cc-hero {
-  background: var(--cc-color-primary-dark);
+  background:
+    linear-gradient(100deg, rgba(4, 70, 61, 0.8) 0%, rgba(5, 79, 69, 0.62) 56%, rgba(5, 79, 69, 0.46) 100%),
+    url('@/assets/images/therapist-session.png') center 46% / cover no-repeat;
   color: #fff;
   padding: calc(env(safe-area-inset-top) + 8px) 22px 22px;
+}
+.cc-hero__back {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  margin: -4px 0 10px -8px;
+  padding: 0;
+  place-items: center;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.14);
+  cursor: pointer;
 }
 .cc-hero__pill {
   display: inline-flex;
@@ -62,7 +99,7 @@ const router = useRouter();
   background: rgba(255, 255, 255, 0.16);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.04em;
   margin-bottom: 14px;
 }
@@ -70,15 +107,15 @@ const router = useRouter();
   margin: 0 0 8px;
   font-family: var(--cc-font-interface);
   font-weight: 800;
-  font-size: 24px;
-  line-height: 29px;
+  font-size: 25px;
+  line-height: 30.5px;
   letter-spacing: -0.02em;
 }
 .cc-hero__body {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 14px;
-  line-height: 21px;
+  font-size: 14.5px;
+  line-height: 22px;
   color: #cde7e1;
 }
 .cc-screen__pad {
@@ -101,8 +138,8 @@ const router = useRouter();
 .cc-notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

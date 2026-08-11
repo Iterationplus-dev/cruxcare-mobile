@@ -66,10 +66,15 @@ export const useAuthStore = defineStore('auth', () => {
     await persistToken(session.token);
   }
 
-  async function login(identifier: string, password: string) {
+  async function login(identifier: string, password: string, keepLoggedIn = true) {
     const session = await authApi.login(identifier, password);
     user.value = session.user;
-    await persistToken(session.token);
+    if (keepLoggedIn) {
+      await persistToken(session.token);
+    } else {
+      token.value = session.token;
+      await secureStorage.remove(SECURE_STORAGE_KEYS.authToken);
+    }
   }
 
   async function logout() {

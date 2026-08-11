@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
     path: '/auth/welcome',
     name: 'welcome',
     component: () => import('@/features/auth/screens/WelcomeScreen.vue'),
-    meta: { requiresGuest: true },
+    meta: { requiresGuest: true, darkStatusBar: true },
   },
   {
     path: '/auth/register',
@@ -71,12 +71,15 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
 
-  // ---- Therapist activation (entered from Profile, any authed member) ----
+  // ---- Therapist activation ----
+  // TA1 is the public landing reached from Login's therapist door. Starting
+  // verification remains protected on the subsequent route because it adds a
+  // role to the existing account.
   {
     path: '/become-therapist',
     name: 'become-therapist',
     component: () => import('@/features/auth/screens/BecomeTherapistScreen.vue'),
-    meta: { requiresAuth: true },
+    meta: { darkStatusBar: true },
   },
   {
     path: '/become-therapist/link-crux-id',
@@ -94,7 +97,7 @@ const routes: RouteRecordRaw[] = [
     path: '/become-therapist/complete',
     name: 'therapist-onboarding-complete',
     component: () => import('@/features/auth/screens/TherapistOnboardingCompleteScreen.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, darkStatusBar: true },
   },
 
   // ---- Client tabs shell ----
@@ -125,7 +128,8 @@ const routes: RouteRecordRaw[] = [
     path: '/shop/product/:id',
     name: 'product-detail',
     component: () => import('@/features/marketplace/screens/ProductDetailScreen.vue'),
-    meta: { requiresAuth: true },
+    // Guests may browse product detail (PRD Guest capability); the
+    // add-to-cart action is what routes them to login, not the page itself.
   },
   {
     path: '/shop/cart',
@@ -197,7 +201,7 @@ const routes: RouteRecordRaw[] = [
     path: '/video/:id',
     name: 'video-visit',
     component: () => import('@/features/shared/screens/VideoVisitScreen.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, darkStatusBar: true },
   },
   {
     path: '/notifications',

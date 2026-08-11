@@ -1,33 +1,35 @@
 <template>
-  <ion-tabs>
-    <ion-router-outlet />
-    <ion-tab-bar slot="bottom" class="cc-tabbar">
-      <ion-tab-button tab="today" href="/therapist/today" class="cc-tabbar__btn">
-        <AppIcon name="today" :size="22" />
-        <ion-label>Today</ion-label>
-      </ion-tab-button>
-      <ion-tab-button tab="calendar" href="/therapist/calendar" class="cc-tabbar__btn">
-        <AppIcon name="calendar_month" :size="22" />
-        <ion-label>Calendar</ion-label>
-      </ion-tab-button>
-      <ion-tab-button tab="clients" href="/therapist/clients" class="cc-tabbar__btn">
-        <AppIcon name="groups" :size="22" />
-        <ion-label>Clients</ion-label>
-      </ion-tab-button>
-      <ion-tab-button tab="earnings" href="/therapist/earnings" class="cc-tabbar__btn">
-        <AppIcon name="payments" :size="22" />
-        <ion-label>Earnings</ion-label>
-      </ion-tab-button>
-      <ion-tab-button tab="profile" href="/therapist/profile" class="cc-tabbar__btn">
-        <AppIcon name="person" :size="22" />
-        <ion-label>Profile</ion-label>
-      </ion-tab-button>
-    </ion-tab-bar>
-  </ion-tabs>
+  <ion-page>
+    <ion-tabs>
+      <ion-router-outlet />
+      <ion-tab-bar slot="bottom" class="cc-tabbar">
+        <ion-tab-button tab="today" href="/therapist/today" class="cc-tabbar__btn">
+          <AppIcon name="today" :size="22" />
+          <ion-label>Today</ion-label>
+        </ion-tab-button>
+        <ion-tab-button tab="calendar" href="/therapist/calendar" class="cc-tabbar__btn">
+          <AppIcon name="calendar_month" :size="22" />
+          <ion-label>Calendar</ion-label>
+        </ion-tab-button>
+        <ion-tab-button tab="clients" href="/therapist/clients" class="cc-tabbar__btn">
+          <AppIcon name="groups" :size="22" />
+          <ion-label>Clients</ion-label>
+        </ion-tab-button>
+        <ion-tab-button tab="earnings" href="/therapist/earnings" class="cc-tabbar__btn">
+          <AppIcon name="payments" :size="22" />
+          <ion-label>Earnings</ion-label>
+        </ion-tab-button>
+        <ion-tab-button tab="profile" href="/therapist/profile" class="cc-tabbar__btn">
+          <AppIcon name="person" :size="22" />
+          <ion-label>Profile</ion-label>
+        </ion-tab-button>
+      </ion-tab-bar>
+    </ion-tabs>
+  </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonLabel, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue';
+import { IonLabel, IonPage, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 
 /**
@@ -50,8 +52,8 @@ import AppIcon from '@/components/ui/AppIcon.vue';
   font-family: var(--cc-font-interface);
 }
 .cc-tabbar__btn ion-label {
-  font-size: 10px;
-  line-height: 14px;
+  font-size: 10.5px;
+  line-height: 14.5px;
   font-weight: 500;
   margin-top: 2px;
 }

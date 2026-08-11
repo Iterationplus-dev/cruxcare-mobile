@@ -15,7 +15,7 @@
           </AppListRow>
         </AppCard>
 
-        <div class="cc-text-body-strong" style="font-size: 14px">Optional</div>
+        <div class="cc-text-body-strong" style="font-size: 14.5px">Optional</div>
         <AppCard style="padding: 0">
           <AppListRow
             v-for="(pref, i) in optional"

@@ -3,8 +3,8 @@
     <AppHeader title="Personal information" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
-        <AppInput v-model="firstName" label="First name" />
-        <AppInput v-model="lastName" label="Last name" />
+        <AppInput v-model="firstName" label="First name" placeholder="Amara" />
+        <AppInput v-model="lastName" label="Last name" placeholder="Okafor" />
         <AppInput :model-value="auth.user?.email" label="Email" disabled helper="Verified · contact support to change" />
         <AppInput :model-value="auth.user?.phone" label="Phone" disabled helper="Verified · contact support to change" />
         <AppInput v-if="auth.user?.membership" :model-value="auth.user.membership.cruxId" label="Crux ID" disabled />
@@ -12,7 +12,7 @@
         <div class="cc-export">
           <AppIcon name="download" :size="20" color="var(--cc-color-primary)" />
           <div class="cc-export__body">
-            <div class="cc-text-body-strong" style="font-size: 13px">Export your data</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Export your data</div>
             <div class="cc-text-caption">Data sits with the field it describes, so it's requested from here.</div>
           </div>
         </div>

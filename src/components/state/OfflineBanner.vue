@@ -29,14 +29,14 @@ defineProps<{ lastSavedAt: string }>();
 .cc-offline-banner__title {
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
-  line-height: 19px;
+  font-size: 13.5px;
+  line-height: 20px;
   color: #5e3810;
 }
 .cc-offline-banner__message {
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: #8a4e17;
 }
 </style>

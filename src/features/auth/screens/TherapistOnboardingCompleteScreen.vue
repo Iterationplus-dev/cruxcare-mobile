@@ -6,7 +6,7 @@
         <h2 class="cc-title">You're verified</h2>
         <p class="cc-subtitle">Your listing is live and clients can book you from today.</p>
         <div class="cc-next">
-          <div class="cc-text-mono" style="font-size: 11px; color: #9bd2c8; margin-bottom: 11px">FIRST THREE THINGS</div>
+          <div class="cc-text-mono" style="font-size: 11.5px; color: #9bd2c8; margin-bottom: 11px">FIRST THREE THINGS</div>
           <div class="cc-next__item"><AppIcon name="event_available" :size="20" color="#9bd2c8" />Open your first bookable week</div>
           <div class="cc-next__item"><AppIcon name="payments" :size="20" color="#9bd2c8" />Confirm your payout account</div>
           <div class="cc-next__item"><AppIcon name="photo_camera" :size="20" color="#9bd2c8" />Add a profile photo clients trust</div>
@@ -61,14 +61,14 @@ function goDashboard() {
   color: #fff;
   font-family: var(--cc-font-interface);
   font-weight: 800;
-  font-size: 24px;
+  font-size: 25px;
   margin: 0 0 10px;
 }
 .cc-subtitle {
   color: #cde7e1;
   font-family: var(--cc-font-interface);
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 14.5px;
+  line-height: 23px;
   margin: 0 0 24px;
 }
 .cc-next {
@@ -84,7 +84,7 @@ function goDashboard() {
   color: #fff;
   font-family: var(--cc-font-interface);
   font-weight: 500;
-  font-size: 13px;
+  font-size: 13.5px;
   margin-bottom: 10px;
 }
 .cc-screen__footer {
@@ -99,7 +99,7 @@ function goDashboard() {
   color: #9bd2c8;
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
   cursor: pointer;
 }
 </style>

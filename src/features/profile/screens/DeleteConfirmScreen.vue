@@ -12,10 +12,10 @@
           including support.
         </p>
         <div class="cc-what-deletes">
-          <div class="cc-text-body-strong" style="font-size: 12px; color: var(--cc-error-surface-text)">
+          <div class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-error-surface-text)">
             What is deleted permanently
           </div>
-          <div class="cc-text-body" style="font-size: 12px">
+          <div class="cc-text-body" style="font-size: 12.5px">
             Health profile and session notes · chat history · Crux ID link and network position
           </div>
         </div>

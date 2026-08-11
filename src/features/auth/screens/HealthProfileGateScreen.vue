@@ -11,14 +11,14 @@
           <AppIcon name="check_circle" :size="17" color="var(--cc-color-success-text)" />
           <span>Account verified</span>
         </div>
-        <h2 class="cc-text-h1" style="margin: 0 0 6px">One step before a therapist</h2>
-        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12px">
+        <h2 class="cc-text-h1" style="margin: 0 0 6px">One step before meeting therapist</h2>
+        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 12.5px">
           A therapist can't safely advise without your history. A few short sections — you can shop and
           browse meanwhile.
         </p>
 
         <div class="cc-progress-row">
-          <span class="cc-text-body" style="font-size: 12px">Health profile</span>
+          <span class="cc-text-body" style="font-size: 12.5px">Health profile</span>
           <span class="cc-text-mono">{{ filledCount }} of {{ sections.length }}</span>
         </div>
         <div class="cc-progress"><div class="cc-progress__fill" :style="{ width: `${completion}%` }" /></div>
@@ -33,14 +33,14 @@
             :icon-color="s.value ? 'var(--cc-color-success)' : 'var(--cc-color-warning)'"
             chevron
             clickable
-            @click="router.push({ name: 'health-profile' })"
+            @click="openHealthProfile"
           />
         </AppCard>
 
         <div class="cc-locked">
           <AppIcon name="lock" :size="20" color="var(--cc-ink-400)" />
           <div>
-            <div class="cc-text-body-strong" style="font-size: 13px">Locked until this is done</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Locked until this is done</div>
             <div class="cc-text-caption">Therapist discovery, booking, chat and video. Shop and wallet are open now.</div>
           </div>
         </div>
@@ -50,8 +50,10 @@
         </div>
       </div>
       <div class="cc-screen__footer">
-        <AppButton style="margin-bottom: 9px" @click="router.push({ name: 'health-profile' })">Continue</AppButton>
-        <AppButton variant="text" @click="router.replace({ name: 'tabs-home' })">Browse the shop first</AppButton>
+        <AppButton style="margin-bottom: 9px" @click="continueToCare">
+          {{ isComplete ? 'Continue to care' : 'Continue' }}
+        </AppButton>
+        <AppButton variant="text" class="cc-skip-btn" @click="goBrowseShop">Browse the shop first</AppButton>
       </div>
     </ion-content>
   </ion-page>
@@ -81,6 +83,24 @@ const sections = computed(() => {
 });
 const filledCount = computed(() => sections.value.filter((s) => s.value).length);
 const completion = computed(() => Math.round((filledCount.value / sections.value.length) * 100));
+const isComplete = computed(() => filledCount.value === sections.value.length);
+
+function openHealthProfile() {
+  router.push({ name: 'health-profile', query: { returnTo: 'health-profile-gate' } });
+}
+
+function continueToCare() {
+  if (isComplete.value) {
+    router.replace({ name: 'care-hub' });
+    return;
+  }
+  openHealthProfile();
+}
+
+/** Shop stays open while care is gated (A4) — this is the escape hatch. */
+function goBrowseShop() {
+  router.replace({ name: 'catalog' });
+}
 </script>
 
 <style scoped>
@@ -110,7 +130,7 @@ const completion = computed(() => Math.round((filledCount.value / sections.value
   color: var(--cc-color-success-text);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 11px;
+  font-size: 11.5px;
   width: fit-content;
   margin-bottom: 4px;
 }
@@ -146,12 +166,19 @@ const completion = computed(() => Math.round((filledCount.value / sections.value
 .cc-consent-note p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {
   padding: 11px 14px calc(25px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--cc-divider);
+}
+/* Text buttons collapse to their label width, leaving a tap target far
+   smaller than the row it appears to occupy. Specificity has to beat
+   AppButton's own `.cc-btn--text { width: auto }`. */
+.cc-screen__footer .cc-skip-btn.cc-btn {
+  display: flex;
+  width: 100%;
 }
 </style>

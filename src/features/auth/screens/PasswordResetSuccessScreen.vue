@@ -8,8 +8,8 @@
           You're signed out everywhere else. We sent a confirmation to your registered contact.
         </p>
         <AppCard class="cc-summary">
-          <div class="cc-row"><span class="cc-text-caption">Devices signed out</span><span class="cc-text-body-strong" style="font-size: 12px">All others</span></div>
-          <div class="cc-row"><span class="cc-text-caption">Didn't do this?</span><a href="#" class="cc-text-body-strong" style="font-size: 12px" @click.prevent="router.push({ name: 'help-support' })">Tell us now</a></div>
+          <div class="cc-row"><span class="cc-text-caption">Devices signed out</span><span class="cc-text-body-strong" style="font-size: 12.5px">All others</span></div>
+          <div class="cc-row"><span class="cc-text-caption">Didn't do this?</span><a href="#" class="cc-text-body-strong" style="font-size: 12.5px" @click.prevent="router.push({ name: 'help-support' })">Tell us now</a></div>
         </AppCard>
       </div>
       <div class="cc-screen__footer">

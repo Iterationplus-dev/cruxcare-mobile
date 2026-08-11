@@ -104,8 +104,8 @@ function skip() {
 .cc-bio__note p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 13.5px;
+  line-height: 21px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

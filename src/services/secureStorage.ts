@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
 
 /**
@@ -6,8 +7,20 @@ import { SecureStoragePlugin } from 'capacitor-secure-storage-plugin';
  * held in plain localStorage/sessionStorage directly (README "Secrets on
  * device").
  */
+function browserStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 export const secureStorage = {
   async get(key: string): Promise<string | null> {
+    if (!Capacitor.isNativePlatform()) return browserStorage()?.getItem(key) ?? null;
+
     try {
       const { value } = await SecureStoragePlugin.get({ key });
       return value;
@@ -17,10 +30,20 @@ export const secureStorage = {
   },
 
   async set(key: string, value: string): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      browserStorage()?.setItem(key, value);
+      return;
+    }
+
     await SecureStoragePlugin.set({ key, value });
   },
 
   async remove(key: string): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      browserStorage()?.removeItem(key);
+      return;
+    }
+
     try {
       await SecureStoragePlugin.remove({ key });
     } catch {

@@ -18,7 +18,7 @@
         <template v-else>
           <AppCard v-if="nextAppointment">
             <div class="cc-home__session-head">
-              <span class="cc-text-mono" style="font-size: 11px; color: var(--cc-ink-400)">NEXT SESSION</span>
+              <span class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">NEXT SESSION</span>
               <AppBadge label="CONFIRMED" tone="success" />
             </div>
             <div class="cc-home__session-body">
@@ -51,8 +51,8 @@
           </div>
 
           <div class="cc-home__section-head">
-            <span class="cc-text-body-strong" style="font-size: 14px">Reorder</span>
-            <a href="#" class="cc-text-body-strong" style="font-size: 12px" @click.prevent="goShop">Shop</a>
+            <span class="cc-text-body-strong" style="font-size: 14.5px">Reorder</span>
+            <a href="#" class="cc-text-body-strong" style="font-size: 12.5px" @click.prevent="goShop">Shop</a>
           </div>
           <div v-if="reorderProducts.length" class="cc-home__reorder">
             <button
@@ -64,7 +64,7 @@
             >
               <img :src="p.media[0]?.url" :alt="p.media[0]?.alt ?? p.name" />
               <div class="cc-home__product-body">
-                <div class="cc-text-body-strong" style="font-size: 12px">{{ p.name }}</div>
+                <div class="cc-text-body-strong" style="font-size: 12.5px">{{ p.name }}</div>
                 <MoneyAmount :value="p.price" :currency="p.currency" size="mono" />
               </div>
             </button>
@@ -171,7 +171,7 @@ function goNotifications() {
   --background: var(--cc-surface-app);
 }
 .cc-home__header {
-  padding: 6px 16px 18px;
+  padding: calc(env(safe-area-inset-top) + 6px) 16px 18px;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -182,7 +182,7 @@ function goNotifications() {
 }
 .cc-home__date {
   font-family: var(--cc-font-interface);
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--cc-color-primary);
 }
 .cc-home__hello {
@@ -232,7 +232,7 @@ function goNotifications() {
 }
 .cc-home__session-actions :deep(.cc-btn) {
   height: 40px;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 .cc-home__stats {
   display: flex;

@@ -21,7 +21,7 @@
           </AppListRow>
         </AppCard>
 
-        <div class="cc-text-body-strong" style="font-size: 14px">Who can see your health data</div>
+        <div class="cc-text-body-strong" style="font-size: 14.5px">Who can see your health data</div>
         <AppCard style="padding: 0">
           <AppListRow
             v-if="assignedTherapist"

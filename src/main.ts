@@ -1,8 +1,10 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { VueQueryPlugin } from '@tanstack/vue-query';
+import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App.vue';
 import router from './router';
+import { initStatusBar } from './services/statusBar';
 
 import { IonicVue } from '@ionic/vue';
 
@@ -41,20 +43,31 @@ import './theme/fonts.css';
 import './theme/variables.css';
 import './theme/typography.css';
 
-async function enableMocksIfNeeded() {
-  if (import.meta.env.DEV && import.meta.env.VITE_USE_API_MOCKS === 'true') {
-    const { worker } = await import('./mocks/browser');
-    await worker.start({ onUnhandledRequest: 'bypass' });
+function enableMocksIfNeeded() {
+  // Gated on the env flag alone (not import.meta.env.DEV) so native builds —
+  // which run as a production build — still get the mock backend until a
+  // real API exists. Flip VITE_USE_API_MOCKS to false once one does.
+  if (import.meta.env.VITE_USE_API_MOCKS === 'true') {
+    // Loading and activating the mock service worker can stall in a browser or
+    // Android WebView. Keep it completely off the startup path so the app shell
+    // always renders; it will be ready before the user submits a request.
+    void import('./mocks/browser')
+      .then(({ worker }) => worker.start({ onUnhandledRequest: 'bypass' }))
+      .catch((error) => {
+        console.error('Could not start the mock API worker.', error);
+      });
   }
 }
 
 async function bootstrap() {
-  await enableMocksIfNeeded();
+  enableMocksIfNeeded();
+  initStatusBar();
 
   const app = createApp(App).use(IonicVue).use(createPinia()).use(VueQueryPlugin).use(router);
 
   await router.isReady();
   app.mount('#app');
+  void SplashScreen.hide();
 }
 
 bootstrap();

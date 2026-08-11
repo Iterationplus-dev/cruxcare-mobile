@@ -215,7 +215,7 @@ async function onLogout() {
   color: var(--cc-error-surface-text);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
   padding: 6px 0;
   cursor: pointer;
 }

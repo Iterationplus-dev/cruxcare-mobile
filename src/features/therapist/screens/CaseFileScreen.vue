@@ -5,12 +5,12 @@
       <LoadingState v-if="isPending" label="Loading case file…" />
       <div v-else-if="caseFile" class="cc-screen__pad">
         <AppCard>
-          <div class="cc-row"><span class="cc-text-caption">Sessions</span><span class="cc-text-body-strong" style="font-size: 13px">{{ caseFile.sessionCount }}</span></div>
-          <div class="cc-row"><span class="cc-text-caption">Last session</span><span class="cc-text-body-strong" style="font-size: 13px">{{ caseFile.lastSessionAt ? formatDate(caseFile.lastSessionAt) : 'None yet' }}</span></div>
+          <div class="cc-row"><span class="cc-text-caption">Sessions</span><span class="cc-text-body-strong" style="font-size: 13.5px">{{ caseFile.sessionCount }}</span></div>
+          <div class="cc-row"><span class="cc-text-caption">Last session</span><span class="cc-text-body-strong" style="font-size: 13.5px">{{ caseFile.lastSessionAt ? formatDate(caseFile.lastSessionAt) : 'None yet' }}</span></div>
         </AppCard>
 
         <div class="cc-section-head">
-          <span class="cc-text-body-strong" style="font-size: 15px">Notes</span>
+          <span class="cc-text-body-strong" style="font-size: 16px">Notes</span>
         </div>
         <AppCard v-for="n in caseFile.notes" :key="n.id" class="cc-note">
           <p class="cc-text-body" style="margin: 0 0 6px">{{ n.body }}</p>
@@ -20,11 +20,11 @@
         <AppButton variant="secondary" :loading="savingNote" @click="onAddNote">Save note</AppButton>
 
         <div class="cc-section-head">
-          <span class="cc-text-body-strong" style="font-size: 15px">Recommendations</span>
+          <span class="cc-text-body-strong" style="font-size: 16px">Recommendations</span>
         </div>
         <AppCard v-for="r in caseFile.recommendations" :key="r.id" class="cc-reco">
           <div class="cc-reco__body">
-            <div class="cc-text-body-strong" style="font-size: 13px">{{ r.productName }}</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">{{ r.productName }}</div>
             <div class="cc-text-caption">{{ r.note }}</div>
           </div>
           <AppButton variant="secondary" @click="router.push({ name: 'product-detail', params: { id: r.productId } })">View</AppButton>
@@ -94,7 +94,7 @@ function formatDate(iso: string) {
   border-radius: var(--cc-radius-sm);
   padding: 10px 12px;
   font-family: var(--cc-font-interface);
-  font-size: 13px;
+  font-size: 13.5px;
   box-sizing: border-box;
   resize: vertical;
 }

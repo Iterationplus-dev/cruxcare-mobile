@@ -19,7 +19,7 @@
         <div v-for="n in filtered" :key="n.id" class="cc-notif" :class="{ 'cc-notif--unread': !n.read }" @click="onOpen(n)">
           <AppIcon :name="iconFor(n.category)" :size="20" color="var(--cc-color-primary)" />
           <div class="cc-notif__body">
-            <div class="cc-text-body-strong" style="font-size: 13px">{{ n.title }}</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">{{ n.title }}</div>
             <div class="cc-text-caption">{{ n.body }}</div>
           </div>
           <span v-if="!n.read" class="cc-notif__dot" />
@@ -85,7 +85,7 @@ function onMarkAll() {
   color: var(--cc-color-primary);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 12.5px;
   cursor: pointer;
 }
 .cc-inbox__chips {

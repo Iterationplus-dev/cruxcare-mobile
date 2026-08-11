@@ -2,14 +2,18 @@
   <ion-page>
     <ion-header class="cc-plain-header">
       <ion-toolbar class="cc-plain-header__bar">
-        <ion-buttons slot="start"><ion-back-button default-href="/auth/login" text="" /></ion-buttons>
+        <ion-buttons slot="start">
+          <button type="button" class="cc-plain-header__back" aria-label="Back" @click="goBack">
+            <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
+          </button>
+        </ion-buttons>
         <ion-title>Forgot password</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Let's get you back in</h2>
-        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 13px">
+        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 13.5px">
           Tell us where to send a reset code. It has to be the email or phone already on the account.
         </p>
 
@@ -21,7 +25,7 @@
             @click="channel = 'sms'"
           >
             <AppIcon name="sms" :size="20" color="var(--cc-color-primary)" />
-            <div class="cc-text-body-strong" style="font-size: 13px">Text me</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Text me</div>
           </button>
           <button
             type="button"
@@ -30,11 +34,16 @@
             @click="channel = 'email'"
           >
             <AppIcon name="mail" :size="20" color="var(--cc-ink-400)" />
-            <div class="cc-text-body-strong" style="font-size: 13px">Email me</div>
+            <div class="cc-text-body-strong" style="font-size: 13.5px">Email me</div>
           </button>
         </div>
 
-        <AppInput v-model="identifier" label="Email or phone" autocomplete="username" />
+        <AppInput
+          v-model="identifier"
+          label="Email or phone"
+          placeholder="amara.okafor@gmail.com"
+          autocomplete="username"
+        />
 
         <div class="cc-notice">
           <AppIcon name="shield" :size="20" color="var(--cc-color-primary)" />
@@ -54,20 +63,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import {
-  IonBackButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-} from '@ionic/vue';
+import { IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppIcon, AppInput } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
 
 const router = useRouter();
+
+/** ion-back-button did nothing here when login was reached via replace(). */
+function goBack() {
+  if (window.history.state?.back) router.back();
+  else router.replace({ name: 'login' });
+}
 const channel = ref<'sms' | 'email'>('sms');
 const identifier = ref('');
 const submitting = ref(false);
@@ -89,6 +96,16 @@ async function onSubmit() {
 <style scoped>
 .cc-plain-header {
   box-shadow: none;
+}
+.cc-plain-header__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-touch-min);
+  height: var(--cc-touch-min);
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .cc-plain-header__bar {
   --background: var(--cc-surface-0);
@@ -138,8 +155,8 @@ async function onSubmit() {
 .cc-notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

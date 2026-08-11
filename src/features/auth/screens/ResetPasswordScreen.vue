@@ -9,7 +9,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Set a new password</h2>
-        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 13px">
+        <p class="cc-text-body" style="margin: 0 0 18px; font-size: 13.5px">
           Choose something you haven't used on CruxCare before.
         </p>
 
@@ -27,16 +27,16 @@
         <AppInput v-model="confirm" label="Confirm new password" :type="show ? 'text' : 'password'" />
 
         <AppCard>
-          <div class="cc-text-body-strong" style="font-size: 13px; margin-bottom: 9px">Requirements</div>
+          <div class="cc-text-body-strong" style="font-size: 13.5px; margin-bottom: 9px">Requirements</div>
           <div v-for="r in requirements" :key="r.label" class="cc-req">
             <AppIcon :name="r.met ? 'check' : 'radio_button_unchecked'" :size="18" :color="r.met ? 'var(--cc-color-success)' : 'var(--cc-ink-300)'" />
-            <span class="cc-text-body" style="font-size: 12px">{{ r.label }}</span>
+            <span class="cc-text-body" style="font-size: 12.5px">{{ r.label }}</span>
           </div>
         </AppCard>
 
         <label class="cc-signout">
           <input v-model="signOutOthers" type="checkbox" />
-          <span class="cc-text-body" style="font-size: 12px">Sign out of all other devices now</span>
+          <span class="cc-text-body" style="font-size: 12.5px">Sign out of all other devices now</span>
         </label>
       </div>
       <div class="cc-screen__footer">

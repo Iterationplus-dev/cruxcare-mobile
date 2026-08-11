@@ -78,22 +78,22 @@ withDefaults(
 .cc-error-state__title {
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 14.5px;
+  line-height: 21px;
   color: #5e1f1a;
   margin-bottom: 4px;
 }
 .cc-error-state__message {
   font-family: var(--cc-font-interface);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 13.5px;
+  line-height: 21px;
   color: #8e2e27;
 }
 .cc-error-state__card-heading {
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
-  line-height: 19px;
+  font-size: 13.5px;
+  line-height: 20px;
   margin-bottom: 12px;
 }
 .cc-error-state__card--grow {

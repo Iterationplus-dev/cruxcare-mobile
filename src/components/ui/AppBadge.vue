@@ -17,8 +17,8 @@ withDefaults(
   padding: 2px 8px;
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 10px;
-  line-height: 15px;
+  font-size: 10.5px;
+  line-height: 16px;
   background: var(--cc-color-mist);
   color: var(--cc-color-primary-dark);
 }

@@ -4,15 +4,20 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Recover without your phone</h2>
-        <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12px">
+        <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12.5px">
           A person reviews this. Wallet, savings and commitment balances stay frozen while the case is open.
         </p>
 
-        <AppInput v-model="registeredName" label="Crux ID or registered name" />
-        <AppInput v-model="contact" label="A contact we can reply to" autocomplete="email" />
+        <AppInput v-model="registeredName" label="Crux ID or registered name" placeholder="Amara Okafor" />
+        <AppInput v-model="contact" label="A contact we can reply to" placeholder="amara.new@gmail.com" autocomplete="email" />
         <div class="cc-field">
           <label class="cc-field__label">What happened</label>
-          <textarea v-model="description" class="cc-textarea" rows="3" placeholder="Briefly describe what happened" />
+          <textarea
+            v-model="description"
+            class="cc-textarea"
+            rows="3"
+            placeholder="Phone stolen on 3 Aug, number not yet restored by my network."
+          />
         </div>
 
         <div class="cc-notice">
@@ -81,7 +86,7 @@ async function onSubmit() {
   display: block;
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 13.5px;
   margin-bottom: 4px;
 }
 .cc-textarea {
@@ -90,7 +95,7 @@ async function onSubmit() {
   border-radius: var(--cc-radius-sm);
   padding: 9px 12px;
   font-family: var(--cc-font-interface);
-  font-size: 13px;
+  font-size: 13.5px;
   box-sizing: border-box;
   resize: vertical;
 }
@@ -105,8 +110,8 @@ async function onSubmit() {
 .cc-notice p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

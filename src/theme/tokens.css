@@ -50,43 +50,43 @@
   --cc-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   /* ---- Typography: scale (size/line-height/weight) ---- */
-  --cc-text-display-size: 18px;
-  --cc-text-display-line: 22px;
+  --cc-text-display-size: 19px;
+  --cc-text-display-line: 23px;
   --cc-text-display-weight: 700;
 
-  --cc-text-h1-size: 17px;
-  --cc-text-h1-line: 22px;
+  --cc-text-h1-size: 18px;
+  --cc-text-h1-line: 23px;
   --cc-text-h1-weight: 700;
 
-  --cc-text-h2-size: 16px;
-  --cc-text-h2-line: 21px;
+  --cc-text-h2-size: 17px;
+  --cc-text-h2-line: 22px;
   --cc-text-h2-weight: 700;
 
-  --cc-text-body-size: 14px;
-  --cc-text-body-line: 22px;
+  --cc-text-body-size: 14.5px;
+  --cc-text-body-line: 23px;
   --cc-text-body-weight: 400;
 
-  --cc-text-body-strong-size: 14px;
-  --cc-text-body-strong-line: 22px;
+  --cc-text-body-strong-size: 14.5px;
+  --cc-text-body-strong-line: 23px;
   --cc-text-body-strong-weight: 600;
 
-  --cc-text-subtitle-size: 12px;
-  --cc-text-subtitle-line: 18px;
+  --cc-text-subtitle-size: 12.5px;
+  --cc-text-subtitle-line: 19px;
   --cc-text-subtitle-weight: 400;
 
-  --cc-text-caption-size: 11px; /* floor — nothing renders smaller */
-  --cc-text-caption-line: 15px;
+  --cc-text-caption-size: 11.5px; /* floor — nothing renders smaller */
+  --cc-text-caption-line: 16px;
   --cc-text-caption-weight: 400;
 
-  --cc-text-mono-size: 14px;
-  --cc-text-mono-line: 20px;
+  --cc-text-mono-size: 14.5px;
+  --cc-text-mono-line: 21px;
   --cc-text-mono-weight: 500;
 
   /* Elder-friendly mode (Point Facility attendee screens, L1-L4) */
-  --cc-text-elder-body-size: 17px;
-  --cc-text-elder-body-line: 26px;
-  --cc-text-elder-caption-size: 15px;
-  --cc-text-elder-caption-line: 22px;
+  --cc-text-elder-body-size: 18px;
+  --cc-text-elder-body-line: 27.5px;
+  --cc-text-elder-caption-size: 16px;
+  --cc-text-elder-caption-line: 23px;
   --cc-touch-elder: 56px;
 
   /* ---- Spacing scale (4-point) ---- */
@@ -115,7 +115,7 @@
   /* ---- Touch & layout ---- */
   --cc-touch-min: 44px;
   --cc-button-height: 47px;
-  --cc-input-height: 44px;
+  --cc-input-height: 48px;
   --cc-textbutton-height: 44px;
   --cc-tabbar-height: 66px;
   --cc-statusbar-height: 50px;

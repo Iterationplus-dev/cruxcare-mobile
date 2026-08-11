@@ -4,7 +4,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Before you delete</h2>
-        <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12px">
+        <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12.5px">
           Settle what's outstanding first. Deleting is permanent after 30 days.
         </p>
 
@@ -30,7 +30,7 @@
           />
         </AppCard>
 
-        <div class="cc-text-body-strong" style="font-size: 13px">Why are you leaving? (optional)</div>
+        <div class="cc-text-body-strong" style="font-size: 13.5px">Why are you leaving? (optional)</div>
         <div class="cc-reasons">
           <button
             v-for="r in reasons"
@@ -108,7 +108,7 @@ function formatSlot(iso: string) {
   gap: 10px;
   align-items: center;
   font-family: var(--cc-font-interface);
-  font-size: 13px;
+  font-size: 13.5px;
   cursor: pointer;
   text-align: left;
 }
@@ -125,8 +125,8 @@ function formatSlot(iso: string) {
 .cc-alt p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-screen__footer {

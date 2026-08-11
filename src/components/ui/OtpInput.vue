@@ -94,16 +94,23 @@ onBeforeUnmount(() => {
 <style scoped>
 .cc-otp {
   display: flex;
+  justify-content: center;
   gap: 10px;
 }
 .cc-otp__digit {
-  width: 44px;
-  height: 52px;
+  /* Flexible so any code length divides the row evenly and stays on screen,
+     capped so short codes don't stretch into slabs. */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 56px;
+  height: 56px;
+  padding: 0;
+  box-sizing: border-box;
   text-align: center;
   border: 1px solid var(--cc-line);
   border-radius: var(--cc-radius-sm);
   font-family: var(--cc-font-mono);
-  font-size: 20px;
+  font-size: 21px;
   color: var(--cc-ink-900);
   background: var(--cc-surface-0);
 }
@@ -116,13 +123,15 @@ onBeforeUnmount(() => {
   background: var(--cc-error-surface);
 }
 .cc-otp__error {
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 11.5px;
+  line-height: 17px;
   color: var(--cc-error-surface-text);
   margin: 8px 0 0;
+  text-align: center;
 }
 .cc-otp__resend {
   margin-top: 16px;
+  text-align: center;
 }
 .cc-otp__resend-btn {
   background: none;
@@ -131,7 +140,7 @@ onBeforeUnmount(() => {
   color: var(--cc-color-primary);
   font-family: var(--cc-font-interface);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 14.5px;
   cursor: pointer;
   min-height: var(--cc-touch-min);
 }

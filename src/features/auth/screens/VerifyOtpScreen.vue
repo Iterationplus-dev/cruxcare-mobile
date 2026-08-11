@@ -10,7 +10,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Enter the 5-digit code</h2>
-        <p class="cc-text-body" style="margin: 0 0 22px; font-size: 13px">
+        <p class="cc-text-body" style="margin: 0 0 22px; font-size: 13.5px">
           Sent to {{ maskedContact }} · <a href="#" @click.prevent="router.back()">change number</a>
         </p>
 
@@ -177,8 +177,8 @@ async function onComplete(value: string) {
 .cc-otp-lockout p {
   margin: 0;
   font-family: var(--cc-font-interface);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-600);
 }
 .cc-otp-lockout {

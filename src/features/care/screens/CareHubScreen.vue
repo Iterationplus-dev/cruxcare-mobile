@@ -11,7 +11,7 @@
             <div class="cc-care__therapist">
               <AppAvatar :name="therapist.name" :size="56" />
               <div class="cc-care__therapist-body">
-                <div class="cc-text-body-strong" style="font-size: 15px">{{ therapist.name }}</div>
+                <div class="cc-text-body-strong" style="font-size: 16px">{{ therapist.name }}</div>
                 <div class="cc-text-caption">Your therapist · {{ therapist.specialties.join(', ') }}</div>
               </div>
             </div>
@@ -27,10 +27,10 @@
           <AppCard v-if="nextVisit" class="cc-care__next-visit">
             <div class="cc-text-caption" style="color: #9bd2c8">NEXT VISIT</div>
             <div class="cc-text-h2" style="color: #fff; margin: 4px 0">{{ formatSlot(nextVisit.slot) }}</div>
-            <div style="color: #cde7e1; font-size: 13px">{{ nextVisit.type }} visit</div>
+            <div style="color: #cde7e1; font-size: 13.5px">{{ nextVisit.type }} visit</div>
           </AppCard>
 
-          <div class="cc-text-body-strong" style="font-size: 15px">Your care</div>
+          <div class="cc-text-body-strong" style="font-size: 16px">Your care</div>
           <AppCard style="padding: 0">
             <AppListRow
               title="Health profile"
@@ -43,10 +43,10 @@
           </AppCard>
 
           <template v-if="caseFile?.recommendations.length">
-            <div class="cc-text-body-strong" style="font-size: 15px">Recommended by your therapist</div>
+            <div class="cc-text-body-strong" style="font-size: 16px">Recommended by your therapist</div>
             <AppCard v-for="r in caseFile.recommendations" :key="r.id" class="cc-care__reco">
               <div class="cc-care__reco-body">
-                <div class="cc-text-body-strong" style="font-size: 14px">{{ r.productName }}</div>
+                <div class="cc-text-body-strong" style="font-size: 14.5px">{{ r.productName }}</div>
                 <div class="cc-text-caption">{{ r.note }}</div>
               </div>
               <AppButton variant="secondary" @click="router.push({ name: 'product-detail', params: { id: r.productId } })">
@@ -65,7 +65,7 @@
           <AppCard v-for="t in therapists" :key="t.id" class="cc-care__discover">
             <AppAvatar :name="t.name" :size="46" />
             <div class="cc-care__therapist-body">
-              <div class="cc-text-body-strong" style="font-size: 14px">{{ t.name }}</div>
+              <div class="cc-text-body-strong" style="font-size: 14.5px">{{ t.name }}</div>
               <div class="cc-text-caption">{{ t.specialties.join(', ') }}</div>
             </div>
             <AppButton variant="secondary" @click="requestTherapist(t.id)">Request</AppButton>
@@ -151,7 +151,7 @@ async function requestTherapist(id: string) {
 
 <style scoped>
 .cc-care__header {
-  padding: 4px 16px 14px;
+  padding: calc(env(safe-area-inset-top) + 4px) 16px 14px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
 }
 .cc-screen {
@@ -178,7 +178,7 @@ async function requestTherapist(id: string) {
 }
 .cc-care__actions :deep(.cc-btn) {
   height: 44px;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 .cc-care__video-btn {
   width: 44px;

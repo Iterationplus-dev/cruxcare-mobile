@@ -79,13 +79,13 @@ const emit = defineEmits<{ click: [] }>();
   min-width: 0;
 }
 .cc-row__title {
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 14.5px;
+  line-height: 23px;
   color: var(--cc-ink-900);
 }
 .cc-row__subtitle {
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 12.5px;
+  line-height: 19px;
   color: var(--cc-ink-400);
 }
 .cc-row__trailing,
