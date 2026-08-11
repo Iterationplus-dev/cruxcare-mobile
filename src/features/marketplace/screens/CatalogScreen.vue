@@ -22,12 +22,13 @@
         <input v-model="search" type="search" placeholder="Search products & services" />
       </div>
       <div class="cc-catalog__chips">
+        <AppChip label="All" :selected="category === ''" @click="category = ''" />
         <AppChip
           v-for="c in categories"
           :key="c"
           :label="c"
           :selected="category === c"
-          @click="category = category === c ? '' : c"
+          @click="category = c"
         />
       </div>
     </div>

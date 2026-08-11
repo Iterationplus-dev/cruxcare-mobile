@@ -18,12 +18,20 @@
 
         <div class="cc-text-body-strong" style="font-size: 14.5px">Still need help?</div>
         <AppCard class="cc-contact">
-          <AppIcon name="support_agent" :size="22" color="var(--cc-color-primary)" />
-          <div class="cc-contact__body">
-            <div class="cc-text-body-strong" style="font-size: 14.5px">Contact support</div>
-            <div class="cc-text-caption">Typical reply within a few hours</div>
+          <div class="cc-contact__intro">
+            <div class="cc-contact__icon" aria-hidden="true">
+              <AppIcon name="support_agent" :size="24" color="var(--cc-color-primary)" />
+            </div>
+            <div class="cc-contact__body">
+              <div class="cc-text-body-strong cc-contact__title">Contact support</div>
+              <p class="cc-contact__description">Our care team is here to help with your account, bookings, and orders.</p>
+            </div>
           </div>
-          <AppButton variant="secondary" @click="toast.show('Support request queued.', 'success')">Message</AppButton>
+          <div class="cc-contact__response-time">
+            <AppIcon name="schedule" :size="16" color="var(--cc-ink-600)" />
+            <span>Typical reply within a few hours</span>
+          </div>
+          <AppButton icon="chat" @click="toast.show('Support request queued.', 'success')">Message support</AppButton>
         </AppCard>
       </div>
     </ion-content>
@@ -58,10 +66,44 @@ const faqs = [
 }
 .cc-contact {
   display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+.cc-contact__intro {
+  display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
+}
+.cc-contact__icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-color-mist);
 }
 .cc-contact__body {
+  min-width: 0;
   flex: 1;
+}
+.cc-contact__title {
+  font-size: 16px;
+  line-height: 22px;
+}
+.cc-contact__description {
+  margin: 3px 0 0;
+  color: var(--cc-ink-600);
+  font-size: 13.5px;
+  line-height: 20px;
+}
+.cc-contact__response-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cc-ink-600);
+  font-size: 13px;
+  line-height: 18px;
 }
 </style>

@@ -1,14 +1,15 @@
 <template>
-  <ion-app>
+  <ion-app class="cc-app" :class="{ 'cc-app--authenticated': isAuthenticatedRoute }">
     <ion-router-outlet />
   </ion-app>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted } from 'vue';
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
+import { useRoute } from 'vue-router';
 import { useToast } from '@/composables/useToast';
 
 /**
@@ -18,6 +19,8 @@ import { useToast } from '@/composables/useToast';
  * a root screen (Welcome, a tab) is too easy to trigger by accident.
  */
 const toast = useToast();
+const route = useRoute();
+const isAuthenticatedRoute = computed(() => route.matched.some((record) => record.meta.requiresAuth));
 let backListener: PluginListenerHandle | undefined;
 let lastBackPressAt = 0;
 
@@ -42,3 +45,19 @@ onUnmounted(() => {
   void backListener?.remove();
 });
 </script>
+
+<style>
+.cc-app--authenticated {
+  background: var(--cc-surface-app) url('@/assets/images/screen-bg.png') center top / cover no-repeat;
+}
+
+/* Authenticated route components retain their own cards and controls, while
+   the shared botanical asset supplies the base screen surface behind them. */
+.cc-app--authenticated ion-content.cc-screen {
+  --background: url('@/assets/images/screen-bg.png') center top / cover no-repeat !important;
+}
+
+.cc-app--authenticated ion-content.cc-screen::part(background) {
+  background: var(--background) !important;
+}
+</style>

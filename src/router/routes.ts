@@ -175,6 +175,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/features/care/screens/HealthProfileScreen.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/care/therapists/:id',
+    name: 'therapist-detail',
+    component: () => import('@/features/care/screens/TherapistDetailScreen.vue'),
+    meta: { requiresAuth: true },
+  },
 
   // ---- Wallet pushes ----
   {
