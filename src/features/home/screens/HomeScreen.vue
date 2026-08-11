@@ -175,7 +175,7 @@ function goNotifications() {
   display: flex;
   align-items: center;
   gap: 11px;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(247, 250, 249, 0.38) 55%, rgba(247, 250, 249, 0.62));
 }
 .cc-home__greeting {
   flex: 1;

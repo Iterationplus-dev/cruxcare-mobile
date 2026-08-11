@@ -2,7 +2,10 @@
   <ion-page>
     <div class="cc-inbox__header">
       <div class="cc-inbox__title-row">
-        <span class="cc-text-h1">Notifications</span>
+        <button type="button" class="cc-inbox__back" aria-label="Back" @click="goBack">
+          <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
+        </button>
+        <span class="cc-text-h1 cc-inbox__title">Notifications</span>
         <button type="button" class="cc-inbox__markall" @click="onMarkAll">Mark all read</button>
       </div>
       <div class="cc-inbox__chips">
@@ -66,18 +69,38 @@ function onOpen(n: AppNotification) {
 function onMarkAll() {
   notifications.value?.filter((n) => !n.read).forEach((n) => markRead.mutate(n.id));
 }
+function goBack() {
+  if (window.history.state?.back) router.back();
+  else router.replace({ name: 'tabs-home' });
+}
 </script>
 
 <style scoped>
 .cc-inbox__header {
-  padding: 4px 16px 12px;
+  padding: calc(env(safe-area-inset-top) + 4px) 16px 12px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
 }
 .cc-inbox__title-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
   margin-bottom: 12px;
+}
+.cc-inbox__back {
+  width: var(--cc-touch-min);
+  height: var(--cc-touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -10px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.cc-inbox__title {
+  flex: 1;
 }
 .cc-inbox__markall {
   background: none;

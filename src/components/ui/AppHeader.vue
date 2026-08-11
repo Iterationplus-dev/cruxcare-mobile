@@ -64,9 +64,9 @@ function goBack() {
 .cc-header--botanical .cc-header__toolbar {
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.8),
-    rgba(255, 255, 255, 0.62) 55%,
-    rgba(247, 250, 249, 0.92)
+    rgba(255, 255, 255, 0.22),
+    rgba(247, 250, 249, 0.38) 55%,
+    rgba(247, 250, 249, 0.62)
   );
 }
 .cc-header__back {

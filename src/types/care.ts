@@ -4,6 +4,10 @@ export interface TherapistSummary {
   avatarUrl: string | null;
   specialties: string[];
   rating: number | null;
+  location?: string | null;
+  bio?: string | null;
+  experienceYears?: number | null;
+  languages?: string[];
   nextAvailableSlot: string | null;
   fullyBooked: boolean;
 }

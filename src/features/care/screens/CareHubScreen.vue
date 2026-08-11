@@ -63,12 +63,27 @@
             message="Choose a therapist below or wait to be assigned by CruxCare."
           />
           <AppCard v-for="t in therapists" :key="t.id" class="cc-care__discover">
-            <AppAvatar :name="t.name" :size="46" />
-            <div class="cc-care__therapist-body">
-              <div class="cc-text-body-strong" style="font-size: 14.5px">{{ t.name }}</div>
-              <div class="cc-text-caption">{{ t.specialties.join(', ') }}</div>
+            <div class="cc-care__discover-profile">
+              <AppAvatar :name="t.name" :size="46" />
+              <div v-if="t.rating !== null" class="cc-care__discover-rating" :aria-label="`${t.rating.toFixed(1)} out of 5 rating`">
+                <AppIcon name="star" :size="16" filled color="var(--cc-color-warning)" />
+                <span>{{ t.rating.toFixed(1) }}</span>
+              </div>
             </div>
-            <AppButton variant="secondary" @click="requestTherapist(t.id)">Request</AppButton>
+            <div class="cc-care__discover-body">
+              <div class="cc-text-body-strong cc-care__discover-name">{{ t.name }}</div>
+              <div class="cc-text-caption cc-care__discover-specialties">{{ t.specialties.join(', ') }}</div>
+              <div class="cc-care__discover-location">
+                <AppIcon name="location_on" :size="16" color="var(--cc-ink-600)" />
+                <span>{{ t.location ?? 'Online consultation' }}</span>
+              </div>
+              <div class="cc-care__discover-actions">
+                <AppButton variant="secondary" @click="router.push({ name: 'therapist-detail', params: { id: t.id } })">
+                  View profile
+                </AppButton>
+                <AppButton @click="requestTherapist(t.id)">Request</AppButton>
+              </div>
+            </div>
           </AppCard>
         </template>
       </div>
@@ -152,7 +167,7 @@ async function requestTherapist(id: string) {
 <style scoped>
 .cc-care__header {
   padding: calc(env(safe-area-inset-top) + 4px) 16px 14px;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(247, 250, 249, 0.38) 55%, rgba(247, 250, 249, 0.62));
 }
 .cc-screen {
   --background: var(--cc-surface-app);
@@ -203,8 +218,52 @@ async function requestTherapist(id: string) {
   flex: 1;
 }
 .cc-care__discover {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.cc-care__discover-profile {
+  align-self: center;
   display: flex;
-  gap: 12px;
+  flex-direction: column;
   align-items: center;
+  gap: 6px;
+}
+.cc-care__discover-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+}
+.cc-care__discover-name {
+  font-size: 16px;
+  line-height: 22px;
+}
+.cc-care__discover-rating,
+.cc-care__discover-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cc-ink-600);
+  font-size: 13px;
+  line-height: 18px;
+}
+.cc-care__discover-rating {
+  color: var(--cc-ink-900);
+  font-weight: 600;
+}
+.cc-care__discover-specialties {
+  min-height: 19px;
+  line-height: 19px;
+}
+.cc-care__discover-location {
+  margin-bottom: 4px;
+}
+.cc-care__discover-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 </style>
