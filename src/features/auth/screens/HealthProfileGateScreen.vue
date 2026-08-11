@@ -33,7 +33,7 @@
             :icon-color="s.value ? 'var(--cc-color-success)' : 'var(--cc-color-warning)'"
             chevron
             clickable
-            @click="router.push({ name: 'health-profile' })"
+            @click="openHealthProfile"
           />
         </AppCard>
 
@@ -50,7 +50,9 @@
         </div>
       </div>
       <div class="cc-screen__footer">
-        <AppButton style="margin-bottom: 9px" @click="router.push({ name: 'health-profile' })">Continue</AppButton>
+        <AppButton style="margin-bottom: 9px" @click="continueToCare">
+          {{ isComplete ? 'Continue to care' : 'Continue' }}
+        </AppButton>
         <AppButton variant="text" class="cc-skip-btn" @click="goBrowseShop">Browse the shop first</AppButton>
       </div>
     </ion-content>
@@ -81,6 +83,19 @@ const sections = computed(() => {
 });
 const filledCount = computed(() => sections.value.filter((s) => s.value).length);
 const completion = computed(() => Math.round((filledCount.value / sections.value.length) * 100));
+const isComplete = computed(() => filledCount.value === sections.value.length);
+
+function openHealthProfile() {
+  router.push({ name: 'health-profile', query: { returnTo: 'health-profile-gate' } });
+}
+
+function continueToCare() {
+  if (isComplete.value) {
+    router.replace({ name: 'care-hub' });
+    return;
+  }
+  openHealthProfile();
+}
 
 /** Shop stays open while care is gated (A4) — this is the escape hatch. */
 function goBrowseShop() {

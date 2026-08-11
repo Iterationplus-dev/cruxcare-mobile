@@ -10,7 +10,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <div class="cc-login-mark">
-          <img :src="logoMark" alt="" width="38" height="41" />
+          <img :src="logoMark" class="cc-login-mark__image" alt="" />
         </div>
         <h2 class="cc-text-h1" style="margin: 0 0 5px; text-align: center">Welcome back</h2>
         <p class="cc-text-body" style="margin: 0 0 20px; font-size: 13.5px; text-align: center">
@@ -48,6 +48,21 @@
             </button>
           </template>
         </AppInput>
+
+        <div v-if="usingMockApi && !formError" class="cc-login-test-account">
+          <div>
+            <div class="cc-login-test-account__title">Mock UI test account</div>
+            <div class="cc-login-test-account__detail">Pre-filled for local testing</div>
+          </div>
+          <button
+            type="button"
+            class="cc-login-test-account__button"
+            :disabled="submitting"
+            @click="loginWithMockAccount"
+          >
+            {{ submitting ? 'Signing in…' : 'Use & log in' }}
+          </button>
+        </div>
 
         <div class="cc-login-row">
           <label v-if="!formError" class="cc-login-remember">
@@ -89,7 +104,7 @@
           New to CruxCare? <a href="#" @click.prevent="router.push({ name: 'register' })">Create an account</a>
         </div>
         <div v-if="!formError" class="cc-text-body" style="text-align: center; font-size: 12.5px">
-          Are you a member?
+          Are you a therapist?
           <a href="#" @click.prevent="router.push({ name: 'become-therapist' })">Become a therapist</a>
         </div>
       </div>
@@ -107,7 +122,7 @@ import {
   IonPage,
   IonToolbar,
 } from '@ionic/vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
@@ -115,8 +130,10 @@ import { biometric } from '@/services/biometric';
 import { useAuthStore } from '@/stores/auth';
 import { ApiError } from '@/types/api';
 import logoMark from '@/assets/images/logo-mark.png';
+import { uiTestCredentials } from '@/mocks/testAccount';
 
 const router = useRouter();
+const route = useRoute();
 const auth = useAuthStore();
 
 const identifier = ref('');
@@ -126,14 +143,38 @@ const keepLoggedIn = ref(true);
 const submitting = ref(false);
 const formError = ref('');
 const attemptsRemaining = ref<number | null>(null);
+const usingMockApi = import.meta.env.VITE_USE_API_MOCKS === 'true';
 
-async function onSubmit() {
-  submitting.value = true;
+function fillMockCredentials() {
+  identifier.value = uiTestCredentials.identifier;
+  password.value = uiTestCredentials.password;
   formError.value = '';
   attemptsRemaining.value = null;
+}
+
+async function loginWithMockAccount() {
+  fillMockCredentials();
+  await onSubmit();
+}
+
+async function onSubmit() {
+  formError.value = '';
+  attemptsRemaining.value = null;
+  const normalizedIdentifier = identifier.value.trim();
+
+  if (!normalizedIdentifier) {
+    formError.value = 'Enter your email address or phone number.';
+    return;
+  }
+  if (!password.value) {
+    formError.value = 'Enter your password.';
+    return;
+  }
+
+  submitting.value = true;
   try {
-    await auth.login(identifier.value, password.value);
-    router.replace({ name: 'tabs-home' });
+    await auth.login(normalizedIdentifier, password.value, keepLoggedIn.value);
+    navigateAfterLogin();
   } catch (e) {
     if (e instanceof ApiError) {
       formError.value = e.status === 401 ? 'Email or password is wrong' : e.message;
@@ -155,11 +196,20 @@ async function onBiometricLogin() {
   const ok = await biometric.verify('Log in to CruxCare');
   if (!ok) return;
   await auth.hydrate();
-  if (auth.isAuthenticated) router.replace({ name: 'tabs-home' });
+  if (auth.isAuthenticated) navigateAfterLogin();
 }
 
 function goForgotPassword() {
   router.push({ name: 'forgot-password' });
+}
+
+function navigateAfterLogin() {
+  if (route.query.redirect === 'link-crux-id') {
+    router.replace({ name: 'link-crux-id', query: { forTherapist: 'true' } });
+    return;
+  }
+
+  router.replace({ name: 'tabs-home' });
 }
 </script>
 
@@ -183,7 +233,19 @@ function goForgotPassword() {
 .cc-login-mark {
   display: flex;
   justify-content: center;
-  margin-bottom: 6px;
+  align-items: center;
+  width: 96px;
+  height: 96px;
+  margin: 6px auto 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, #ffffff 0 58%, #f5fbf9 100%);
+  box-shadow:
+    0 16px 38px rgba(19, 117, 101, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+.cc-login-mark__image {
+  width: 56px;
+  height: auto;
 }
 .cc-login-error {
   display: flex;
@@ -209,6 +271,45 @@ function goForgotPassword() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.cc-login-test-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px dashed #9bc9be;
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-color-mist);
+}
+.cc-login-test-account__title {
+  font-family: var(--cc-font-interface);
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--cc-ink-900);
+}
+.cc-login-test-account__detail {
+  margin-top: 2px;
+  font-family: var(--cc-font-interface);
+  font-size: 11.5px;
+  color: var(--cc-ink-600);
+}
+.cc-login-test-account__button {
+  flex: none;
+  min-height: 36px;
+  padding: 0 11px;
+  border: none;
+  border-radius: 9px;
+  background: var(--cc-color-primary);
+  color: #fff;
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cc-login-test-account__button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 .cc-login-remember {
   display: flex;

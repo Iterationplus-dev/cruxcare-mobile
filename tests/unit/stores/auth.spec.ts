@@ -1,11 +1,29 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/stores/auth';
 import { demoCredentials } from '@/mocks/db';
+import { uiTestCredentials } from '@/mocks/testAccount';
+
+const { secureStorageMock } = vi.hoisted(() => ({
+  secureStorageMock: {
+    get: vi.fn(),
+    set: vi.fn(),
+    remove: vi.fn(),
+  },
+}));
+
+vi.mock('@/services/secureStorage', () => ({
+  secureStorage: secureStorageMock,
+  SECURE_STORAGE_KEYS: { authToken: 'cc_auth_token' },
+}));
 
 describe('useAuthStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+    secureStorageMock.get.mockResolvedValue(null);
+    secureStorageMock.set.mockResolvedValue(undefined);
+    secureStorageMock.remove.mockResolvedValue(undefined);
+    vi.clearAllMocks();
   });
 
   it('registers a new client and holds a session', async () => {
@@ -45,6 +63,23 @@ describe('useAuthStore', () => {
     await auth.login(demoCredentials.identifier, demoCredentials.password);
     expect(auth.isAuthenticated).toBe(true);
     expect(auth.roles).toEqual(expect.arrayContaining(['client', 'member', 'therapist']));
+  });
+
+  it('logs in the seeded mock UI test account', async () => {
+    const auth = useAuthStore();
+    await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);
+
+    expect(auth.user?.id).toBe('ui-test-user');
+    expect(auth.roles).toEqual(['client']);
+  });
+
+  it('keeps a session in memory when the user opts out of persistent login', async () => {
+    const auth = useAuthStore();
+    await auth.login(demoCredentials.identifier, demoCredentials.password, false);
+
+    expect(auth.isAuthenticated).toBe(true);
+    expect(secureStorageMock.remove).toHaveBeenCalledWith('cc_auth_token');
+    expect(secureStorageMock.set).not.toHaveBeenCalled();
   });
 
   it('rejects the wrong password and reports attempts remaining', async () => {

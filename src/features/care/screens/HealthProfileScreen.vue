@@ -1,9 +1,6 @@
 <template>
   <ion-page>
     <AppHeader title="Health profile" show-back :botanical="false">
-      <template #actions>
-        <button type="button" class="cc-hp__save" :disabled="saving" @click="onSave">Save</button>
-      </template>
     </AppHeader>
     <ion-content class="cc-screen">
       <LoadingState v-if="isPending" label="Loading your health profile…" />
@@ -38,6 +35,10 @@
       </div>
     </ion-content>
 
+    <div class="cc-screen__footer">
+      <AppButton :loading="saving" @click="onSave">Save health profile</AppButton>
+    </div>
+
     <AppSheet v-model="sheetOpen" :title="editing?.label">
       <textarea
         v-model="draftValue"
@@ -53,7 +54,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { AppButton, AppCard, AppHeader, AppIcon, AppListRow, AppSheet } from '@/components/ui';
 import { LoadingState } from '@/components/state';
 import { healthProfileApi } from '@/api/case-files.api';
@@ -65,6 +66,7 @@ import type { HealthProfileSection } from '@/types/care';
 const { data: profile, isPending, refetch } = useHealthProfile();
 const toast = useToast();
 const router = useRouter();
+const route = useRoute();
 
 const sectionPlaceholders: Record<HealthProfileSection['key'], string> = {
   basics: '34 yrs · 68 kg · 1.66 m',
@@ -129,10 +131,14 @@ async function onSave() {
     await healthProfileApi.update(sections.value, profile.value?.consentVersion ?? 'v1');
     await refetch();
     await toast.show('Health profile updated', 'success');
-    // Previously stayed put with no feedback beyond the toast, which read as
-    // "nothing happened" and left no way onward from the A4 gate flow.
+    if (route.query.returnTo === 'health-profile-gate') {
+      router.replace({ name: 'health-profile-gate' });
+      return;
+    }
     if (window.history.state?.back) router.back();
     else router.replace({ name: 'care-hub' });
+  } catch {
+    await toast.show('Could not save your health profile. Please try again.', 'danger');
   } finally {
     saving.value = false;
   }
@@ -140,15 +146,6 @@ async function onSave() {
 </script>
 
 <style scoped>
-.cc-hp__save {
-  background: none;
-  border: none;
-  color: var(--cc-color-primary);
-  font-family: var(--cc-font-interface);
-  font-weight: 600;
-  font-size: 14.5px;
-  cursor: pointer;
-}
 .cc-screen {
   --background: var(--cc-surface-app);
 }
@@ -195,5 +192,10 @@ async function onSave() {
   font-size: 14.5px;
   box-sizing: border-box;
   resize: vertical;
+}
+.cc-screen__footer {
+  padding: 11px 16px calc(25px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--cc-divider);
+  background: var(--cc-surface-app);
 }
 </style>

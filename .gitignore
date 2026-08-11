@@ -31,7 +31,8 @@ npm-debug.log*
 /plugins
 /www
 /ios
-/android
+/android/*
+!/android/gradle.properties
 .env
 tests/e2e/videos
 tests/e2e/screenshots

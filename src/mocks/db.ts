@@ -9,6 +9,7 @@ import pGimPowder from '@/assets/images/p-gim-powder.jpg';
 import pCapsicumPlaster from '@/assets/images/p-capsicum-plaster.jpg';
 import pLumbarStretcher from '@/assets/images/p-lumbar-stretcher.jpg';
 import pCaccigart from '@/assets/images/p-caccigart.jpg';
+import { uiTestCredentials } from './testAccount';
 
 /**
  * In-memory fixture "database" for MSW. Resets on every page reload —
@@ -57,6 +58,22 @@ export const users: StoredUser[] = [
     biometricEnabled: false,
     createdAt: '2025-11-02T00:00:00Z',
     password: demoCredentials.password,
+  },
+  {
+    id: 'ui-test-user',
+    firstName: 'UI',
+    lastName: 'Tester',
+    email: uiTestCredentials.identifier,
+    phone: '+2348090000000',
+    avatarUrl: null,
+    roles: ['client'],
+    capabilities: ['orders.place', 'appointments.book', 'health-profile.write'],
+    referredBySource: 'other',
+    membership: null,
+    therapistProfile: null,
+    biometricEnabled: false,
+    createdAt: '2026-08-11T00:00:00Z',
+    password: uiTestCredentials.password,
   },
 ];
 

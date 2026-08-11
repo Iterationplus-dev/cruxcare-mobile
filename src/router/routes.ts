@@ -71,12 +71,15 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
 
-  // ---- Therapist activation (entered from Profile, any authed member) ----
+  // ---- Therapist activation ----
+  // TA1 is the public landing reached from Login's therapist door. Starting
+  // verification remains protected on the subsequent route because it adds a
+  // role to the existing account.
   {
     path: '/become-therapist',
     name: 'become-therapist',
     component: () => import('@/features/auth/screens/BecomeTherapistScreen.vue'),
-    meta: { requiresAuth: true, darkStatusBar: true },
+    meta: { darkStatusBar: true },
   },
   {
     path: '/become-therapist/link-crux-id',
