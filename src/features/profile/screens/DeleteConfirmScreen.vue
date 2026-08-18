@@ -19,8 +19,8 @@
             Health profile and session notes · chat history · Crux ID link and network position
           </div>
         </div>
-        <AppInput v-model="typed" label="Type DELETE to confirm" placeholder="DELETE" :invalid="!!error" />
-        <AppInput v-model="password" label="Password" type="password" :error="error" />
+        <AppInput v-model="typed" label="Type DELETE to confirm" placeholder="DELETE" />
+        <AppInput v-model="password" label="Password" type="password" />
         <AppButton
           variant="secondary"
           :disabled="typed !== 'DELETE' || !password"
@@ -42,25 +42,29 @@ import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppIcon, AppInput } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
+import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 
 const router = useRouter();
 const typed = ref('');
 const password = ref('');
 const submitting = ref(false);
-const error = ref('');
+const toast = useToast();
 
 const deadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 const deadlineLabel = deadline.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 
 async function onConfirm() {
   submitting.value = true;
-  error.value = '';
   try {
     const { deletionCompletesAt } = await authApi.deleteAccount(password.value);
     router.replace({ name: 'account-deleted', query: { completesAt: deletionCompletesAt } });
   } catch (e) {
-    error.value = e instanceof ApiError ? e.message : 'Something went wrong.';
+    const message = e instanceof ApiError ? e.message : 'Something went wrong.';
+    await toast.show(message, 'danger', {
+      title: 'Could not delete account',
+      dismissLabel: 'Try again',
+    });
   } finally {
     submitting.value = false;
   }

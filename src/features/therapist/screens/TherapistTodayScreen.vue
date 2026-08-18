@@ -1,8 +1,9 @@
 <template>
   <ion-page>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['appointments'], ['case-files'], ['chat', 'threads'], ['wallet']]" />
       <div class="cc-td__header">
-        <AppAvatar :name="fullName" :size="40" />
+        <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="40" />
         <div class="cc-td__greeting">
           <div class="cc-td__date">{{ formattedDate }}</div>
           <div class="cc-text-h2" style="margin: 0">{{ fullName }}</div>
@@ -87,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
@@ -154,18 +156,26 @@ function goCalendar() {
   --background: var(--cc-surface-app);
 }
 .cc-td__header {
-  padding: calc(env(safe-area-inset-top) + 6px) 16px 0;
+  /* TD1 sets the identity row apart from the status bar above and the stats
+     below; without the vertical padding the three items read as one block. */
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 13px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));
 }
 .cc-td__greeting {
   flex: 1;
+  /* Keeps a long name from crowding the role badge. */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 .cc-td__date {
   font-family: var(--cc-font-interface);
   font-size: 12.5px;
+  line-height: 17px;
   color: var(--cc-color-primary);
 }
 .cc-td__stats {

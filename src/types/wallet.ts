@@ -2,15 +2,25 @@ export type TransactionType =
   | 'order-payment'
   | 'withdrawal'
   | 'transfer'
+  | 'deposit'
+  | 'refund'
+  | 'adjustment'
   | 'commitment-interest'
   | 'cooperative-contribution'
   | 'cooperative-help'
   | 'rank-earning';
 
+/**
+ * The ledger type vocabulary is extensible on the API. Known values remain
+ * discoverable to the UI, while an unfamiliar server value is rendered with
+ * the generic ledger treatment instead of rejecting the entire response.
+ */
+export type TransactionTypeLike = TransactionType | (string & {});
+
 export interface Transaction {
   id: string;
   reference: string;
-  type: TransactionType;
+  type: TransactionTypeLike;
   amount: number;
   /** Positive for credits, negative for debits — server-signed, never inferred. */
   fee: number;
@@ -29,7 +39,7 @@ export interface Wallet {
   lastUpdatedAt: string;
 }
 
-export type MoneyActionKind = 'withdrawal' | 'transfer';
+export type MoneyActionKind = 'withdrawal' | 'transfer' | 'cooperative-contribution';
 
 export interface MoneyQuoteRequest {
   kind: MoneyActionKind;

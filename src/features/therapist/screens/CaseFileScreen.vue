@@ -238,7 +238,8 @@ function formatDate(iso: string) {
 .cc-reco__guidance > div {
   min-width: 0;
 }
-.cc-reco__guidance span {
+/* Same reason as the payout card: a bare `span` also matches the icon root. */
+.cc-reco__guidance > div > span {
   display: block;
   margin-bottom: 2px;
   color: var(--cc-ink-600);

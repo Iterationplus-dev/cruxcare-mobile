@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { applyDarkScreenIcons, applyLightScreenIcons } from '@/services/statusBar';
+import { homeRouteForRole } from './roleHome';
 import routes from './routes';
 
 const router = createRouter({
@@ -27,8 +28,24 @@ router.beforeEach(async (to) => {
   const auth = useAuthStore();
   if (!auth.hydrated) await auth.hydrate();
 
+  // A pending signup token exists only for OTP delivery and verification.
+  // Keep it out of every application and guest route until the email code is
+  // accepted; the API independently enforces the same restriction.
+  const isPendingSignupRoute = to.name === 'register-otp' || to.name === 'register-change-email';
+  if (auth.isAuthenticated && auth.user?.emailVerified === false && !isPendingSignupRoute) {
+    return {
+      name: 'register-otp',
+      query: {
+        purpose: 'signup',
+        contact: auth.user.email,
+        channel: 'email',
+        redirect: 'health-profile-gate',
+      },
+    };
+  }
+
   if (to.meta.requiresGuest && auth.isAuthenticated) {
-    return { name: 'tabs-home' };
+    return { name: homeRouteForRole(auth.activeRole) };
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
@@ -37,7 +54,9 @@ router.beforeEach(async (to) => {
 
   const requiredRole = to.meta.requiresRole as string | undefined;
   if (requiredRole && !auth.roles.includes(requiredRole as never)) {
-    return { name: 'tabs-home' };
+    // Their own dashboard, not the client one — activeRole is always a context
+    // the account actually holds, so this cannot bounce into another refusal.
+    return { name: homeRouteForRole(auth.activeRole) };
   }
 
   return true;

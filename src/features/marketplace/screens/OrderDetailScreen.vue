@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader :title="order ? `Order ${order.reference}` : 'Order'" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['orders']]" />
       <LoadingState v-if="isPending" label="Loading order…" />
       <div v-else-if="order" class="cc-screen__pad">
         <AppCard>
@@ -42,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';

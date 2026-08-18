@@ -11,31 +11,26 @@
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Enter the 5-digit code</h2>
         <p class="cc-text-body" style="margin: 0 0 22px; font-size: 13.5px">
-          Sent to {{ maskedContact }} · <a href="#" @click.prevent="router.back()">change number</a>
+          {{ deliveryMessage }} <a href="#" @click.prevent="onChangeContact">change {{ contactKind }}</a>
         </p>
 
         <OtpInput
           v-model="code"
           :length="5"
-          :error="errorMessage && attemptsRemaining !== null ? errorText : ''"
           :cooldown-remaining="cooldown"
           @complete="onComplete"
           @resend="onResend"
         />
 
-        <div v-if="!errorMessage" class="cc-otp-hint">
-          <AppIcon name="sms" :size="20" color="var(--cc-color-primary)" />
+        <div class="cc-otp-hint">
+          <AppIcon :name="deliveryIcon" :size="20" color="var(--cc-color-primary)" />
           <p>Codes expire after 10 minutes. Three wrong attempts locks the code and sends a fresh one.</p>
-        </div>
-        <div v-else class="cc-otp-lockout">
-          <AppIcon name="lock_clock" :size="20" color="var(--cc-error-surface-text)" />
-          <p>After the next wrong attempt we send a new code and pause entry for 15 minutes.</p>
         </div>
       </div>
 
       <div class="cc-screen__footer">
-        <AppButton :disabled="code.length < 5 && !errorMessage" :loading="verifying" @click="onComplete(code)">
-          {{ errorMessage ? 'Try again' : 'Verify' }}
+        <AppButton :disabled="code.length < 5" :loading="verifying" @click="onComplete(code)">
+          Verify
         </AppButton>
       </div>
     </ion-content>
@@ -53,11 +48,12 @@ import {
   IonToolbar,
 } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
-import { authApi } from '@/api/auth.api';
+import { authApi, type OtpChannel } from '@/api/auth.api';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import OtpInput from '@/components/ui/OtpInput.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 
 /**
@@ -72,30 +68,73 @@ import { ApiError } from '@/types/api';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const toast = useToast();
 
 const purpose = (route.query.purpose as 'signup' | 'recovery' | 'member-link') ?? 'signup';
-const contact = (route.query.contact as string) ?? auth.user?.phone ?? '';
+const requestedChannel = route.query.channel;
+const channel: OtpChannel = requestedChannel === 'email' || requestedChannel === 'sms' || requestedChannel === 'whatsapp'
+  ? requestedChannel
+  : purpose === 'signup'
+    ? 'email'
+    : 'sms';
+const contact = (route.query.contact as string) ?? (channel === 'email' ? auth.user?.email : auth.user?.phone) ?? '';
+const contactKind = channel === 'email' ? 'email' : channel === 'whatsapp' ? 'WhatsApp' : 'number';
+const deliveryLabel = channel === 'email' ? 'email' : channel === 'whatsapp' ? 'WhatsApp' : 'phone';
+const deliveryIcon = channel === 'email' ? 'mail' : channel === 'whatsapp' ? 'chat' : 'sms';
+const initialResendAvailableAt = typeof route.query.resendAvailableAt === 'string'
+  ? route.query.resendAvailableAt
+  : undefined;
+/**
+ * Callers that dispatched a code before navigating say so with `sent=true`.
+ * Login and the pending-signup route guard cannot: `/auth/login` only issues a
+ * session, so those lanes arrive with nothing sent and the screen must ask for
+ * its own code on mount, or the user waits for mail that was never queued.
+ */
+const codeAlreadySent = route.query.sent === 'true';
 const redirectName = (route.query.redirect as string) ?? 'health-profile-gate';
 const cruxId = route.query.cruxId as string | undefined;
 const identifier = route.query.identifier as string | undefined;
 
 const maskedContact = computed(() => contact || 'your registered contact');
 
+const sending = ref(false);
+const sendFailed = ref(false);
+
+const deliveryMessage = computed(() => {
+  if (sending.value) return `Sending your code to ${maskedContact.value}…`;
+  if (sendFailed.value) return `We could not send a code to ${maskedContact.value}. Tap resend to try again.`;
+  return `Your code is on its way to ${maskedContact.value}.`;
+});
+
+async function onChangeContact() {
+  if (purpose === 'signup' && channel === 'email') {
+    await router.push({
+      name: 'register-change-email',
+      query: { redirect: redirectName },
+    });
+    return;
+  }
+
+  router.back();
+}
+
 const code = ref('');
 const verifying = ref(false);
-const errorMessage = ref('');
-const attemptsRemaining = ref<number | null>(null);
-const cooldown = ref(30);
+const cooldown = ref(0);
 let timer: ReturnType<typeof setInterval> | undefined;
 
-const errorText = computed(() =>
-  errorMessage.value
-    ? `${errorMessage.value}${attemptsRemaining.value !== null ? ` ${attemptsRemaining.value} attempt${attemptsRemaining.value === 1 ? '' : 's'} left.` : ''}`
-    : '',
-);
+function secondsUntil(resendAvailableAt?: string): number {
+  const timestamp = resendAvailableAt ? Date.parse(resendAvailableAt) : Number.NaN;
+  if (Number.isFinite(timestamp)) {
+    return Math.max(0, Math.ceil((timestamp - Date.now()) / 1000));
+  }
 
-function startCooldown() {
-  cooldown.value = 30;
+  // Recovery's non-enumerating response intentionally omits timing metadata.
+  return 60;
+}
+
+function startCooldown(resendAvailableAt?: string) {
+  cooldown.value = secondsUntil(resendAvailableAt);
   clearInterval(timer);
   timer = setInterval(() => {
     if (cooldown.value > 0) cooldown.value -= 1;
@@ -103,43 +142,108 @@ function startCooldown() {
   }, 1000);
 }
 
-onMounted(startCooldown);
+/** Recovery stays non-enumerating, so it reports no delivery timing to echo back. */
+async function requestCode(): Promise<string | undefined> {
+  if (purpose === 'recovery' && identifier) {
+    await authApi.requestPasswordReset(identifier, channel);
+    return undefined;
+  }
+
+  const delivery = await authApi.requestOtp(channel, purpose);
+  return delivery.resendAvailableAt;
+}
+
+async function sendInitialCode() {
+  sending.value = true;
+  try {
+    startCooldown(await requestCode());
+    sendFailed.value = false;
+  } catch (e) {
+    // The server's resend cooldown means a code went out moments ago and is
+    // still live — that is the happy path, not a delivery failure.
+    if (e instanceof ApiError && e.code === 'otp_cooldown') {
+      const retryAfter = Number(e.meta?.retryAfterSeconds);
+      if (Number.isFinite(retryAfter) && retryAfter > 0) cooldown.value = Math.ceil(retryAfter);
+      sendFailed.value = false;
+      return;
+    }
+
+    // Let them retry immediately — no code was queued to wait on.
+    sendFailed.value = true;
+    clearInterval(timer);
+    cooldown.value = 0;
+    const message = e instanceof ApiError ? e.message : 'We could not send your verification code.';
+    await toast.show(message, 'danger', {
+      title: 'Could not send code',
+      dismissLabel: 'Try again',
+    });
+  } finally {
+    sending.value = false;
+  }
+}
+
+onMounted(() => {
+  if (codeAlreadySent) {
+    startCooldown(initialResendAvailableAt);
+    return;
+  }
+
+  // Hold resend at the default interval while the first send is in flight.
+  startCooldown();
+  void sendInitialCode();
+});
 onBeforeUnmount(() => clearInterval(timer));
 
 async function onResend() {
-  if (purpose === 'recovery' && identifier) {
-    await authApi.requestPasswordReset(identifier, 'sms');
-  } else {
-    await authApi.requestOtp('sms', purpose);
-  }
-  code.value = '';
-  errorMessage.value = '';
-  attemptsRemaining.value = null;
-  startCooldown();
-}
+  if (sending.value) return;
 
+  try {
+    const resendAvailableAt = await requestCode();
+
+    sendFailed.value = false;
+    code.value = '';
+    startCooldown(resendAvailableAt);
+    await toast.show('Your verification code is on its way to your ' + deliveryLabel + '.', 'success', {
+      title: 'Code queued',
+    });
+  } catch (e) {
+    const message = e instanceof ApiError ? e.message : 'We could not queue a new code. Please try again.';
+    await toast.show(message, 'danger', {
+      title: 'Could not resend code',
+      dismissLabel: 'Try again',
+    });
+  }
+}
 async function onComplete(value: string) {
-  if (value.length < 5) return;
+  if (verifying.value || value.length < 5) return;
   verifying.value = true;
   try {
     if (purpose === 'recovery') {
-      // Verified together with the new password on AR3 — carry the code forward.
+      // Verified together with the new password on AR3; carry the code forward.
       router.replace({ name: redirectName, query: { identifier, code: value } });
       return;
     }
     await authApi.verifyOtp(value, purpose);
+    if (purpose === 'signup') {
+      // The OTP endpoint changes the account on the server. Refresh before
+      // navigating so the route guard cannot bounce a verified user back here.
+      await auth.refreshUser();
+    }
     if (purpose === 'member-link' && cruxId) {
       await auth.linkMembership(cruxId);
     }
-    router.replace({ name: redirectName });
+    await router.replace({ name: redirectName });
   } catch (e) {
-    if (e instanceof ApiError) {
-      errorMessage.value = e.message;
-      attemptsRemaining.value = (e.meta?.attemptsRemaining as number) ?? null;
-    } else {
-      errorMessage.value = 'Something went wrong. Please try again.';
-    }
+    const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
+    const attempts = e instanceof ApiError ? (e.meta?.attemptsRemaining as number) ?? null : null;
+    const retryMessage = attempts === null
+      ? message
+      : `${message} You have ${attempts} attempt${attempts === 1 ? '' : 's'} left.`;
     code.value = '';
+    await toast.show(retryMessage, 'danger', {
+      title: 'Verification failed',
+      dismissLabel: 'Try again',
+    });
   } finally {
     verifying.value = false;
   }

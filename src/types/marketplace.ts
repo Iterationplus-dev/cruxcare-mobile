@@ -6,7 +6,8 @@ export interface ProductMedia {
 export interface Product {
   id: string;
   name: string;
-  description: string;
+  /** Product copy is optional in the API; the UI renders a neutral empty state. */
+  description: string | null;
   price: number;
   currency: string;
   stock: number;

@@ -22,6 +22,7 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['chat', 'threads']]" />
       <LoadingState v-if="isPending" label="Loading messages…" />
       <div v-else class="cc-thread__messages">
         <div
@@ -48,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import {
   IonBackButton,

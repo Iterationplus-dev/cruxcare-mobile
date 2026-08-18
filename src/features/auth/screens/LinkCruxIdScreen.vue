@@ -86,12 +86,15 @@ const channels = [
 async function onSend() {
   submitting.value = true;
   try {
-    await authApi.requestOtp(channel.value === 'email' ? 'sms' : channel.value, 'member-link');
+    const delivery = await authApi.requestOtp(channel.value, 'member-link');
     router.push({
       name: 'register-otp',
       query: {
         purpose: 'member-link',
-        contact: channels.find((c) => c.key === channel.value)?.masked,
+        contact: delivery.destination ?? channels.find((c) => c.key === channel.value)?.masked,
+        channel: channel.value,
+        resendAvailableAt: delivery.resendAvailableAt,
+        sent: 'true',
         redirect: forTherapist ? 'therapist-plan' : 'client-settings',
         cruxId: cruxId.value,
       },

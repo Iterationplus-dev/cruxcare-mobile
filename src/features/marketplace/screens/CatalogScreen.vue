@@ -34,6 +34,7 @@
     </div>
 
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['products']]" />
       <LoadingState v-if="isPending" label="Loading products…" />
       <EmptyState
         v-else-if="!products.length"
@@ -50,11 +51,11 @@
           @click="router.push({ name: 'product-detail', params: { id: p.id } })"
         >
           <div class="cc-product-card__media">
-            <img :src="p.media[0]?.url" :alt="p.media[0]?.alt ?? p.name" />
+            <ProductImage :media="p.media" :name="formatProductTitle(p.name)" class="cc-product-card__image" />
             <span v-if="p.stock === 0" class="cc-product-card__oos">Out of stock</span>
           </div>
           <div class="cc-product-card__body">
-            <div class="cc-text-body-strong" style="font-size: 16px">{{ p.name }}</div>
+            <div class="cc-text-body-strong" style="font-size: 16px">{{ formatProductTitle(p.name) }}</div>
             <div class="cc-text-caption" style="margin-bottom: 8px">{{ p.category }}</div>
             <div class="cc-product-card__foot">
               <MoneyAmount :value="p.price" :currency="p.currency" />
@@ -62,7 +63,7 @@
                 v-if="p.stock > 0"
                 type="button"
                 class="cc-product-card__add"
-                :aria-label="`Add ${p.name} to cart`"
+                :aria-label="`Add ${formatProductTitle(p.name)} to cart`"
                 @click.stop="onAdd(p.id)"
               >
                 <AppIcon name="add" :size="20" color="var(--cc-color-primary)" />
@@ -79,14 +80,17 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppChip, AppIcon, MoneyAmount } from '@/components/ui';
+import ProductImage from '@/components/marketplace/ProductImage.vue';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useProducts } from '@/composables/useProducts';
 import { useCartStore } from '@/stores/cart';
 import { useToast } from '@/composables/useToast';
+import { formatProductTitle } from '@/features/marketplace/productPresentation';
 
 /** C1 · Catalog. `guestMode` (set via the standalone /shop/guest route) lets
  * an unauthenticated visitor browse per the PRD Guest capability, routing
@@ -216,7 +220,7 @@ function goCart() {
   box-sizing: border-box;
   position: relative;
 }
-.cc-product-card__media img {
+.cc-product-card__image {
   width: 100%;
   height: 100%;
   object-fit: contain;

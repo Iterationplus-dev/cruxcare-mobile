@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
-import { apiClient, setUnauthorizedHandler } from '@/api/client';
+import { apiClient, recoverJsonResponse, setUnauthorizedHandler } from '@/api/client';
 import { server } from '@/mocks/server';
 import { ApiError } from '@/types/api';
 
@@ -28,5 +28,23 @@ describe('apiClient error normalization', () => {
     await expect(apiClient.get('/test-401')).rejects.toBeInstanceOf(ApiError);
     expect(handler).toHaveBeenCalledOnce();
     setUnauthorizedHandler(() => {}); // reset for other tests
+  });
+
+  it('recovers a JSON payload prefixed by a local PHP warning', () => {
+    const data = '<br>Deprecated: local development warning</br>{"status":"ok"}';
+
+    expect(recoverJsonResponse(data, 'application/json')).toEqual({ status: 'ok' });
+  });
+
+  it('unwraps a native bridge JSON string before recovering its trailing payload', () => {
+    const data = JSON.stringify('<br>Deprecated: local development warning</br>{"status":"ok"}');
+
+    expect(recoverJsonResponse(data, 'application/json')).toEqual({ status: 'ok' });
+  });
+
+  it('does not reinterpret a non-JSON response body', () => {
+    const data = '<html>Gateway error</html>{"status":"ok"}';
+
+    expect(recoverJsonResponse(data, 'text/html')).toBe(data);
   });
 });

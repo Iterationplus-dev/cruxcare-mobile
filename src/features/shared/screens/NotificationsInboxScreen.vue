@@ -16,6 +16,7 @@
       </div>
     </div>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['notifications']]" />
       <LoadingState v-if="isPending" label="Loading notifications…" />
       <EmptyState v-else-if="!filtered.length" icon="notifications" title="Nothing here" message="You're all caught up." />
       <AppCard v-else style="margin: 0 16px; padding: 0">
@@ -33,16 +34,20 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppCard, AppChip, AppIcon } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useMarkNotificationRead, useNotifications } from '@/composables/useNotifications';
+import { homeRouteForRole } from '@/router/roleHome';
+import { useAuthStore } from '@/stores/auth';
 import type { AppNotification, NotificationCategory } from '@/types/notifications';
 
 /** SH1 · Notifications — unread tinted and dotted, settings escape at the foot. */
 const router = useRouter();
+const auth = useAuthStore();
 const { data: notifications, isPending } = useNotifications();
 const markRead = useMarkNotificationRead();
 const category = ref<'all' | NotificationCategory>('all');
@@ -71,7 +76,7 @@ function onMarkAll() {
 }
 function goBack() {
   if (window.history.state?.back) router.back();
-  else router.replace({ name: 'tabs-home' });
+  else router.replace({ name: homeRouteForRole(auth.activeRole) });
 }
 </script>
 

@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Your cart" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[]" :refresh="cart.load" />
       <LoadingState v-if="cart.loading && !cart.cart" label="Loading your cart…" />
       <EmptyState
         v-else-if="!cart.cart?.items.length"
@@ -15,9 +16,9 @@
         <div class="cc-screen__pad">
           <AppCard style="padding: 0">
             <div v-for="item in cart.cart.items" :key="item.id" class="cc-cart-row">
-              <img :src="item.product.media[0]?.url" :alt="item.product.name" />
+              <ProductImage :media="item.product.media" :name="formatProductTitle(item.product.name)" class="cc-cart-row__image" />
               <div class="cc-cart-row__body">
-                <div class="cc-text-body-strong" style="font-size: 14.5px">{{ item.product.name }}</div>
+                <div class="cc-text-body-strong" style="font-size: 14.5px">{{ formatProductTitle(item.product.name) }}</div>
                 <div class="cc-text-caption">{{ item.quantity }} × <MoneyAmount :value="item.product.price" :currency="item.product.currency" size="mono" /></div>
               </div>
               <div class="cc-cart-row__end">
@@ -56,12 +57,15 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { onMounted } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppCard, AppHeader, AppIcon, MoneyAmount } from '@/components/ui';
+import ProductImage from '@/components/marketplace/ProductImage.vue';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useCartStore } from '@/stores/cart';
+import { formatProductTitle } from '@/features/marketplace/productPresentation';
 
 const router = useRouter();
 const cart = useCartStore();
@@ -88,7 +92,7 @@ onMounted(() => cart.load());
 .cc-cart-row:last-child {
   border-bottom: none;
 }
-.cc-cart-row img {
+.cc-cart-row__image {
   width: 56px;
   height: 56px;
   border-radius: 12px;

@@ -18,6 +18,7 @@
               <AppBadge label="CLIENT" />
               <AppBadge v-if="auth.roles.includes('member')" :label="`MEMBER${tierLabel}`" />
               <AppBadge v-if="auth.roles.includes('therapist')" label="THERAPIST" />
+              <AppBadge v-if="auth.roles.includes('admin')" label="ADMIN" />
             </div>
           </div>
         </div>
@@ -25,6 +26,7 @@
     </div>
 
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['appointments'], ['orders']]" />
       <div class="cc-screen__pad">
         <div class="cc-profile__stats">
           <div class="cc-profile__stat">
@@ -95,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
@@ -140,7 +143,7 @@ const logoutSheetOpen = ref(false);
 
 async function onLogout() {
   await auth.logout();
-  router.replace({ name: 'welcome' });
+  router.replace({ name: 'login' });
 }
 </script>
 

@@ -1,6 +1,7 @@
 <template>
   <ion-app class="cc-app" :class="{ 'cc-app--authenticated': isAuthenticatedRoute }">
     <ion-router-outlet />
+    <AppFeedbackSheet />
   </ion-app>
 </template>
 
@@ -10,6 +11,7 @@ import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { useRoute } from 'vue-router';
+import AppFeedbackSheet from '@/components/ui/AppFeedbackSheet.vue';
 import { useToast } from '@/composables/useToast';
 
 /**

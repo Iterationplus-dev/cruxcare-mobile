@@ -18,6 +18,7 @@ import { uiTestCredentials } from './testAccount';
  */
 
 interface StoredUser extends User {
+  username: string;
   password: string;
 }
 
@@ -32,6 +33,7 @@ export const demoCredentials = { identifier: 'demo@cruxcare.app', password: 'Pas
 export const users: StoredUser[] = [
   {
     id: 'user-1',
+    username: 'amaka.obi',
     firstName: 'Amaka',
     lastName: 'Obi',
     email: demoCredentials.identifier,
@@ -61,6 +63,7 @@ export const users: StoredUser[] = [
   },
   {
     id: 'ui-test-user',
+    username: 'ui.tester',
     firstName: 'UI',
     lastName: 'Tester',
     email: uiTestCredentials.identifier,
@@ -74,6 +77,40 @@ export const users: StoredUser[] = [
     biometricEnabled: false,
     createdAt: '2026-08-11T00:00:00Z',
     password: uiTestCredentials.password,
+  },
+  {
+    id: 'shared-email-user-1',
+    username: 'shared.one',
+    firstName: 'Shared',
+    lastName: 'One',
+    email: 'shared@cruxcare.app',
+    phone: '+2348090000001',
+    avatarUrl: null,
+    roles: ['client'],
+    capabilities: ['orders.place', 'appointments.book', 'health-profile.write'],
+    referredBySource: 'other',
+    membership: null,
+    therapistProfile: null,
+    biometricEnabled: false,
+    createdAt: '2026-08-11T00:00:00Z',
+    password: 'Passw0rd!1',
+  },
+  {
+    id: 'shared-email-user-2',
+    username: 'shared.two',
+    firstName: 'Shared',
+    lastName: 'Two',
+    email: 'shared@cruxcare.app',
+    phone: '+2348090000002',
+    avatarUrl: null,
+    roles: ['client'],
+    capabilities: ['orders.place', 'appointments.book', 'health-profile.write'],
+    referredBySource: 'other',
+    membership: null,
+    therapistProfile: null,
+    biometricEnabled: false,
+    createdAt: '2026-08-11T00:00:00Z',
+    password: 'Passw0rd!1',
   },
 ];
 
@@ -299,6 +336,16 @@ wallets.set('user-1', {
 export const ledgers = new Map<string, Transaction[]>();
 ledgers.set('user-1', [
   {
+    id: 'txn-0',
+    reference: 'TOPUP-90400',
+    type: 'deposit',
+    amount: 285,
+    fee: 0,
+    currency: 'USD',
+    description: 'Wallet funding',
+    createdAt: '2026-07-31T00:00:00Z',
+  },
+  {
     id: 'txn-1',
     reference: 'REF-90436',
     type: 'order-payment',
@@ -333,11 +380,22 @@ export const notifications: AppNotification[] = [
   },
 ];
 
+export function resolveLoginIdentifier(identifier: string): {
+  user?: StoredUser;
+  ambiguousEmail: boolean;
+} {
+  const usernameMatch = users.find((user) => user.username === identifier);
+  if (usernameMatch) return { user: usernameMatch, ambiguousEmail: false };
+
+  const emailMatches = users.filter((user) => user.email === identifier);
+  return { user: emailMatches.length === 1 ? emailMatches[0] : undefined, ambiguousEmail: emailMatches.length > 1 };
+}
+
 export function findUserByCredentials(identifier: string): StoredUser | undefined {
-  return users.find((u) => u.email === identifier || u.phone === identifier);
+  return resolveLoginIdentifier(identifier).user;
 }
 
 export function toPublicUser(user: StoredUser): User {
-  const { password: _password, ...publicUser } = user;
+  const { password: _password, username: _username, ...publicUser } = user;
   return publicUser;
 }

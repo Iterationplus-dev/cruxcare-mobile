@@ -1,8 +1,9 @@
 <template>
   <ion-page>
     <ion-content class="cc-screen" :scroll-y="true">
+      <AppPullToRefresh :query-keys="[['appointments'], ['wallet'], ['orders'], ['products']]" />
       <div class="cc-home__header">
-        <AppAvatar :name="fullName" :size="40" />
+        <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="40" />
         <div class="cc-home__greeting">
           <div class="cc-home__date">{{ formattedDate }}</div>
           <div class="cc-home__hello cc-text-h2">{{ greeting }}, {{ auth.user?.firstName }}</div>
@@ -62,9 +63,9 @@
               class="cc-home__product"
               @click="router.push({ name: 'product-detail', params: { id: p.id } })"
             >
-              <img :src="p.media[0]?.url" :alt="p.media[0]?.alt ?? p.name" />
+              <ProductImage :media="p.media" :name="formatProductTitle(p.name)" class="cc-home__product-image" />
               <div class="cc-home__product-body">
-                <div class="cc-text-body-strong" style="font-size: 12.5px">{{ p.name }}</div>
+                <div class="cc-text-body-strong" style="font-size: 12.5px">{{ formatProductTitle(p.name) }}</div>
                 <MoneyAmount :value="p.price" :currency="p.currency" size="mono" />
               </div>
             </button>
@@ -76,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
@@ -95,6 +97,8 @@ import { useOrders } from '@/composables/useOrders';
 import { useProducts } from '@/composables/useProducts';
 import { useAuthStore } from '@/stores/auth';
 import { fullName as formatFullName } from '@/types/user';
+import ProductImage from '@/components/marketplace/ProductImage.vue';
+import { formatProductTitle } from '@/features/marketplace/productPresentation';
 
 /**
  * CD1 · Home — canonical Home-tab screen for both client and member roles
@@ -257,11 +261,10 @@ function goNotifications() {
   cursor: pointer;
   text-align: left;
 }
-.cc-home__product img {
+.cc-home__product-image {
   width: 100%;
   height: 74px;
   object-fit: cover;
-  display: block;
 }
 .cc-home__product-body {
   padding: 8px 9px;

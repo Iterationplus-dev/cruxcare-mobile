@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Therapist profile" show-back back-href="/tabs/care" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['therapists']]" />
       <LoadingState v-if="isPending" label="Loading therapist profile…" />
 
       <div v-else-if="therapist" class="cc-screen__pad">
@@ -73,6 +74,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';

@@ -176,7 +176,8 @@ async function onSave() {
   font-family: var(--cc-font-interface);
   font-size: 13px;
 }
-.cc-payout__confirmed span {
+/* Scoped to the copy block — a bare `span` here also matches the icon root. */
+.cc-payout__confirmed > div > span {
   color: var(--cc-ink-600);
   font-family: var(--cc-font-interface);
   font-size: 11.5px;

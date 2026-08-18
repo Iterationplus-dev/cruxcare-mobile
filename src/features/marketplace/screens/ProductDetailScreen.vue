@@ -1,6 +1,7 @@
 <template>
   <ion-page>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['products']]" />
       <LoadingState v-if="isPending" label="Loading product…" />
       <template v-else-if="product">
         <div class="cc-pd__gallery">
@@ -9,17 +10,20 @@
               <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
             </button>
           </ion-buttons>
-          <img :src="product.media[0]?.url" :alt="product.media[0]?.alt ?? product.name" />
+          <ProductImage :media="product.media" :name="formatProductTitle(product.name)" class="cc-pd__image" />
         </div>
         <div class="cc-pd__body">
           <div class="cc-pd__badges">
             <AppBadge v-if="product.stock > 0" label="In stock" tone="success" />
             <AppBadge v-else label="Out of stock" tone="danger" />
           </div>
-          <h2 class="cc-text-h1" style="margin: 0 0 4px">{{ product.name }}</h2>
+          <h2 class="cc-text-h1" style="margin: 0 0 4px">{{ formatProductTitle(product.name) }}</h2>
           <div class="cc-text-subtitle" style="margin-bottom: 14px">{{ product.category }}</div>
           <MoneyAmount :value="product.price" :currency="product.currency" size="display" />
-          <p class="cc-text-body" style="margin: 16px 0">{{ product.description }}</p>
+          <p v-if="product.description" class="cc-text-body" style="margin: 16px 0">{{ product.description }}</p>
+          <p v-else class="cc-pd__description-empty cc-text-body" role="status">
+            A description is not available for this product yet.
+          </p>
         </div>
 
         <div class="cc-screen__footer">
@@ -42,15 +46,18 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { ref } from 'vue';
 import { IonButtons, IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppBadge, AppButton, AppIcon, MoneyAmount } from '@/components/ui';
+import ProductImage from '@/components/marketplace/ProductImage.vue';
 import { LoadingState } from '@/components/state';
 import { useProduct } from '@/composables/useProducts';
 import { useCartStore } from '@/stores/cart';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
+import { formatProductTitle } from '@/features/marketplace/productPresentation';
 
 const route = useRoute();
 const router = useRouter();
@@ -112,13 +119,18 @@ async function onAdd() {
   border: none;
   cursor: pointer;
 }
-.cc-pd__gallery img {
+.cc-pd__image {
   width: 248px;
   height: 248px;
   object-fit: contain;
 }
 .cc-pd__body {
   padding: 18px 16px 0;
+}
+.cc-pd__description-empty {
+  margin: 16px 0;
+  color: var(--cc-ink-500);
+  font-style: italic;
 }
 .cc-pd__badges {
   display: flex;

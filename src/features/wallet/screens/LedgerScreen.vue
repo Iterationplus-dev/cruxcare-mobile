@@ -5,6 +5,7 @@
       <AppChip v-for="f in filters" :key="f" :label="f" :selected="filter === f" @click="filter = f" />
     </div>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['wallet']]" />
       <LoadingState v-if="isPending" label="Loading ledger…" />
       <EmptyState
         v-else-if="!grouped.length"
@@ -31,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppCard, AppChip, AppHeader, MoneyAmount } from '@/components/ui';

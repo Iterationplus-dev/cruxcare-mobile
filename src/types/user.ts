@@ -51,6 +51,8 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
+  /** False only while a newly created account is still awaiting its signup OTP. */
+  emailVerified?: boolean;
   phone: string;
   avatarUrl: string | null;
   roles: Role[];

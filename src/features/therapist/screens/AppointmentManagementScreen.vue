@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Appointments" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['appointments']]" />
       <LoadingState v-if="isPending" label="Loading requests…" />
       <EmptyState v-else-if="!requests.length" icon="event_available" title="No requests waiting" message="New booking requests will appear here first." />
       <div v-else class="cc-screen__pad">
@@ -26,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppAvatar, AppButton, AppCard, AppHeader } from '@/components/ui';

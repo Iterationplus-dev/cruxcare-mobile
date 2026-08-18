@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Calendar" :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['appointments']]" />
       <LoadingState v-if="isPending" label="Loading calendar…" />
       <EmptyState v-else-if="!appointments?.data.length" icon="calendar_month" title="Nothing scheduled" message="Accepted appointments will show up here." />
       <AppCard v-else style="margin: 16px; padding: 0">
@@ -22,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppCard, AppHeader, AppListRow } from '@/components/ui';
