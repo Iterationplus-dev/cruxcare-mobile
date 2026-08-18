@@ -10,7 +10,7 @@
         <template v-if="therapist">
           <AppCard>
             <div class="cc-care__therapist">
-              <AppAvatar :name="therapist.name" :size="56" />
+              <AppAvatar :name="therapist.name" :src="therapist.avatarUrl ?? undefined" :size="56" />
               <div class="cc-care__therapist-body">
                 <div class="cc-text-body-strong" style="font-size: 16px">{{ therapist.name }}</div>
                 <div class="cc-text-caption">Your therapist · {{ therapist.specialties.join(', ') }}</div>
@@ -67,12 +67,44 @@
             :primary-action="therapists.length ? undefined : 'Request a therapist'"
             @primary="requestMatching"
           />
-          <AppCard v-for="t in therapists" :key="t.id" class="cc-care__discover">
+          <div v-if="therapists.length" class="cc-care__search">
+            <AppIcon name="search" :size="20" color="var(--cc-ink-400)" />
+            <input
+              v-model="therapistSearch"
+              type="search"
+              placeholder="Search therapists by name"
+              aria-label="Search therapists by name"
+            />
+            <button
+              v-if="therapistSearch"
+              type="button"
+              class="cc-care__search-clear"
+              aria-label="Clear search"
+              @click="therapistSearch = ''"
+            >
+              <AppIcon name="close" :size="18" color="var(--cc-ink-400)" />
+            </button>
+          </div>
+
+          <p v-if="therapistSearch.trim() && !filteredTherapists.length" class="cc-care__no-match cc-text-caption">
+            No therapist here matches “{{ therapistSearch.trim() }}”.
+          </p>
+
+          <AppCard v-for="t in filteredTherapists" :key="t.id" class="cc-care__discover">
             <div class="cc-care__discover-profile">
-              <AppAvatar :name="t.name" :size="46" />
-              <div v-if="t.rating !== null" class="cc-care__discover-rating" :aria-label="`${t.rating.toFixed(1)} out of 5 rating`">
-                <AppIcon name="star" :size="16" filled color="var(--cc-color-warning)" />
-                <span>{{ t.rating.toFixed(1) }}</span>
+              <AppAvatar :name="t.name" :src="t.avatarUrl ?? undefined" :size="46" />
+              <div
+                class="cc-care__discover-rating"
+                :class="{ 'cc-care__discover-rating--unrated': t.rating === null }"
+                :aria-label="t.rating === null ? 'Not rated yet' : `${t.rating.toFixed(1)} out of 5 rating`"
+              >
+                <AppIcon
+                  name="star"
+                  :size="16"
+                  filled
+                  :color="t.rating === null ? 'var(--cc-ink-300)' : 'var(--cc-color-warning)'"
+                />
+                <span>{{ t.rating === null ? 'New' : t.rating.toFixed(1) }}</span>
               </div>
             </div>
             <div class="cc-care__discover-body">
@@ -98,7 +130,7 @@
 
 <script setup lang="ts">
 import { AppPullToRefresh } from '@/components/ui';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import {
@@ -131,6 +163,19 @@ const { data: therapist, isPending: therapistPending } = useTherapist(
 );
 const { data: therapistsPage, isPending: therapistsPending } = useTherapists();
 const therapists = computed(() => therapistsPage.value?.data ?? []);
+
+/**
+ * Filtered on the client: GET /therapists takes only `cursor`, so there is no
+ * server-side name query to delegate to. That scopes the search to the
+ * directory page already loaded — fine at the current page size (20), but it
+ * needs a backend `search` param before the directory outgrows one page.
+ */
+const therapistSearch = ref('');
+const filteredTherapists = computed(() => {
+  const term = therapistSearch.value.trim().toLowerCase();
+  if (!term) return therapists.value;
+  return therapists.value.filter((t) => t.name.toLowerCase().includes(term));
+});
 
 const { data: appointmentsPage } = useAppointments();
 const nextVisit = computed(() =>
@@ -236,6 +281,35 @@ async function requestTherapist(id: string) {
 .cc-care__reco-body {
   flex: 1;
 }
+.cc-care__search {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-surface-0);
+}
+.cc-care__search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--cc-font-interface);
+  font-size: 13.5px;
+}
+.cc-care__search-clear {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.cc-care__no-match {
+  margin: 0;
+}
 .cc-care__discover {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -272,6 +346,11 @@ async function requestTherapist(id: string) {
 .cc-care__discover-rating {
   color: var(--cc-ink-900);
   font-weight: 600;
+}
+/* No reviews yet — present but visibly quieter than a real score. */
+.cc-care__discover-rating--unrated {
+  color: var(--cc-ink-400);
+  font-weight: 500;
 }
 .cc-care__discover-specialties {
   min-height: 19px;

@@ -4,7 +4,7 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <AppCard v-if="therapist" class="cc-book__therapist">
-          <AppAvatar :name="therapist.name" :size="44" />
+          <AppAvatar :name="therapist.name" :src="therapist.avatarUrl ?? undefined" :size="44" />
           <div>
             <div class="cc-text-body-strong" style="font-size: 14.5px">{{ therapist.name }}</div>
             <div class="cc-text-caption">{{ therapist.specialties.join(', ') }}</div>

@@ -7,7 +7,7 @@
 
       <div v-else-if="therapist" class="cc-screen__pad">
         <AppCard class="cc-therapist-detail__summary">
-          <AppAvatar :name="therapist.name" :size="64" />
+          <AppAvatar :name="therapist.name" :src="therapist.avatarUrl ?? undefined" :size="64" />
           <div class="cc-therapist-detail__identity">
             <h2 class="cc-text-h2" style="margin: 0">{{ therapist.name }}</h2>
             <div

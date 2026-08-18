@@ -6,7 +6,7 @@
           <ion-back-button default-href="/tabs/care" text="" />
         </ion-buttons>
         <div class="cc-thread-header__title">
-          <AppAvatar :name="other?.name ?? ''" :size="36" />
+          <AppAvatar :name="other?.name ?? ''" :src="other?.avatarUrl ?? undefined" :size="36" />
           <div>
             <div class="cc-text-body-strong" style="font-size: 16px">{{ other?.name }}</div>
             <div v-if="other?.online" class="cc-thread-header__online">
