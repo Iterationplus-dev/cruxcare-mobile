@@ -27,6 +27,7 @@
     </div>
 
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['wallet']]" />
       <div class="cc-screen__pad">
         <div class="cc-wallet__actions">
           <button v-for="a in actions" :key="a.label" type="button" class="cc-wallet__action" @click="a.onClick">
@@ -53,7 +54,7 @@
         <AppCard v-else style="padding: 0">
           <div v-for="txn in ledger.data.slice(0, 6)" :key="txn.id" class="cc-ledger-row">
             <div class="cc-ledger-row__icon" :style="{ background: iconBg(txn.amount) }">
-              <AppIcon :name="iconFor(txn.type)" :size="19" :color="iconColor(txn.amount)" />
+              <AppIcon :name="ledgerIconForType(txn.type)" :size="19" :color="iconColor(txn.amount)" />
             </div>
             <div class="cc-ledger-row__body">
               <div class="cc-text-body-strong" style="font-size: 14.5px">{{ txn.description }}</div>
@@ -71,14 +72,15 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppCard, AppIcon, MoneyAmount } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useLedger, useWallet } from '@/composables/useWallet';
+import { ledgerIconForType } from '@/features/wallet/ledgerPresentation';
 import { formatRelativeTime } from '@/utils/formatTime';
-import type { TransactionType } from '@/types/wallet';
 
 /** E1 · Wallet home. Committed/Coop-saved tiles return with the Finance
  * module (Commitment/Cooperative) — showing them now would fabricate
@@ -92,23 +94,12 @@ const relativeUpdated = computed(() => (wallet.value ? formatRelativeTime(wallet
 const actions = [
   { icon: 'arrow_outward', label: 'Withdraw', onClick: () => router.push({ name: 'wallet-withdraw' }) },
   { icon: 'swap_horiz', label: 'Transfer', onClick: () => router.push({ name: 'wallet-transfer' }) },
-  { icon: 'savings', label: 'Contribute', onClick: () => router.push({ name: 'member-cooperative' }) },
+  { icon: 'savings', label: 'Contribute', onClick: () => router.push({ name: 'cooperative-contribute' }) },
   { icon: 'receipt_long', label: 'Statements', onClick: () => router.push({ name: 'ledger' }) },
 ];
 
-const iconMap: Record<TransactionType, string> = {
-  'order-payment': 'shopping_bag',
-  withdrawal: 'arrow_outward',
-  transfer: 'swap_horiz',
-  'commitment-interest': 'trending_up',
-  'cooperative-contribution': 'savings',
-  'cooperative-help': 'volunteer_activism',
-  'rank-earning': 'workspace_premium',
-};
-function iconFor(type: TransactionType) {
-  return iconMap[type] ?? 'receipt_long';
-}
 function iconColor(amount: number) {
+  // Transfer is used for both legs; the signed amount is the authority.
   return amount >= 0 ? 'var(--cc-color-success-text)' : 'var(--cc-color-warning-text)';
 }
 function iconBg(amount: number) {

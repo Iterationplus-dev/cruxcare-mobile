@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Messages" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['chat', 'threads']]" />
       <p class="cc-chat__disclaimer cc-text-caption">
         For care coordination only — call emergency services for urgent medical needs.
       </p>
@@ -27,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppBadge, AppCard, AppHeader, AppListRow } from '@/components/ui';

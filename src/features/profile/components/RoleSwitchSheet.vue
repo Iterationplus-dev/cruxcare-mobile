@@ -81,6 +81,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppIcon, AppSheet } from '@/components/ui';
+import { homeRouteForRole } from '@/router/roleHome';
 import { useAuthStore } from '@/stores/auth';
 import type { Role } from '@/types/user';
 
@@ -106,19 +107,12 @@ function select(role: Role) {
 function continueAsSelected() {
   auth.setActiveRole(selectedRole.value);
   open.value = false;
-  router.replace({ name: homeForRole(selectedRole.value) });
+  router.replace({ name: homeRouteForRole(selectedRole.value) });
 }
 
 function goActivate() {
   open.value = false;
   router.push({ name: 'become-therapist' });
-}
-
-function homeForRole(role: Role) {
-  if (role === 'therapist') return 'therapist-today';
-  if (role === 'member') return 'tabs-member-home';
-  if (role === 'admin') return 'admin-approvals';
-  return 'tabs-home';
 }
 
 function iconColor(role: Role) {

@@ -12,7 +12,7 @@
               {{ savingPhoto ? 'Updating photo...' : auth.user?.avatarUrl ? 'Change photo' : 'Add photo' }}
             </button>
           </div>
-          <input ref="photoInput" class="cc-profile-photo__input" type="file" accept="image/*" @change="onPhotoSelected" />
+          <input ref="photoInput" class="cc-profile-photo__input" type="file" accept="image/jpeg,image/png,image/webp" @change="onPhotoSelected" />
         </section>
         <AppInput v-model="firstName" label="First name" placeholder="Amara" />
         <AppInput v-model="lastName" label="Last name" placeholder="Okafor" />
@@ -43,6 +43,7 @@ import { AppAvatar, AppButton, AppHeader, AppIcon, AppInput } from '@/components
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
+import { ApiError } from '@/types/api';
 
 /** PR3 · Personal information — verified fields shown read-only in place;
  * cosmetic fields (name) editable directly. */
@@ -60,22 +61,35 @@ function choosePhoto() {
   photoInput.value?.click();
 }
 
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
+
 async function onPhotoSelected(event: Event) {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
 
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    input.value = '';
+    await toast.show('Choose a JPG, PNG, or WebP image.', 'warning', { title: 'Unsupported photo format' });
+    return;
+  }
+
+  if (file.size > MAX_AVATAR_SIZE_BYTES) {
+    input.value = '';
+    await toast.show('Choose an image smaller than 5 MB.', 'warning', { title: 'Photo is too large' });
+    return;
+  }
+
   savingPhoto.value = true;
   try {
-    const avatarUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result));
-      reader.onerror = () => reject(reader.error ?? new Error('Unable to read photo'));
-      reader.readAsDataURL(file);
-    });
-    const updated = await authApi.updateMe({ avatarUrl });
+    const updated = await authApi.updateAvatar(file);
     auth.user = updated;
     await toast.show('Profile photo updated', 'success');
+  } catch (error) {
+    const message = error instanceof ApiError
+      ? error.message
+      : 'We could not update your profile photo. Please try again.';
+    await toast.show(message, 'danger', { title: 'Could not update photo' });
   } finally {
     savingPhoto.value = false;
     input.value = '';

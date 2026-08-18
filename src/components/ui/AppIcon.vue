@@ -38,10 +38,18 @@ const variationSettings = computed(
 </script>
 
 <style scoped>
-.cc-icon {
+/**
+ * Both classes on purpose. A screen rule like `.card span { font-family: … }`
+ * outranks a single class, and since this root is a <span> holding the icon
+ * name as a ligature, losing the icon face renders that name as words —
+ * "check_circle" in prose rather than a tick. Two classes outrank any
+ * `.class element` selector, so the icon keeps its face and box regardless.
+ */
+.cc-icon.material-symbols-rounded {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Material Symbols Rounded';
   line-height: 1;
 }
 </style>

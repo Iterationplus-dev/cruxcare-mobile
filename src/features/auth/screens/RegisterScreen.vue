@@ -138,13 +138,22 @@
         </label>
         <p v-if="errors.consent" class="cc-field__error" role="alert">{{ errors.consent }}</p>
 
-        <p v-if="formError" class="cc-field__error" role="alert" style="margin-top: 12px">{{ formError }}</p>
+
       </div>
     </ion-content>
 
     <ion-footer class="cc-register__footer">
       <div class="cc-screen__footer">
-        <AppButton :loading="submitting" @click="onSubmit">Create account</AppButton>
+        <AppButton
+          :loading="submitting"
+          :aria-label="submitting ? 'Creating account' : 'Create account'"
+          @click="onSubmit"
+        >
+          {{ submitting ? 'Creating account…' : 'Create account' }}
+        </AppButton>
+        <p v-if="submitting" class="cc-register__submitting" role="status" aria-live="polite">
+          Creating your account…
+        </p>
         <div class="cc-text-body" style="text-align: center; font-size: 12.5px">
           Already have an account?
           <a href="#" @click.prevent="router.push({ name: 'login' })">Log in</a>
@@ -185,7 +194,9 @@ import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AppSheet from '@/components/ui/AppSheet.vue';
+import { authApi, type OtpRequestResult } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 import {
   passwordStrength,
@@ -223,7 +234,7 @@ const [consent] = defineField('consent');
 const showPassword = ref(false);
 const showConfirm = ref(false);
 const submitting = ref(false);
-const formError = ref('');
+const toast = useToast();
 
 const referredByOptions: { value: string; label: string }[] = referredBySourceOptions.map((o) => ({
   value: o.value,
@@ -244,9 +255,9 @@ watch(password, (v) => (strength.value = passwordStrength(v ?? '')));
 
 const onSubmit = handleSubmit(async (values) => {
   submitting.value = true;
-  formError.value = '';
+  const phone = `+234${values.phone}`;
+
   try {
-    const phone = `+234${values.phone}`;
     await auth.register({
       firstName: values.firstName,
       lastName: values.lastName,
@@ -255,16 +266,41 @@ const onSubmit = handleSubmit(async (values) => {
       password: values.password,
       referredBySource: values.referredBySource as ReferredBySource,
     });
-    // CA3 — signup OTP verification precedes the role-appropriate home (A3).
-    router.replace({
-      name: 'register-otp',
-      query: { purpose: 'signup', contact: phone, redirect: 'health-profile-gate' },
-    });
   } catch (e) {
-    formError.value = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
+    const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
+    await toast.show(message, 'danger', {
+      title: 'Could not create account',
+      dismissLabel: 'Try again',
+    });
+    submitting.value = false;
+    return;
+  }
+
+  let delivery: OtpRequestResult | undefined;
+  try {
+    delivery = await authApi.requestOtp('email', 'signup');
+  } catch (e) {
+    const message = e instanceof ApiError ? e.message : 'We could not send your verification email.';
+    await toast.show(`${message} You can request another code on the next screen.`, 'warning', {
+      title: 'Account created',
+      dismissLabel: 'Continue',
+    });
   } finally {
     submitting.value = false;
   }
+
+  router.replace({
+    name: 'register-otp',
+    query: {
+      purpose: 'signup',
+      contact: delivery?.destination ?? values.email,
+      channel: 'email',
+      resendAvailableAt: delivery?.resendAvailableAt,
+      // A failed send leaves the flag off so the OTP screen retries on arrival.
+      sent: delivery ? 'true' : undefined,
+      redirect: 'health-profile-gate',
+    },
+  });
 });
 </script>
 
@@ -436,4 +472,12 @@ const onSubmit = handleSubmit(async (values) => {
   flex-direction: column;
   gap: 10px;
 }
+.cc-register__submitting {
+  margin: -2px 0 0;
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+  color: var(--cc-ink-500);
+  text-align: center;
+}
+
 </style>

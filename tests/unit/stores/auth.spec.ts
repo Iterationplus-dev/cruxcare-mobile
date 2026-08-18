@@ -82,6 +82,20 @@ describe('useAuthStore', () => {
     expect(secureStorageMock.set).not.toHaveBeenCalled();
   });
 
+  it('restores a persisted session after the app is relaunched', async () => {
+    const signedIn = useAuthStore();
+    await signedIn.login(demoCredentials.identifier, demoCredentials.password);
+    const persistedToken = signedIn.token;
+
+    setActivePinia(createPinia());
+    secureStorageMock.get.mockResolvedValue(persistedToken);
+    const relaunched = useAuthStore();
+    await relaunched.hydrate();
+
+    expect(relaunched.isAuthenticated).toBe(true);
+    expect(relaunched.user?.email).toBe(demoCredentials.identifier);
+  });
+
   it('rejects the wrong password and reports attempts remaining', async () => {
     const auth = useAuthStore();
     await expect(auth.login(demoCredentials.identifier, 'wrong-password')).rejects.toMatchObject({
@@ -102,9 +116,24 @@ describe('useAuthStore', () => {
   it('restricts activeRole to roles the account actually holds', async () => {
     const auth = useAuthStore();
     await auth.login(demoCredentials.identifier, demoCredentials.password);
+    auth.setActiveRole('client');
     auth.setActiveRole('admin');
     expect(auth.activeRole).toBe('client'); // unchanged — demo user has no admin role
     auth.setActiveRole('therapist');
     expect(auth.activeRole).toBe('therapist');
+  });
+
+  it('opens a therapist session on the therapist dashboard context', async () => {
+    const auth = useAuthStore();
+    await auth.login(demoCredentials.identifier, demoCredentials.password);
+    expect(auth.roles).toContain('therapist');
+    expect(auth.activeRole).toBe('therapist');
+  });
+
+  it('opens a non-therapist session in the client context', async () => {
+    const auth = useAuthStore();
+    await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);
+    expect(auth.roles).not.toContain('therapist');
+    expect(auth.activeRole).toBe('client');
   });
 });

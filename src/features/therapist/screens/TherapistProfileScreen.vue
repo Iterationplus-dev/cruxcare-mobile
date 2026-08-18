@@ -58,7 +58,7 @@ const logoutSheetOpen = ref(false);
 
 async function onLogout() {
   await auth.logout();
-  router.replace({ name: 'welcome' });
+  router.replace({ name: 'login' });
 }
 </script>
 

@@ -19,22 +19,20 @@
 
         <div class="cc-channels">
           <button
+            v-for="option in channelOptions"
+            :key="option.key"
             type="button"
             class="cc-channel"
-            :class="{ 'cc-channel--selected': channel === 'sms' }"
-            @click="channel = 'sms'"
+            :class="{ 'cc-channel--selected': channel === option.key }"
+            :aria-pressed="channel === option.key"
+            @click="channel = option.key"
           >
-            <AppIcon name="sms" :size="20" color="var(--cc-color-primary)" />
-            <div class="cc-text-body-strong" style="font-size: 13.5px">Text me</div>
-          </button>
-          <button
-            type="button"
-            class="cc-channel"
-            :class="{ 'cc-channel--selected': channel === 'email' }"
-            @click="channel = 'email'"
-          >
-            <AppIcon name="mail" :size="20" color="var(--cc-ink-400)" />
-            <div class="cc-text-body-strong" style="font-size: 13.5px">Email me</div>
+            <AppIcon
+              :name="option.icon"
+              :size="20"
+              :color="channel === option.key ? 'var(--cc-color-primary)' : 'var(--cc-ink-400)'"
+            />
+            <div class="cc-text-body-strong" style="font-size: 13.5px">{{ option.label }}</div>
           </button>
         </div>
 
@@ -75,17 +73,26 @@ function goBack() {
   if (window.history.state?.back) router.back();
   else router.replace({ name: 'login' });
 }
-const channel = ref<'sms' | 'email'>('sms');
+type RecoveryChannel = 'sms' | 'whatsapp' | 'email';
+
+/** WhatsApp and SMS both reach the account phone; the API validates all three. */
+const channelOptions: { key: RecoveryChannel; icon: string; label: string }[] = [
+  { key: 'sms', icon: 'sms', label: 'Text me' },
+  { key: 'whatsapp', icon: 'chat', label: 'WhatsApp' },
+  { key: 'email', icon: 'mail', label: 'Email me' },
+];
+
+const channel = ref<RecoveryChannel>('sms');
 const identifier = ref('');
 const submitting = ref(false);
 
 async function onSubmit() {
   submitting.value = true;
   try {
-    await authApi.requestPasswordReset(identifier.value, channel.value === 'sms' ? 'sms' : 'email');
+    await authApi.requestPasswordReset(identifier.value, channel.value);
     router.push({
       name: 'register-otp',
-      query: { purpose: 'recovery', contact: identifier.value, redirect: 'reset-password', identifier: identifier.value },
+      query: { purpose: 'recovery', contact: identifier.value, channel: channel.value, sent: 'true', redirect: 'reset-password', identifier: identifier.value },
     });
   } finally {
     submitting.value = false;
@@ -127,6 +134,8 @@ async function onSubmit() {
 }
 .cc-channel {
   flex: 1;
+  /* Three across on a 360dp screen — let them shrink rather than overflow. */
+  min-width: 0;
   border: 1px solid var(--cc-line);
   border-radius: 12px;
   padding: 11px 12px;

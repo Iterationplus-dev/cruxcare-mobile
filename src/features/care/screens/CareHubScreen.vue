@@ -4,6 +4,7 @@
       <h1 class="cc-text-h1" style="margin: 0">Care</h1>
     </div>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['case-files'], ['therapists'], ['appointments'], ['chat', 'threads']]" />
       <LoadingState v-if="isPending" label="Loading your care…" />
       <div v-else class="cc-screen__pad">
         <template v-if="therapist">
@@ -60,7 +61,11 @@
           <EmptyState
             icon="health_and_safety"
             title="No therapist assigned yet"
-            message="Choose a therapist below or wait to be assigned by CruxCare."
+            :message="therapists.length
+              ? 'Choose a therapist below or wait to be assigned by CruxCare.'
+              : 'No therapist is available to show right now. Request a match and CruxCare will contact you.'"
+            :primary-action="therapists.length ? undefined : 'Request a therapist'"
+            @primary="requestMatching"
           />
           <AppCard v-for="t in therapists" :key="t.id" class="cc-care__discover">
             <div class="cc-care__discover-profile">
@@ -92,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
@@ -158,9 +164,22 @@ function goVideo() {
   if (nextVisit.value) router.push({ name: 'video-visit', params: { id: nextVisit.value.id } });
 }
 
+async function requestMatching(reason = 'Please match me with an available therapist.') {
+  try {
+    await therapistsApi.requestAssignment(reason);
+    await toast.show('Your request is on its way. CruxCare will contact you when a therapist is available.', 'success', {
+      title: 'Matching request sent',
+    });
+  } catch {
+    await toast.show('We could not send your matching request. Please try again.', 'danger', {
+      title: 'Could not request a therapist',
+      dismissLabel: 'Try again',
+    });
+  }
+}
+
 async function requestTherapist(id: string) {
-  await therapistsApi.requestAssignment(`Requested therapist ${id}`);
-  await toast.show('Request sent — CruxCare will confirm your assignment.', 'success');
+  await requestMatching(`Requested therapist ${id}`);
 }
 </script>
 

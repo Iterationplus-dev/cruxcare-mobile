@@ -35,6 +35,7 @@ import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
+import { homeRouteForRole } from '@/router/roleHome';
 import { biometric } from '@/services/biometric';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
@@ -58,7 +59,7 @@ async function onEnable() {
     await auth.enableBiometric();
     await biometric.markEnabledOnDevice();
     await toast.show('Biometric login turned on.', 'success');
-    router.replace({ name: 'tabs-home' });
+    router.replace({ name: homeRouteForRole(auth.activeRole) });
   } finally {
     enabling.value = false;
   }

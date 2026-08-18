@@ -31,6 +31,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/features/auth/screens/VerifyOtpScreen.vue'),
   },
   {
+    path: '/auth/change-email',
+    name: 'register-change-email',
+    component: () => import('@/features/auth/screens/ChangeEmailScreen.vue'),
+  },
+  {
     path: '/auth/login',
     name: 'login',
     component: () => import('@/features/auth/screens/LoginScreen.vue'),
@@ -223,6 +228,13 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresRole: 'member' },
   },
   {
+    path: '/member/cooperative/contribute',
+    name: 'cooperative-contribute',
+    component: () => import('@/features/wallet/screens/MoneyActionScreen.vue'),
+    props: { action: 'cooperative-contribution' },
+    meta: { requiresAuth: true, requiresRole: 'member' },
+  },
+  {
     path: '/member/rank',
     name: 'member-rank',
     component: () => import('@/features/member/screens/MemberProgramScreen.vue'),
@@ -264,11 +276,20 @@ const routes: RouteRecordRaw[] = [
     props: { view: 'live' },
     meta: { requiresAuth: true, darkStatusBar: true },
   },
+  // ---- Admin tabs shell (own bar, reached via role switch) ----
+  // Wallet and Profile are the shared screens under admin paths so the context
+  // keeps a working account surface — Profile is also the only route back to
+  // the role switcher.
   {
-    path: '/admin/approvals',
-    name: 'admin-approvals',
-    component: () => import('@/features/admin/screens/AdminApprovalsScreen.vue'),
+    path: '/admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
     meta: { requiresAuth: true, requiresRole: 'admin' },
+    children: [
+      { path: '', redirect: '/admin/approvals' },
+      { path: 'approvals', name: 'admin-approvals', component: () => import('@/features/admin/screens/AdminApprovalsScreen.vue') },
+      { path: 'wallet', name: 'admin-wallet', component: () => import('@/features/wallet/screens/WalletHomeScreen.vue') },
+      { path: 'profile', name: 'admin-profile', component: () => import('@/features/profile/screens/ProfileScreen.vue') },
+    ],
   },
 
   // ---- Shared: chat, video, notifications, help ----

@@ -12,7 +12,7 @@ Cypress.Commands.add('fillByLabel', (label: string, value: string) => {
 
 Cypress.Commands.add('loginAsDemo', () => {
   cy.visit('/auth/login');
-  cy.fillByLabel('Email or phone', 'demo@cruxcare.app');
+  cy.fillByLabel('Username or email', 'demo@cruxcare.app');
   cy.fillByLabel('Password', 'Passw0rd!1');
   cy.contains('button', 'Log in').click();
 });

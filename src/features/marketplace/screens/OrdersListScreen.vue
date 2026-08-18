@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Your orders" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['orders']]" />
       <LoadingState v-if="isPending" label="Loading orders…" />
       <EmptyState
         v-else-if="!orders?.data.length"
@@ -31,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppCard, AppHeader, AppListRow, MoneyAmount } from '@/components/ui';

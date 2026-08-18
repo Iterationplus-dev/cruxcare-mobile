@@ -1,6 +1,7 @@
 <template>
   <ion-page>
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['orders']]" />
       <LoadingState v-if="isPending" label="Loading your order…" />
       <template v-else-if="order">
         <div class="cc-confirm">
@@ -35,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppButton, AppCard, AppIcon, MoneyAmount } from '@/components/ui';

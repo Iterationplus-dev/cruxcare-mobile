@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader title="Earnings" :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh :query-keys="[['wallet']]" />
       <div class="cc-screen__pad">
         <section class="cc-earn__balance" aria-label="Available earnings">
           <div class="cc-earn__balance-label">AVAILABLE EARNINGS</div>
@@ -31,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppCard, AppHeader, MoneyAmount } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';

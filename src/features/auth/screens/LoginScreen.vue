@@ -14,24 +14,15 @@
         </div>
         <h2 class="cc-text-h1" style="margin: 0 0 5px; text-align: center">Welcome back</h2>
         <p class="cc-text-body" style="margin: 0 0 20px; font-size: 13.5px; text-align: center">
-          Log in with the email or phone on your account.
+          Log in with your username or email address.
         </p>
-
-        <div v-if="formError" class="cc-login-error">
-          <AppIcon name="error" :size="20" color="var(--cc-error-surface-text)" />
-          <div>
-            <div class="cc-login-error__title">{{ formError }}</div>
-            <div v-if="attemptsRemaining !== null" class="cc-login-error__subtitle">
-              {{ attemptsRemaining }} attempt{{ attemptsRemaining === 1 ? '' : 's' }} left before a
-              15-minute pause.
-            </div>
-          </div>
-        </div>
 
         <AppInput
           v-model="identifier"
-          label="Email or phone"
-          placeholder="amara.okafor@gmail.com"
+          label="Username or email"
+          placeholder="amara.okafor or amara@example.com"
+          type="text"
+          inputmode="text"
           autocomplete="username"
         />
 
@@ -128,13 +119,17 @@ import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import { biometric } from '@/services/biometric';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
+import { loginFailureMessage, validateLoginIdentifier } from '@/features/auth/loginIdentifier';
+import { homeRouteForRole } from '@/router/roleHome';
 import logoMark from '@/assets/images/logo-mark.png';
 import { uiTestCredentials } from '@/mocks/testAccount';
 
 const router = useRouter();
 const route = useRoute();
 const auth = useAuthStore();
+const toast = useToast();
 
 const identifier = ref('');
 const password = ref('');
@@ -162,12 +157,13 @@ async function onSubmit() {
   attemptsRemaining.value = null;
   const normalizedIdentifier = identifier.value.trim();
 
-  if (!normalizedIdentifier) {
-    formError.value = 'Enter your email address or phone number.';
+  const identifierError = validateLoginIdentifier(normalizedIdentifier);
+  if (identifierError) {
+    await toast.show(identifierError, 'warning', { title: 'Check your details' });
     return;
   }
   if (!password.value) {
-    formError.value = 'Enter your password.';
+    await toast.show('Enter your password.', 'warning', { title: 'Check your details' });
     return;
   }
 
@@ -176,21 +172,26 @@ async function onSubmit() {
     await auth.login(normalizedIdentifier, password.value, keepLoggedIn.value);
     navigateAfterLogin();
   } catch (e) {
-    if (e instanceof ApiError) {
-      formError.value = e.status === 401 ? 'Email or password is wrong' : e.message;
-      attemptsRemaining.value = (e.meta?.attemptsRemaining as number) ?? null;
-    } else {
-      formError.value = 'Something went wrong. Please try again.';
-    }
+    const failureMessage = e instanceof ApiError ? loginFailureMessage(e) : 'Something went wrong. Please try again.';
+    formError.value = failureMessage;
+    attemptsRemaining.value = e instanceof ApiError ? (e.meta?.attemptsRemaining as number) ?? null : null;
+    const retryMessage = attemptsRemaining.value === null
+      ? failureMessage
+      : `${failureMessage} You have ${attemptsRemaining.value} attempt${attemptsRemaining.value === 1 ? '' : 's'} left before a 15-minute pause.`;
+    await toast.show(retryMessage, 'danger', {
+      title: 'Login failed',
+      dismissLabel: 'Try again',
+    });
   } finally {
     submitting.value = false;
   }
 }
-
 async function onBiometricLogin() {
   const enabled = await biometric.isEnabledOnDevice();
   if (!enabled) {
-    formError.value = 'Biometric login is not set up on this device yet.';
+    await toast.show('Biometric login is not set up on this device yet.', 'warning', {
+      title: 'Biometric sign-in unavailable',
+    });
     return;
   }
   const ok = await biometric.verify('Log in to CruxCare');
@@ -198,18 +199,31 @@ async function onBiometricLogin() {
   await auth.hydrate();
   if (auth.isAuthenticated) navigateAfterLogin();
 }
-
 function goForgotPassword() {
   router.push({ name: 'forgot-password' });
 }
 
 function navigateAfterLogin() {
+  if (auth.user?.emailVerified === false) {
+    router.replace({
+      name: 'register-otp',
+      query: {
+        purpose: 'signup',
+        contact: auth.user.email,
+        channel: 'email',
+        redirect: 'health-profile-gate',
+      },
+    });
+    return;
+  }
+
   if (route.query.redirect === 'link-crux-id') {
     router.replace({ name: 'link-crux-id', query: { forTherapist: 'true' } });
     return;
   }
 
-  router.replace({ name: 'tabs-home' });
+  // Therapists open on their own dashboard; the store picked the context.
+  router.replace({ name: homeRouteForRole(auth.activeRole) });
 }
 </script>
 
@@ -246,26 +260,6 @@ function navigateAfterLogin() {
 .cc-login-mark__image {
   width: 56px;
   height: auto;
-}
-.cc-login-error {
-  display: flex;
-  gap: 10px;
-  padding: 13px 14px;
-  border-radius: var(--cc-radius-md);
-  background: var(--cc-error-surface);
-  border: 1px solid var(--cc-error-surface-border);
-}
-.cc-login-error__title {
-  font-family: var(--cc-font-interface);
-  font-weight: 600;
-  font-size: 13.5px;
-  color: var(--cc-error-surface-text);
-  margin-bottom: 2px;
-}
-.cc-login-error__subtitle {
-  font-family: var(--cc-font-interface);
-  font-size: 12.5px;
-  color: var(--cc-ink-600);
 }
 .cc-login-row {
   display: flex;

@@ -28,6 +28,15 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value?.capabilities.includes(capability) ?? false;
   }
 
+  /**
+   * Which dashboard a session opens in. A therapist's practice is the surface
+   * they signed in to work from, so they start there rather than in the client
+   * shell; everyone else opens as client and switches from Profile.
+   */
+  function defaultRoleContext(value: User | null): Role {
+    return value?.roles.includes('therapist') ? 'therapist' : 'client';
+  }
+
   async function persistToken(value: string | null) {
     token.value = value;
     if (value) await secureStorage.set(SECURE_STORAGE_KEYS.authToken, value);
@@ -53,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = stored;
       try {
         user.value = await authApi.me();
+        activeRole.value = defaultRoleContext(user.value);
       } catch {
         await clearSession();
       }
@@ -69,12 +79,26 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(identifier: string, password: string, keepLoggedIn = true) {
     const session = await authApi.login(identifier, password);
     user.value = session.user;
+    activeRole.value = defaultRoleContext(session.user);
     if (keepLoggedIn) {
       await persistToken(session.token);
     } else {
       token.value = session.token;
       await secureStorage.remove(SECURE_STORAGE_KEYS.authToken);
     }
+  }
+
+  async function refreshUser() {
+    user.value = await authApi.me();
+    return user.value;
+  }
+
+  async function changeSignupEmail(email: string) {
+    const delivery = await authApi.changeSignupEmail(email);
+    if (user.value) {
+      user.value = { ...user.value, email, emailVerified: false };
+    }
+    return delivery;
   }
 
   async function logout() {
@@ -91,6 +115,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function activateTherapist(plan: TherapistPlanTier) {
     user.value = await authApi.activateTherapist(plan);
+    // Onboarding hands off to the therapist dashboard — keep the context that
+    // Profile reports in step with the shell they are about to land in.
+    activeRole.value = defaultRoleContext(user.value);
   }
 
   async function enableBiometric() {
@@ -114,6 +141,8 @@ export const useAuthStore = defineStore('auth', () => {
     hydrate,
     register,
     login,
+    refreshUser,
+    changeSignupEmail,
     logout,
     linkMembership,
     activateTherapist,

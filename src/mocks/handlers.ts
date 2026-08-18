@@ -62,6 +62,7 @@ const authHandlers: HttpHandler[] = [
       therapistProfile: null,
       biometricEnabled: false,
       createdAt: new Date().toISOString(),
+      username: body.email,
       password: body.password,
     };
     db.users.push(user);
@@ -76,15 +77,26 @@ const authHandlers: HttpHandler[] = [
       identifier: string;
       password: string;
     };
-    const user = db.findUserByCredentials(identifier);
+    const resolution = db.resolveLoginIdentifier(identifier);
+    const user = resolution.user;
     const attempts = db.loginAttempts.get(identifier) ?? 0;
+
+    if (resolution.ambiguousEmail) {
+      return HttpResponse.json(
+        {
+          message: 'Multiple accounts use this email address. Enter your username to log in.',
+          code: 'use_username',
+        },
+        { status: 401 },
+      );
+    }
 
     if (!user || user.password !== password) {
       const nextAttempts = attempts + 1;
       db.loginAttempts.set(identifier, nextAttempts);
       return HttpResponse.json(
         {
-          message: 'The email/phone and password combination is incorrect.',
+          message: 'Those details did not match our records.',
           code: 'invalid_credentials',
           meta: { attemptsRemaining: Math.max(0, 5 - nextAttempts) },
         },
@@ -486,7 +498,7 @@ const careHandlers: HttpHandler[] = [
 // ---------------------------------------------------------------------------
 // Wallet, server-quoted money actions, and notifications
 // ---------------------------------------------------------------------------
-const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string }; stepUpVerified: boolean }>();
+const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string }; stepUpVerified: boolean }>();
 const walletHandlers: HttpHandler[] = [
   http.get(url('/wallet'), ({ request }) => {
     const user = currentUser(request);
@@ -505,7 +517,7 @@ const walletHandlers: HttpHandler[] = [
   http.post(url('/wallet/quotes'), async ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
-    const body = await request.json() as { kind?: 'withdrawal' | 'transfer'; amount?: number; recipient?: string };
+    const body = await request.json() as { kind?: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount?: number; recipient?: string };
     const wallet = db.wallets.get(user.id);
     const amount = Number(body.amount);
     if (!wallet || !body.kind || !Number.isFinite(amount) || amount <= 0 || amount > wallet.available) {
@@ -514,13 +526,16 @@ const walletHandlers: HttpHandler[] = [
     if (body.kind === 'transfer' && !body.recipient?.trim()) {
       return HttpResponse.json({ message: 'Choose the member receiving this transfer.' }, { status: 422 });
     }
-    const fee = Math.round(amount * 0.05 * 100) / 100;
+    if (body.kind === 'cooperative-contribution' && amount < 5) {
+      return HttpResponse.json({ message: 'The minimum contribution is 5 USD.' }, { status: 422 });
+    }
+    const fee = body.kind === 'cooperative-contribution' ? 0 : Math.round(amount * 0.05 * 100) / 100;
     const quote = {
       id: db.nextId('quote'),
       kind: body.kind,
       amount,
       fee,
-      recipientReceives: Math.round((amount - fee) * 100) / 100,
+      recipientReceives: body.kind === 'cooperative-contribution' ? amount : Math.round((amount - fee) * 100) / 100,
       balanceAfter: Math.round((wallet.available - amount) * 100) / 100,
       currency: wallet.currency,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
@@ -528,6 +543,20 @@ const walletHandlers: HttpHandler[] = [
     };
     moneyQuotes.set(quote.id, { userId: user.id, quote, stepUpVerified: false });
     return HttpResponse.json(quote);
+  }),
+
+  http.post(url('/wallet/quotes/:id/step-up/request'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const saved = moneyQuotes.get(String(params.id));
+    if (!saved || saved.userId !== user.id) {
+      return HttpResponse.json({ message: 'This quote is no longer available.' }, { status: 404 });
+    }
+    return HttpResponse.json({
+      sent: true,
+      destination: user.email,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    });
   }),
 
   http.post(url('/wallet/quotes/:id/step-up'), async ({ request, params }) => {
@@ -552,11 +581,15 @@ const walletHandlers: HttpHandler[] = [
     const wallet = db.wallets.get(user.id);
     if (!wallet || saved.quote.amount > wallet.available) return HttpResponse.json({ message: 'Your available balance changed. Request a new quote.' }, { status: 422 });
     wallet.available = saved.quote.balanceAfter;
-    wallet.pending += saved.quote.amount;
+    if (saved.quote.kind === 'cooperative-contribution') {
+      wallet.cooperativeSaved = (wallet.cooperativeSaved ?? 0) + saved.quote.amount;
+    } else {
+      wallet.pending += saved.quote.amount;
+    }
     wallet.lastUpdatedAt = new Date().toISOString();
     const reference = `REF-${Math.floor(90000 + Math.random() * 9999)}`;
     const ledger = db.ledgers.get(user.id) ?? [];
-    ledger.unshift({ id: db.nextId('txn'), reference, type: saved.quote.kind, amount: -saved.quote.amount, fee: saved.quote.fee, currency: saved.quote.currency, description: saved.quote.kind === 'withdrawal' ? 'Withdrawal processing' : `Transfer to ${saved.quote.recipient}`, createdAt: new Date().toISOString() });
+    ledger.unshift({ id: db.nextId('txn'), reference, type: saved.quote.kind, amount: -saved.quote.amount, fee: saved.quote.fee, currency: saved.quote.currency, description: saved.quote.kind === 'withdrawal' ? 'Withdrawal processing' : saved.quote.kind === 'cooperative-contribution' ? 'Cooperative contribution' : `Transfer to ${saved.quote.recipient}`, createdAt: new Date().toISOString() });
     db.ledgers.set(user.id, ledger);
     moneyQuotes.delete(saved.quote.id);
     return HttpResponse.json({ reference, status: 'processing', quote: saved.quote });

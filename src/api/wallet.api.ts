@@ -21,6 +21,14 @@ export const walletApi = {
     return data;
   },
 
+  async requestMoneyStepUp(quoteId: string): Promise<{ sent: boolean; destination: string; expiresAt: string }> {
+    const { data } = await apiClient.post<{ sent: boolean; destination: string; expiresAt: string }>(
+      '/wallet/quotes/' + quoteId + '/step-up/request',
+      { channel: 'email' },
+    );
+    return data;
+  },
+
   async verifyMoneyStepUp(quoteId: string, code: string): Promise<void> {
     await apiClient.post('/wallet/quotes/' + quoteId + '/step-up', { code }, idempotencyHeader(newIdempotencyKey()));
   },

@@ -2,6 +2,7 @@
   <ion-page>
     <AppHeader :title="title" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <AppPullToRefresh v-if="program === 'cooperative'" :query-keys="[['wallet']]" />
       <div class="cc-screen__pad">
         <template v-if="program === 'commitment'">
           <section class="cc-program__hero cc-program__hero--dark">
@@ -23,7 +24,7 @@
         <template v-else-if="program === 'cooperative'">
           <section class="cc-program__savings">
             <div class="cc-program__ring"><strong>18</strong><span>of 52 weeks</span></div>
-            <div><span class="cc-program__eyebrow">TOTAL SAVED</span><div class="cc-program__money">$180.00</div><p>18 consecutive weeks · $10.00 each Friday</p></div>
+            <div><span class="cc-program__eyebrow">TOTAL SAVED</span><MoneyAmount v-if="wallet" :value="wallet.cooperativeSaved ?? 0" :currency="wallet.currency" size="display" class="cc-program__money" /><p>18 consecutive weeks · $10.00 each Friday</p></div>
           </section>
           <div class="cc-program__warning"><AppIcon name="event_repeat" :size="20" color="var(--cc-color-warning-text)" /><p><strong>Week 19 due Friday 7 Aug</strong><br />$10.00 will be taken from your wallet.</p></div>
           <div class="cc-program__tiles"><AppCard><span>Savings type</span><strong>Open</strong><small>Help allowed</small></AppCard><AppCard><span>Help cap</span><strong>$500.00</strong><small>50-week limit</small></AppCard><AppCard><span>Cycle ends</span><strong>28 Mar</strong><small>2027</small></AppCard></div>
@@ -59,7 +60,7 @@
       <AppButton v-if="program === 'commitment'" variant="secondary" @click="showInfo('A server quote is required before withdrawing interest.')">Withdraw interest</AppButton>
       <AppButton v-if="program === 'commitment'" @click="showInfo('A server quote is required before starting a new commitment.')">New commitment</AppButton>
       <AppButton v-if="program === 'cooperative'" variant="secondary" @click="showInfo('Your eligibility and guarantors are checked before you can request help.')">Request help</AppButton>
-      <AppButton v-if="program === 'cooperative'" @click="router.push({ name: 'wallet-home' })">Contribute</AppButton>
+      <AppButton v-if="program === 'cooperative'" @click="router.push({ name: 'cooperative-contribute' })">Contribute</AppButton>
     </ion-footer>
     <ion-footer v-else-if="program === 'rank'" class="cc-program__footer"><AppButton @click="copyReferral">Share your referral link</AppButton></ion-footer>
   </ion-page>
@@ -69,14 +70,16 @@
 import { computed } from 'vue';
 import { IonContent, IonFooter, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
+import { AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppListRow, AppPullToRefresh, MoneyAmount } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
+import { useWallet } from '@/composables/useWallet';
 
 const props = defineProps<{ program: 'commitment' | 'cooperative' | 'rank' | 'network' | 'earnings' }>();
 const router = useRouter();
 const auth = useAuthStore();
 const toast = useToast();
+const { data: wallet } = useWallet();
 const title = computed(() => ({ commitment: 'Commitment', cooperative: 'Cooperative', rank: 'Rank', network: 'Your network', earnings: 'Earnings history' }[props.program]));
 
 async function copyReferral() {
