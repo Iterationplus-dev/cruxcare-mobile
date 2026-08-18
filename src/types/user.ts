@@ -25,8 +25,12 @@ export type ReferredBySource =
 export type TherapistPlanTier = 'free-trial' | 'monthly' | 'yearly';
 
 export interface TherapistProfile {
-  plan: TherapistPlanTier;
-  status: 'active' | 'expired' | 'pending-verification';
+  /** Null on therapist accounts that never subscribed — the API returns
+   *  `{ plan: null, status: 'inactive' }` for them. */
+  plan: TherapistPlanTier | null;
+  /** `inactive` covers therapist accounts that predate plan selection — the
+   *  role exists but no plan was ever chosen, so nothing is subscribed yet. */
+  status: 'active' | 'inactive' | 'expired' | 'pending-verification';
   clientLimit: number | null;
   caseFileLimit: number | null;
   clientCount: number;

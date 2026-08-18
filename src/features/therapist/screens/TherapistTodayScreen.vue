@@ -24,6 +24,21 @@
       </div>
 
       <div class="cc-td__body">
+        <!-- Sits above the loading state: subscribing does not depend on the
+             dashboard's data, and it is what unblocks taking clients. -->
+        <AppCard v-if="auth.needsTherapistPlan" class="cc-td__plan-banner" @click="goPlan">
+          <AppIcon name="workspace_premium" :size="20" color="var(--cc-color-primary)" />
+          <div class="cc-td__banner-body">
+            <div class="cc-text-body-strong" style="font-size: 13.5px">
+              {{ planBannerTitle }}
+            </div>
+            <div class="cc-text-caption">Clients cannot be assigned to you until a plan is active</div>
+          </div>
+          <span class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-color-primary)">
+            Choose
+          </span>
+        </AppCard>
+
         <LoadingState v-if="appointmentsQuery.isPending.value" label="Loading your dashboard…" />
         <template v-else>
           <AppCard v-if="pendingRequests.length" tint class="cc-td__banner" @click="goRequests">
@@ -140,6 +155,13 @@ const unreadCount = computed(() => threads?.value?.reduce((sum, t) => sum + t.un
 
 const { data: wallet } = useWallet();
 
+/** Expired reads differently from never-subscribed; both need a plan. */
+const planBannerTitle = computed(() =>
+  auth.user?.therapistProfile?.status === 'expired'
+    ? 'Your therapist plan has expired'
+    : 'Choose a plan to start taking clients',
+);
+
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
@@ -148,6 +170,9 @@ function goRequests() {
 }
 function goCalendar() {
   router.push({ name: 'therapist-calendar' });
+}
+function goPlan() {
+  router.push({ name: 'therapist-plan' });
 }
 </script>
 
@@ -209,11 +234,17 @@ function goCalendar() {
   flex-direction: column;
   gap: 12px;
 }
-.cc-td__banner {
+.cc-td__banner,
+.cc-td__plan-banner {
   display: flex;
   gap: 11px;
   align-items: center;
   cursor: pointer;
+}
+.cc-td__plan-banner {
+  margin-bottom: 12px;
+  background: var(--cc-color-mist);
+  border-color: transparent;
 }
 .cc-td__banner-body {
   flex: 1;

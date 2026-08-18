@@ -130,6 +130,32 @@ describe('useAuthStore', () => {
     expect(auth.activeRole).toBe('therapist');
   });
 
+  it('treats a subscribed therapist as needing no plan', async () => {
+    const auth = useAuthStore();
+    await auth.login(demoCredentials.identifier, demoCredentials.password);
+    expect(auth.therapistPlanActive).toBe(true);
+    expect(auth.needsTherapistPlan).toBe(false);
+  });
+
+  it('flags a therapist whose account predates plan selection', async () => {
+    const auth = useAuthStore();
+    await auth.login(demoCredentials.identifier, demoCredentials.password);
+
+    // What the API returns for therapists who never chose a plan.
+    auth.user = { ...auth.user!, therapistProfile: { ...auth.user!.therapistProfile!, plan: null, status: 'inactive' } };
+    expect(auth.therapistPlanActive).toBe(false);
+    expect(auth.needsTherapistPlan).toBe(true);
+
+    auth.user = { ...auth.user!, therapistProfile: { ...auth.user!.therapistProfile!, plan: 'monthly', status: 'expired' } };
+    expect(auth.needsTherapistPlan).toBe(true);
+  });
+
+  it('does not ask a non-therapist to choose a plan', async () => {
+    const auth = useAuthStore();
+    await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);
+    expect(auth.needsTherapistPlan).toBe(false);
+  });
+
   it('opens a non-therapist session in the client context', async () => {
     const auth = useAuthStore();
     await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);

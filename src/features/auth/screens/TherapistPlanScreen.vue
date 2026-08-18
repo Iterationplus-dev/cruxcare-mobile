@@ -2,16 +2,24 @@
   <ion-page>
     <ion-header class="cc-plain-header">
       <ion-toolbar class="cc-plain-header__bar">
-        <ion-buttons slot="start"><ion-back-button default-href="/profile" text="" /></ion-buttons>
-        <ion-title>Verification · step 2 of 2</ion-title>
+        <ion-buttons slot="start"><ion-back-button :default-href="backHref" text="" /></ion-buttons>
+        <ion-title>{{ onboarding ? 'Verification · step 2 of 2' : 'Therapist plan' }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <div class="cc-progress-track"><div class="cc-progress-fill" style="width: 100%" /></div>
+    <div v-if="onboarding" class="cc-progress-track"><div class="cc-progress-fill" style="width: 100%" /></div>
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
-        <h2 class="cc-text-h1" style="margin: 0 0 6px">Choose a therapist plan</h2>
+        <h2 class="cc-text-h1" style="margin: 0 0 6px">
+          {{ currentPlanLabel ? 'Change your plan' : 'Choose a therapist plan' }}
+        </h2>
         <p class="cc-text-body" style="margin: 0 0 16px; font-size: 12.5px">
-          Purchases stay unlimited on every plan — only clients and case files are limited.
+          <template v-if="currentPlanLabel">
+            You are on the {{ currentPlanLabel }} plan. Purchases stay unlimited on every plan — only
+            clients and case files are limited.
+          </template>
+          <template v-else>
+            Purchases stay unlimited on every plan — only clients and case files are limited.
+          </template>
         </p>
 
         <button
@@ -61,17 +69,35 @@ import {
 import { useRouter } from 'vue-router';
 import { AppBadge, AppButton, AppCard, AppIcon } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
+import { ApiError } from '@/types/api';
 import type { TherapistPlanTier } from '@/types/user';
 
 const router = useRouter();
 const auth = useAuthStore();
+const toast = useToast();
+
+/**
+ * Serves two lanes. New therapists arrive mid-onboarding (step 2 of 2) and
+ * continue to the completion screen. Existing therapists — including accounts
+ * that held the role before plans existed, which the API returns as
+ * `{ plan: null, status: 'inactive' }` — arrive from their dashboard or
+ * profile and drop straight back into the practice once subscribed.
+ */
+const onboarding = !auth.roles.includes('therapist') || !auth.user?.therapistProfile;
+const backHref = onboarding ? '/profile' : '/therapist/profile';
 
 const plans: { key: TherapistPlanTier; name: string; price: string; detail: string; tag?: string }[] = [
   { key: 'free-trial', name: 'Free trial', price: '$0', detail: '1 client · 1 case file · unlimited purchases' },
   { key: 'monthly', name: 'Monthly', price: '$15/mo', detail: '25 clients · unlimited case files · Point Facility hosting', tag: 'MOST CHOSEN' },
   { key: 'yearly', name: 'Yearly', price: '$200/yr', detail: 'Everything monthly · save $40 · priority assignment' },
 ];
-const plan = ref<TherapistPlanTier>('monthly');
+const currentPlan = computed(() => auth.user?.therapistProfile?.plan ?? null);
+const currentPlanLabel = computed(
+  () => (auth.therapistPlanActive ? plans.find((p) => p.key === currentPlan.value)?.name : null) ?? null,
+);
+
+const plan = ref<TherapistPlanTier>(currentPlan.value ?? 'monthly');
 const selectedPlan = computed(() => plans.find((p) => p.key === plan.value)!);
 const submitting = ref(false);
 
@@ -79,7 +105,19 @@ async function onActivate() {
   submitting.value = true;
   try {
     await auth.activateTherapist(plan.value);
-    router.replace({ name: 'therapist-onboarding-complete' });
+
+    if (onboarding) {
+      router.replace({ name: 'therapist-onboarding-complete' });
+      return;
+    }
+
+    router.replace({ name: 'therapist-today' });
+    await toast.show(`Your ${selectedPlan.value.name} plan is active. You can take clients now.`, 'success', {
+      title: 'Plan activated',
+    });
+  } catch (e) {
+    const message = e instanceof ApiError ? e.message : 'We could not activate that plan. Please try again.';
+    await toast.show(message, 'danger', { title: 'Activation failed', dismissLabel: 'Try again' });
   } finally {
     submitting.value = false;
   }

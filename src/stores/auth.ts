@@ -29,6 +29,19 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
+   * A therapist is only subscribed with a plan on an active profile. Accounts
+   * that held the role before plan selection existed come back as
+   * `{ plan: null, status: 'inactive' }`, and an expired plan lapses the same
+   * way — both need to choose a plan before taking clients.
+   */
+  const therapistPlanActive = computed(
+    () => !!user.value?.therapistProfile?.plan && user.value.therapistProfile.status === 'active',
+  );
+  const needsTherapistPlan = computed(
+    () => roles.value.includes('therapist') && !therapistPlanActive.value,
+  );
+
+  /**
    * Which dashboard a session opens in. A therapist's practice is the surface
    * they signed in to work from, so they start there rather than in the client
    * shell; everyone else opens as client and switches from Profile.
@@ -137,6 +150,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     roles,
     availableRoleContexts,
+    therapistPlanActive,
+    needsTherapistPlan,
     hasCapability,
     hydrate,
     register,

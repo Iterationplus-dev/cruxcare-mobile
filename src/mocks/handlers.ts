@@ -365,7 +365,39 @@ const careHandlers: HttpHandler[] = [
     return HttpResponse.json(t);
   }),
 
-  http.post(url('/care/requests'), () => HttpResponse.json({ requested: true })),
+  http.post(url('/care/requests'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const { reason, therapistId } = (await request.json()) as { reason: string; therapistId?: string };
+
+    // Mirrors the API: a named therapist is attached and notified, an
+    // unnamed request stays open for staff matching.
+    if (therapistId) {
+      db.notifications.unshift({
+        id: `notif-care-${Date.now()}`,
+        // The API maps its `cases` notification type onto `system`.
+        category: 'system',
+        title: 'New client request',
+        body: reason,
+        read: false,
+        actionLabel: 'View requests',
+        actionRoute: '/therapist/appointments',
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return HttpResponse.json(
+      {
+        id: `case-${Date.now()}`,
+        reference: `CR-${Date.now()}`,
+        status: 'requested',
+        reason,
+        therapistId: therapistId ?? null,
+        createdAt: new Date().toISOString(),
+      },
+      { status: 202 },
+    );
+  }),
 
   http.get(url('/appointments'), ({ request }) => {
     const user = currentUser(request);

@@ -83,21 +83,36 @@ import { EmptyState, LoadingState } from '@/components/state';
 import { therapistsApi } from '@/api/therapists.api';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
+import { fullName as formatFullName } from '@/types/user';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const auth = useAuthStore();
+const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const therapistId = computed(() => String(route.params.id ?? ''));
 const { data: therapist, isPending } = useTherapist(therapistId);
 const requesting = ref(false);
 
 async function requestTherapist() {
   if (!therapist.value) return;
+  const target = therapist.value;
   requesting.value = true;
   try {
-    await therapistsApi.requestAssignment(`Requested therapist ${therapist.value.id}`);
-    await toast.show('Request sent — CruxCare will confirm your assignment.', 'success');
+    await therapistsApi.requestAssignment(
+      `${clientName.value} would like to work with ${target.name}.`,
+      target.id,
+    );
+    await toast.show(`${target.name} has been notified of your request.`, 'success', {
+      title: 'Request sent',
+    });
     router.replace({ name: 'care-hub' });
+  } catch {
+    await toast.show(`We could not send your request to ${target.name}. Please try again.`, 'danger', {
+      title: 'Could not send request',
+      dismissLabel: 'Try again',
+    });
   } finally {
     requesting.value = false;
   }

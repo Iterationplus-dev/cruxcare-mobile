@@ -7,11 +7,19 @@
           <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="56" />
           <div>
             <div class="cc-text-h2" style="margin: 0">{{ fullName }}</div>
-            <div class="cc-text-caption">{{ auth.user?.therapistProfile?.plan }} plan</div>
+            <div class="cc-text-caption">{{ planCaption }}</div>
           </div>
         </AppCard>
 
         <AppCard style="padding: 0">
+          <AppListRow
+            :title="auth.therapistPlanActive ? 'Therapist plan' : 'Choose a therapist plan'"
+            :subtitle="planRowSubtitle"
+            icon="workspace_premium"
+            chevron
+            clickable
+            @click="router.push({ name: 'therapist-plan' })"
+          />
           <AppListRow title="Manage availability" icon="event_available" chevron clickable @click="router.push({ name: 'therapist-availability' })" />
           <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
           <AppListRow title="Profile photo" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Help clients recognise you'" icon="photo_camera" chevron clickable @click="router.push({ name: 'personal-info', query: { focus: 'profile-photo' } })" />
@@ -52,6 +60,25 @@ import { fullName as formatFullName } from '@/types/user';
 const router = useRouter();
 const auth = useAuthStore();
 const fullName = computed(() => (auth.user ? formatFullName(auth.user) : ''));
+
+const PLAN_LABELS: Record<string, string> = {
+  'free-trial': 'Free trial',
+  monthly: 'Monthly',
+  yearly: 'Yearly',
+};
+const planLabel = computed(() => {
+  const plan = auth.user?.therapistProfile?.plan;
+  return plan ? PLAN_LABELS[plan] ?? plan : null;
+});
+/** Accounts that predate plan selection have the role but no plan at all. */
+const planCaption = computed(() =>
+  auth.therapistPlanActive && planLabel.value ? `${planLabel.value} plan` : 'No active plan',
+);
+const planRowSubtitle = computed(() => {
+  if (auth.therapistPlanActive && planLabel.value) return `${planLabel.value} · change or upgrade`;
+  if (auth.user?.therapistProfile?.status === 'expired') return 'Your plan expired — resubscribe to take clients';
+  return 'Subscribe to start taking clients';
+});
 
 const roleSheetOpen = ref(false);
 const logoutSheetOpen = ref(false);

@@ -118,7 +118,7 @@
                 <AppButton variant="secondary" @click="router.push({ name: 'therapist-detail', params: { id: t.id } })">
                   View profile
                 </AppButton>
-                <AppButton @click="requestTherapist(t.id)">Request</AppButton>
+                <AppButton @click="requestTherapist(t)">Request</AppButton>
               </div>
             </div>
           </AppCard>
@@ -148,10 +148,13 @@ import { therapistsApi } from '@/api/therapists.api';
 import { useChatThreads } from '@/composables/useChat';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
+import { fullName as formatFullName } from '@/types/user';
+import type { TherapistSummary } from '@/types/care';
 
 const router = useRouter();
 const auth = useAuthStore();
 const toast = useToast();
+const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const { data: chatThreads } = useChatThreads();
 
 const { data: caseFilesPage, isPending: caseFilesPending } = useCaseFiles();
@@ -223,8 +226,22 @@ async function requestMatching(reason = 'Please match me with an available thera
   }
 }
 
-async function requestTherapist(id: string) {
-  await requestMatching(`Requested therapist ${id}`);
+/** Named request: the therapist is attached to the case and notified. */
+async function requestTherapist(therapist: TherapistSummary) {
+  try {
+    await therapistsApi.requestAssignment(
+      `${clientName.value} would like to work with ${therapist.name}.`,
+      therapist.id,
+    );
+    await toast.show(`${therapist.name} has been notified of your request.`, 'success', {
+      title: 'Request sent',
+    });
+  } catch {
+    await toast.show(`We could not send your request to ${therapist.name}. Please try again.`, 'danger', {
+      title: 'Could not send request',
+      dismissLabel: 'Try again',
+    });
+  }
 }
 </script>
 
