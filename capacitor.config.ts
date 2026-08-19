@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appName: 'CruxCare Mobile',
   webDir: 'dist',
   plugins: {
+    PushNotifications: {
+      // Without this the plugin shows nothing while the app is in the
+      // foreground, so a message that arrives mid-session is silently lost.
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
     SplashScreen: {
       launchAutoHide: false,
       backgroundColor: '#ffffff',

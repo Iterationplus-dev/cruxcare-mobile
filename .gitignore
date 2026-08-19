@@ -36,3 +36,12 @@ npm-debug.log*
 .env
 tests/e2e/videos
 tests/e2e/screenshots
+
+# Gradle output for the local Capacitor plugin(s) in packages/
+/packages/*/android/build
+/packages/*/android/.gradle
+
+# Firebase client config belongs in android/app/, never in public/ — anything
+# in public/ is copied verbatim into dist/ and into the APK's web assets, and
+# is served publicly by the web build.
+/public/google-services.json

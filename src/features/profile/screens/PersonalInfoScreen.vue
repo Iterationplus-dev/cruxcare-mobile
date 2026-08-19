@@ -14,6 +14,8 @@
           </div>
           <input ref="photoInput" class="cc-profile-photo__input" type="file" accept="image/jpeg,image/png,image/webp" @change="onPhotoSelected" />
         </section>
+
+        <AppImageCropper v-model="cropping" :file="pendingPhoto" @confirm="onCropConfirmed" />
         <AppInput v-model="firstName" label="First name" placeholder="Amara" />
         <AppInput v-model="lastName" label="Last name" placeholder="Okafor" />
         <AppInput :model-value="auth.user?.email" label="Email" disabled helper="Verified · contact support to change" />
@@ -36,13 +38,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute } from 'vue-router';
-import { AppAvatar, AppButton, AppHeader, AppIcon, AppInput } from '@/components/ui';
+import { AppAvatar, AppButton, AppHeader, AppIcon, AppImageCropper, AppInput } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
+import { prepareAvatarUpload, type AvatarCrop } from '@/utils/avatarImage';
 import { ApiError } from '@/types/api';
 
 /** PR3 · Personal information — verified fields shown read-only in place;
@@ -55,6 +58,8 @@ const lastName = ref(auth.user?.lastName ?? '');
 const saving = ref(false);
 const savingPhoto = ref(false);
 const photoInput = ref<HTMLInputElement | null>(null);
+const pendingPhoto = ref<File | null>(null);
+const cropping = ref(false);
 const profileName = computed(() => `${auth.user?.firstName ?? ''} ${auth.user?.lastName ?? ''}`.trim());
 
 function choosePhoto() {
@@ -80,9 +85,25 @@ async function onPhotoSelected(event: Event) {
     return;
   }
 
+  // Hand off to the cropper; the upload waits for the member to frame the shot.
+  pendingPhoto.value = file;
+  cropping.value = true;
+  input.value = '';
+}
+
+// Dismissing the cropper drops the selection, releasing its object URL.
+watch(cropping, (open) => {
+  if (!open && !savingPhoto.value) pendingPhoto.value = null;
+});
+
+async function onCropConfirmed(crop: AvatarCrop) {
+  const file = pendingPhoto.value;
+  if (!file) return;
+
   savingPhoto.value = true;
   try {
-    const updated = await authApi.updateAvatar(file);
+    const upload = await prepareAvatarUpload(file, crop);
+    const updated = await authApi.updateAvatar(upload);
     auth.user = updated;
     await toast.show('Profile photo updated', 'success');
   } catch (error) {
@@ -92,7 +113,7 @@ async function onPhotoSelected(event: Event) {
     await toast.show(message, 'danger', { title: 'Could not update photo' });
   } finally {
     savingPhoto.value = false;
-    input.value = '';
+    pendingPhoto.value = null;
   }
 }
 

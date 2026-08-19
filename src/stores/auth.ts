@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { authApi, type RegisterPayload } from '@/api/auth.api';
 import { setAuthTokenGetter, setUnauthorizedHandler } from '@/api/client';
 import { secureStorage, SECURE_STORAGE_KEYS } from '@/services/secureStorage';
+import { disablePushNotifications } from '@/services/push/pushNotifications';
 import type { Capability, Role, TherapistPlanTier, User } from '@/types/user';
 
 /**
@@ -116,6 +117,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout() {
     try {
+      // Revoke the push registration while the token is still valid — after
+      // the session is cleared the API call would 401 and this handset would
+      // keep receiving the departing user's notifications.
+      await disablePushNotifications();
       await authApi.logout();
     } finally {
       await clearSession();
@@ -126,11 +131,18 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = await authApi.linkMembership(cruxId);
   }
 
-  async function activateTherapist(plan: TherapistPlanTier) {
-    user.value = await authApi.activateTherapist(plan);
+  async function activateTherapist(plan: TherapistPlanTier, paymentToken: string) {
+    const result = await authApi.activateTherapist(plan, paymentToken);
+
+    // A pending gateway payment leaves the account exactly as it was: no plan,
+    // no role, so nothing about the session may change here.
+    if (result.status === 'pending_payment') return result;
+
+    user.value = result.user;
     // Onboarding hands off to the therapist dashboard — keep the context that
     // Profile reports in step with the shell they are about to land in.
     activeRole.value = defaultRoleContext(user.value);
+    return result;
   }
 
   async function enableBiometric() {

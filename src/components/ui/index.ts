@@ -6,6 +6,7 @@ export { default as AppFeedbackSheet } from './AppFeedbackSheet.vue';
 export { default as AppChip } from './AppChip.vue';
 export { default as AppHeader } from './AppHeader.vue';
 export { default as AppIcon } from './AppIcon.vue';
+export { default as AppImageCropper } from './AppImageCropper.vue';
 export { default as AppInput } from './AppInput.vue';
 export { default as AppListRow } from './AppListRow.vue';
 export { default as AppPullToRefresh } from './AppPullToRefresh.vue';

@@ -4,7 +4,13 @@
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <EmptyState
-          v-if="!methods.length"
+          v-if="!canSaveMethods"
+          icon="credit_card"
+          title="Cards are entered at checkout"
+          message="Your payment provider collects card details in its own secure sheet each time you pay, so there is nothing to save here. Card numbers never touch CruxCare's servers."
+        />
+        <EmptyState
+          v-else-if="!methods.length"
           icon="credit_card"
           title="No cards saved"
           message="Add a card for faster checkout. Card numbers never touch CruxCare's servers."
@@ -31,12 +37,21 @@ import { ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
 import { EmptyState } from '@/components/state';
-import { paymentProvider } from '@/services/payment/PaymentProvider';
+import { paymentProvider } from '@/services/payment';
 
-/** PR6 · Payment methods — expired-card state inline, provider left open (README open item). */
+/** PR6 · Payment methods — expired-card state inline. */
 const methods = ref<{ label: string; expired: boolean }[]>([]);
 
+/**
+ * Monnify's checkout SDK charges one transaction at a time and has no vaulting
+ * flow, so under that provider there is nothing to save. Saying so is better
+ * than offering an "Add a card" button that lists a card which can never be
+ * charged again.
+ */
+const canSaveMethods = typeof paymentProvider.collectPaymentMethod === 'function';
+
 async function onAdd() {
+  if (!paymentProvider.collectPaymentMethod) return;
   const { label } = await paymentProvider.collectPaymentMethod();
   methods.value.push({ label, expired: false });
 }

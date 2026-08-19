@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Monnify's checkout activity and its own permissions are contributed by
+         the SDK's AAR manifest; nothing extra is needed here. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>

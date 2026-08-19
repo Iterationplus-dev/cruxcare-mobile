@@ -13,7 +13,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@cruxcare/capacitor-monnify": ["./packages/capacitor-monnify/src/index.ts"]
     }
   },
   "include": [
@@ -21,7 +22,8 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "tests/**/*.ts"
+    "tests/**/*.ts",
+    "packages/capacitor-monnify/src/**/*.ts"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

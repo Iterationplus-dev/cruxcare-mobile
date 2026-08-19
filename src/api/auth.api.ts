@@ -26,6 +26,20 @@ export interface AuthSession {
   token: string;
 }
 
+/** Payment the provider still has to confirm — the plan is not active yet. */
+export interface PendingPlanPayment {
+  status: 'pending_payment';
+  reference: string;
+  plan: TherapistPlanTier;
+  amount: number;
+  currency: string;
+  message: string;
+}
+
+export type TherapistActivationResult =
+  | { status: 'active'; user: User }
+  | { status: 'pending_payment'; payment: PendingPlanPayment };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -138,8 +152,25 @@ export const authApi = {
     return data;
   },
 
-  async activateTherapist(plan: TherapistPlanTier): Promise<User> {
-    const { data } = await apiClient.post<User>('/me/therapist/activate', { plan });
-    return data;
+  /**
+   * A priced plan is paid for before it starts. Wallet payments settle
+   * server-side and come back as an activated user; a gateway token cannot be
+   * verified during the request, so the API answers `202` with a pending
+   * result and the plan stays inactive until the provider confirms.
+   */
+  async activateTherapist(
+    plan: TherapistPlanTier,
+    paymentToken: string,
+  ): Promise<TherapistActivationResult> {
+    const response = await apiClient.post<User | PendingPlanPayment>('/me/therapist/activate', {
+      plan,
+      paymentToken,
+    });
+
+    if (response.status === 202) {
+      return { status: 'pending_payment', payment: response.data as PendingPlanPayment };
+    }
+
+    return { status: 'active', user: requireUser(response.data) };
   },
 };

@@ -14,6 +14,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // The local Capacitor plugin is consumed straight from source: npm only
+      // needs to link it so `cap sync` finds the native module, and this keeps
+      // Vite/vue-tsc/vitest off a separate build step for it.
+      '@cruxcare/capacitor-monnify': path.resolve(
+        __dirname,
+        './packages/capacitor-monnify/src/index.ts',
+      ),
     },
   },
   test: {

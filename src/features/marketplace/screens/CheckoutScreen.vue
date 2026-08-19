@@ -82,7 +82,6 @@ import { ordersApi } from '@/api/orders.api';
 import { newIdempotencyKey } from '@/api/client';
 import { useCartStore } from '@/stores/cart';
 import { useWallet } from '@/composables/useWallet';
-import { paymentProvider } from '@/services/payment/PaymentProvider';
 import { useConnectivityStore } from '@/stores/connectivity';
 import { useToast } from '@/composables/useToast';
 import type { CheckoutQuote } from '@/types/marketplace';
@@ -120,8 +119,11 @@ async function openSummary() {
 async function placeOrder() {
   placing.value = true;
   try {
-    const { token } = await paymentProvider.collectPaymentMethod();
-    const order = await ordersApi.checkout(idempotencyKey, token);
+    // This screen only offers the wallet, which settles server-side: there is
+    // no gateway to open, so it must not mint a payment token to stand in for
+    // one. Adding a card option here means opening a payment intent instead
+    // (see TherapistPlanScreen and docs/PAYMENTS_MONNIFY_CONTRACT.md).
+    const order = await ordersApi.checkout(idempotencyKey, payment.value);
     cart.clear();
     router.replace({ name: 'order-confirmed', params: { id: order.id } });
   } finally {

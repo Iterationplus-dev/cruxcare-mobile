@@ -2,7 +2,11 @@
 
 **Audience:** Senior Laravel engineer
 
-**Status:** Frontend contract audit as of 12 August 2026. The mobile app has a working mock API layer for the Phase 0/1 surface. It is ready to switch to Laravel once the contracts below are available.
+**Status:** Frontend contract audit as of 12 August 2026, amended 18 August 2026. The mobile app has a working mock API layer for the Phase 0/1 surface. It is ready to switch to Laravel once the contracts below are available.
+
+> **Amended 18 August 2026.** Push notifications and gateway payments are now wired end-to-end in the client, so the "not connected in current frontend code" caveats below no longer hold for them. Their contracts have moved to dedicated notes:
+> - **[`PUSH_NOTIFICATIONS_CONTRACT.md`](PUSH_NOTIFICATIONS_CONTRACT.md)** — `POST /devices/token`, `DELETE /devices/token/{installationId}`, `GET`/`PATCH /notifications/prefs`, and the FCM payload contract.
+> - **[`PAYMENTS_MONNIFY_CONTRACT.md`](PAYMENTS_MONNIFY_CONTRACT.md)** — Monnify selected as the gateway; `POST /payments/intents`, `POST /payments/intents/{ref}/confirm`, `GET /payments/intents/{ref}`, plus webhook handling.
 
 ## 1. Integration boundary
 
@@ -109,7 +113,7 @@ These routes have typed frontend client methods and MSW equivalents today. This 
 | `PATCH /me` | Any of `firstName`, `lastName`, `avatarUrl`, `payoutAccount` | Updated `User`. Do not allow arbitrary fields/roles to be mass assigned. |
 | `POST /me/delete` | `{ password }` | `{ deletionCompletesAt }`; the UI displays a reversible 30-day deletion window. A cancellation/restore endpoint is not yet wired and needs agreement before implementation. |
 | `POST /me/membership/link` | `{ cruxId }` after OTP verification | Updated `User` with member role/capabilities. Validate an existing membership and its owner; the client validates `^[A-Z]{3}\d{4}[A-Z]{2}$`. Never accept a user-supplied Crux ID as proof of ownership. |
-| `POST /me/therapist/activate` | `{ plan: "free-trial" \| "monthly" \| "yearly" }` | Updated `User`/`therapistProfile`. Member status and payment/plan eligibility must be enforced server-side. |
+| `POST /me/therapist/activate` | `{ plan: "free-trial" \| "monthly" \| "yearly", paymentToken }` | A priced plan is only activated once paid. A wallet token (`wallet` or `wallet:*`) settles against the ledger and returns the updated `User`/`therapistProfile`; any other token is an unverified gateway reference, so the subscription is stored `pending`, the therapist role is withheld, and the reply is `202 { status: "pending_payment", reference, plan, amount, currency, message }`. Free plans skip payment. `422 insufficient_funds` carries `meta.available`/`meta.required`/`meta.currency`. Member status, plan eligibility and payment stay server-enforced. |
 
 Registration performs local validation: first and last name required, valid email, digits-only phone with at least seven digits, password minimum eight characters and at least one number, plus terms/privacy consent. The consent checkbox is currently UI-only; product should decide whether registration needs a `termsVersion`/consent receipt field before backend implementation.
 
@@ -151,7 +155,7 @@ The app currently sends an opaque single-use `paymentToken` from a hosted provid
 | --- | --- | --- |
 | `GET /therapists` | `cursor?` | Cursor page of `TherapistSummary`: `id`, `name`, `avatarUrl`, `specialties[]`, `rating`, `location`, `bio`, `experienceYears`, `languages[]`, `nextAvailableSlot`, `fullyBooked`. |
 | `GET /therapists/{id}` | — | `TherapistSummary`. |
-| `POST /care/requests` | `{ reason }` | Create care/therapist assignment request; return `201/202`. Assignment remains staff workflow, not an immediate client-side assignment. |
+| `POST /care/requests` | `{ reason, therapistId? }` | Create care/therapist assignment request; return `201/202` with `therapistId`. A named therapist is attached to the case and notified so it reaches their queue; without one the request stays open. Final assignment remains a staff workflow either way. `422 therapist_unavailable` if the id is not a bookable therapist. |
 | `GET /appointments` | `cursor?` | Cursor page of `Appointment`. Scope it to client, assigned therapist, or administrator. |
 | `POST /appointments` | `{ therapistId, slot, type }`, `type` is `in-person\|video\|chat` | Creates requested appointment. Revalidate live availability and care/plan access atomically. |
 | `PATCH /appointments/{id}` | `{ status }` | Updated appointment. Current UI supplies status only; Laravel must authorize valid transitions (`requested`, `confirmed`, `completed`, `cancelled`, `no-show`). A later rescheduling request needs an explicit slot payload/contract. |
@@ -214,13 +218,13 @@ The rule is **minimum 5% admin charge** for withdrawals and member-to-member tra
 | `GET /notifications` | — | Array of `AppNotification`: `id`, `category`, `title`, `body`, `read`, `actionLabel`, `actionRoute`, `createdAt`. Current categories are `appointments`, `orders`, `wallet`, `chat`, `system`. |
 | `PATCH /notifications/{id}` | `{ read: true }` | `204` or `{ ok: true }`; it must only mutate the caller’s notification. |
 
-Notification preferences and device registration are planned in the product documentation but are not connected in current frontend code; see section 6.
+Notification preferences and device registration **are now connected** in the frontend. Their request/response shapes, the FCM payload contract, and the native defects fixed alongside them are in [`PUSH_NOTIFICATIONS_CONTRACT.md`](PUSH_NOTIFICATIONS_CONTRACT.md).
 
 ## 5. Realtime and native-device requirements
 
 The present chat UI fetches and posts through REST. The PRD requires Laravel Echo/Reverb for chat messages, presence, Point Facility signaling, payout status, approvals, and appointment changes. The mobile client is **not yet wired to Echo**, so agree on exact channel/event names before implementing it. A suitable direction is private user channels for notifications and private/presence channels scoped to an authorized chat thread, appointment/video room, or Point Facility center; the broadcast authorization endpoint must apply the same Laravel policies as REST.
 
-Push uses Capacitor FCM/APNs, but the app has no `POST /devices/token` client method yet. The planned request needs an opaque device token, platform, permission status, app version, and a device installation identifier so a user can revoke a single device. Never use the push token as an authentication credential.
+Push uses Capacitor FCM/APNs and **is now wired end-to-end**: the app requests permission, registers, uploads its token to `POST /devices/token`, revokes it on sign-out, and deep-links on tap. The full contract — including the FCM payload shape, upsert-on-`installationId` rule, and the still-outstanding `google-services.json` — is in [`PUSH_NOTIFICATIONS_CONTRACT.md`](PUSH_NOTIFICATIONS_CONTRACT.md). Never use the push token as an authentication credential.
 
 Video is currently a mock provider. The selected SFU (Agora, Twilio, Daily, or LiveKit) should be hidden behind backend-issued short-lived, room-scoped credentials. Create/join endpoints must enforce appointment/Point Facility entitlement and persist recording consent before a recording is started.
 
@@ -237,12 +241,12 @@ The following screens exist and communicate the intended backend capability, but
 | Therapist management | roster, availability, appointment-management, earnings, payout account, and case-file attachment endpoints | Current therapist dashboard mostly has static sample data. Enforce plan limits and client assignments in policies/services. |
 | Point Facility | `GET/POST /point/centers`, `POST /point/centers/{id}/resources`, `POST /point/centers/{id}/join` | Host rank/therapist-plan gate; client subscription gate; capacity, presence, moderation and recording consent. |
 | Admin | `POST /admin/assign-client`, `POST /admin/approvals/{id}` plus queue/list endpoints | Approval types include payouts, cooperative help, and capital-return notices. Actions require audit data and authorised admin scope. |
-| Notification settings | `GET/PATCH /notifications/prefs`, `POST /devices/token` | The current settings screen is deliberately local-only. Required security/money events cannot be silently disabled; optional categories include appointments, orders, chat, marketing. |
+| ~~Notification settings~~ **(now wired)** | `GET/PATCH /notifications/prefs`, `POST /devices/token` | The settings screen now reads and writes the API. Required security/money events cannot be silently disabled; optional categories are appointments, orders, chat, marketing. See [`PUSH_NOTIFICATIONS_CONTRACT.md`](PUSH_NOTIFICATIONS_CONTRACT.md). |
 | Account data rights | deletion cancellation, data export, consent withdrawal | Required by the PRD privacy requirement but not yet exposed in frontend API methods. |
 
 ## 7. Decisions needed before the next API increment
 
-1. **Payment gateway:** select Paystack, Flutterwave, Stripe, or another provider; define the provider-token/payment-intent lifecycle, webhooks, refunds, and wallet funding/checkout responsibility.
+1. ~~**Payment gateway:** select Paystack, Flutterwave, Stripe, or another provider~~ — **resolved: Monnify.** The native SDK, provider, and intent lifecycle are implemented client-side; see [`PAYMENTS_MONNIFY_CONTRACT.md`](PAYMENTS_MONNIFY_CONTRACT.md) for the endpoints, webhook signature handling, and the two decisions still open (intent currency, and whether saved cards are needed).
 2. **Video provider:** select the SFU and the shape/TTL of backend-issued room tokens, recording storage, moderation, and consent withdrawal.
 3. **OTP provider and rules:** confirm SMS/WhatsApp/email provider, code length (the implemented UI is five digits), expiry, resend and lockout policy. Membership linking must bind OTP to the target Crux ID and verified contact.
 4. **Sanctum token lifecycle:** define token expiry/rotation and per-device revocation. If refresh is required, add a frontend endpoint before enforcing a short access-token TTL.
@@ -254,10 +258,10 @@ The following screens exist and communicate the intended backend capability, but
 
 1. `/api/v1` baseline, Sanctum device tokens, user resource, RBAC/policies, common errors, cursor pagination, audit logging, and CORS for Capacitor/Web builds.
 2. Auth/account/OTP/recovery plus `GET/PATCH /me` and membership/therapist activation.
-3. Catalog, cart, checkout quote, orders and payment-provider adapter.
+3. Catalog, cart, checkout quote, orders and the Monnify payment adapter (`/payments/intents` + webhook).
 4. Therapists, appointments, health profile, case files, chat REST endpoints; then Echo/Reverb and attachments.
 5. Wallet/ledger and the reusable server quote → step-up → idempotent action pattern.
-6. Finance/network/rank modules, then Point Facility, push preferences/device registration, and admin queues.
+6. Finance/network/rank modules, then Point Facility and admin queues. (Push preferences and device registration are contract-ready now — see the push note — and only need a Firebase project to be testable.)
 
 ## 9. Contract source of truth in this repository
 

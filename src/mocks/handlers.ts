@@ -201,7 +201,50 @@ const authHandlers: HttpHandler[] = [
   http.post(url('/me/therapist/activate'), async ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
-    const { plan } = (await request.json()) as { plan: TherapistPlanTier };
+    const { plan, paymentToken } = (await request.json()) as {
+      plan: TherapistPlanTier;
+      paymentToken: string;
+    };
+
+    // Mirrors the API: priced plans settle before they start, wallet is the
+    // only token that settles here, and a gateway token stays pending.
+    const priceMinor = plan === 'monthly' ? 1500 : plan === 'yearly' ? 20000 : 0;
+    const payByWallet = paymentToken === 'wallet' || paymentToken.startsWith('wallet:');
+    const wallet = db.wallets.get(user.id);
+
+    if (priceMinor > 0) {
+      if (!payByWallet) {
+        return HttpResponse.json(
+          {
+            status: 'pending_payment',
+            reference: `SUB-${Date.now()}`,
+            plan,
+            amount: priceMinor / 100,
+            currency: wallet?.currency ?? 'USD',
+            message: 'Your plan starts as soon as the payment is confirmed.',
+          },
+          { status: 202 },
+        );
+      }
+
+      if ((wallet?.available ?? 0) * 100 < priceMinor) {
+        return HttpResponse.json(
+          {
+            message: 'Your wallet balance is not enough for this plan.',
+            code: 'insufficient_funds',
+            meta: {
+              available: wallet?.available ?? 0,
+              required: priceMinor / 100,
+              currency: wallet?.currency ?? 'USD',
+            },
+          },
+          { status: 422 },
+        );
+      }
+
+      if (wallet) wallet.available -= priceMinor / 100;
+    }
+
     user.therapistProfile = {
       plan,
       status: 'active',
@@ -531,6 +574,30 @@ const careHandlers: HttpHandler[] = [
 // Wallet, server-quoted money actions, and notifications
 // ---------------------------------------------------------------------------
 const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string }; stepUpVerified: boolean }>();
+/** installationId -> push token, scoped per user. */
+const devices = new Map<string, string>();
+
+const notificationPrefs = new Map<string, ReturnType<typeof defaultPreferences>>();
+
+function defaultPreferences() {
+  return {
+    optional: { appointments: true, orders: true, chat: true, marketing: false },
+    required: [
+      { key: 'security', label: 'Security alerts' },
+      { key: 'money', label: 'Money & wallet activity' },
+    ],
+    quietHours: { start: '22:00', end: '07:00', allowTimeSensitive: true },
+  };
+}
+
+function preferencesFor(userId: string) {
+  const existing = notificationPrefs.get(userId);
+  if (existing) return existing;
+  const created = defaultPreferences();
+  notificationPrefs.set(userId, created);
+  return created;
+}
+
 const walletHandlers: HttpHandler[] = [
   http.get(url('/wallet'), ({ request }) => {
     const user = currentUser(request);
@@ -627,6 +694,59 @@ const walletHandlers: HttpHandler[] = [
     return HttpResponse.json({ reference, status: 'processing', quote: saved.quote });
   }),
 
+  // Device push registration. Keyed on installationId so a rotated FCM token
+  // replaces the row instead of adding one; the token is a delivery address,
+  // never a credential.
+  http.post(url('/devices/token'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const body = (await request.json()) as { installationId?: string; token?: string };
+    if (!body.installationId || !body.token) {
+      return HttpResponse.json(
+        { message: 'installationId and token are both required.' },
+        { status: 422 },
+      );
+    }
+
+    devices.set(`${user.id}:${body.installationId}`, body.token);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.delete(url('/devices/token/:installationId'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    devices.delete(`${user.id}:${String(params.installationId)}`);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(url('/notifications/prefs'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    return HttpResponse.json(preferencesFor(user.id));
+  }),
+
+  http.patch(url('/notifications/prefs'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const body = (await request.json()) as {
+      optional?: Record<string, boolean>;
+      quietHours?: unknown;
+    };
+    const current = preferencesFor(user.id);
+
+    // Only optional categories are patchable — security and money alerts are
+    // not in `optional` at all, so they cannot be switched off from here.
+    const next = {
+      ...current,
+      optional: { ...current.optional, ...(body.optional ?? {}) },
+      quietHours: body.quietHours === undefined ? current.quietHours : (body.quietHours as never),
+    };
+    notificationPrefs.set(user.id, next);
+    return HttpResponse.json(next);
+  }),
+
   http.get(url('/notifications'), () => HttpResponse.json(db.notifications)),
 
   http.patch(url('/notifications/:id'), ({ params }) => {
@@ -636,9 +756,123 @@ const walletHandlers: HttpHandler[] = [
   }),
 ];
 
+// ---------------------------------------------------------------------------
+// Gateway payments (Monnify). The device is never the authority here: an
+// intent is priced and referenced by the server, and settlement is whatever
+// the server says after it verifies with the gateway.
+// ---------------------------------------------------------------------------
+const paymentIntents = new Map<
+  string,
+  { userId: string; purpose: string; amount: number; currency: string; settled: boolean }
+>();
+
+const PLAN_PRICE_MINOR: Record<string, number> = { 'free-trial': 0, monthly: 1500, yearly: 20000 };
+
+const paymentHandlers: HttpHandler[] = [
+  http.post(url('/payments/intents'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const body = (await request.json()) as {
+      purpose?: string;
+      subject?: string;
+      expectedAmount?: number;
+      expectedCurrency?: string;
+    };
+
+    // The server prices the subject; `expectedAmount` only detects a stale quote.
+    const currency = db.wallets.get(user.id)?.currency ?? 'USD';
+    const amount =
+      body.purpose === 'therapist-plan' ? (PLAN_PRICE_MINOR[body.subject ?? ''] ?? 0) / 100 : 0;
+
+    if (!body.purpose || !body.subject || amount <= 0) {
+      return HttpResponse.json(
+        { message: 'There is nothing to pay for on that request.', code: 'unpayable_subject' },
+        { status: 422 },
+      );
+    }
+
+    if (typeof body.expectedAmount === 'number' && body.expectedAmount !== amount) {
+      return HttpResponse.json(
+        { message: 'That price has changed. Please review it again.', code: 'stale_quote' },
+        { status: 422 },
+      );
+    }
+
+    const reference = `CCPAY-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    paymentIntents.set(reference, {
+      userId: user.id,
+      purpose: body.purpose,
+      amount,
+      currency,
+      settled: false,
+    });
+
+    return HttpResponse.json({
+      reference,
+      amount,
+      currency,
+      description: `CruxCare ${body.purpose} (${body.subject})`,
+      customerName: `${user.firstName} ${user.lastName}`.trim(),
+      customerEmail: user.email,
+      // Null exercises the app's build-time fallback. A real API returns the
+      // merchant credentials here so keys rotate without an app release.
+      gateway: null,
+      expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+    });
+  }),
+
+  http.post(url('/payments/intents/:reference/confirm'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const intent = paymentIntents.get(String(params.reference));
+    if (!intent || intent.userId !== user.id) {
+      return HttpResponse.json({ message: 'That payment could not be found.' }, { status: 404 });
+    }
+
+    // A gateway confirmation is asynchronous in reality; the mock stays
+    // pending once so no screen can be written against instant settlement.
+    const status = intent.settled ? 'settled' : 'pending';
+    intent.settled = true;
+
+    return HttpResponse.json({
+      reference: String(params.reference),
+      status,
+      message:
+        status === 'settled'
+          ? 'Payment confirmed.'
+          : 'Your payment is being confirmed. This usually takes a few moments.',
+      amountPaid: status === 'settled' ? intent.amount : null,
+      currency: intent.currency,
+      settledAt: status === 'settled' ? new Date().toISOString() : null,
+    });
+  }),
+
+  http.get(url('/payments/intents/:reference'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const intent = paymentIntents.get(String(params.reference));
+    if (!intent || intent.userId !== user.id) {
+      return HttpResponse.json({ message: 'That payment could not be found.' }, { status: 404 });
+    }
+
+    return HttpResponse.json({
+      reference: String(params.reference),
+      status: intent.settled ? 'settled' : 'pending',
+      message: intent.settled ? 'Payment confirmed.' : 'Your payment is being confirmed.',
+      amountPaid: intent.settled ? intent.amount : null,
+      currency: intent.currency,
+      settledAt: intent.settled ? new Date().toISOString() : null,
+    });
+  }),
+];
+
 export const handlers: HttpHandler[] = [
   ...authHandlers,
   ...marketplaceHandlers,
   ...careHandlers,
   ...walletHandlers,
+  ...paymentHandlers,
 ];

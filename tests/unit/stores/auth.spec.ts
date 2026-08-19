@@ -14,7 +14,7 @@ const { secureStorageMock } = vi.hoisted(() => ({
 
 vi.mock('@/services/secureStorage', () => ({
   secureStorage: secureStorageMock,
-  SECURE_STORAGE_KEYS: { authToken: 'cc_auth_token' },
+  SECURE_STORAGE_KEYS: { authToken: 'cc_auth_token', pushInstallationId: 'cc_push_installation_id' },
 }));
 
 describe('useAuthStore', () => {
@@ -154,6 +154,40 @@ describe('useAuthStore', () => {
     const auth = useAuthStore();
     await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);
     expect(auth.needsTherapistPlan).toBe(false);
+  });
+
+  it('activates a plan paid from the wallet', async () => {
+    const auth = useAuthStore();
+    await auth.login(demoCredentials.identifier, demoCredentials.password);
+
+    const result = await auth.activateTherapist('yearly', 'wallet');
+
+    expect(result.status).toBe('active');
+    expect(auth.user?.therapistProfile?.plan).toBe('yearly');
+    expect(auth.needsTherapistPlan).toBe(false);
+  });
+
+  it('leaves the account untouched while a gateway payment is pending', async () => {
+    const auth = useAuthStore();
+    await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);
+
+    const result = await auth.activateTherapist('monthly', 'mock-pay-token');
+
+    // The plan must not start on a payment the server has not confirmed.
+    expect(result.status).toBe('pending_payment');
+    expect(auth.user?.therapistProfile).toBeNull();
+    expect(auth.roles).not.toContain('therapist');
+  });
+
+  it('refuses a wallet payment the balance cannot cover', async () => {
+    const auth = useAuthStore();
+    await auth.login(uiTestCredentials.identifier, uiTestCredentials.password);
+
+    await expect(auth.activateTherapist('yearly', 'wallet')).rejects.toMatchObject({
+      status: 422,
+      code: 'insufficient_funds',
+    });
+    expect(auth.roles).not.toContain('therapist');
   });
 
   it('opens a non-therapist session in the client context', async () => {

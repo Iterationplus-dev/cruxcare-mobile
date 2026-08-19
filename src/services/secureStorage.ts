@@ -54,4 +54,10 @@ export const secureStorage = {
 
 export const SECURE_STORAGE_KEYS = {
   authToken: 'cc_auth_token',
+  /**
+   * Stable id for this app installation, used to revoke one device's push
+   * registration without touching the user's other devices. Not a hardware
+   * identifier — it is generated here and dies with the install.
+   */
+  pushInstallationId: 'cc_push_installation_id',
 } as const;
