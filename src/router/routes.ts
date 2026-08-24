@@ -184,6 +184,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/care/requests',
+    name: 'care-requests',
+    component: () => import('@/features/care/screens/CareRequestsScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/care/therapists/:id',
     name: 'therapist-detail',
     component: () => import('@/features/care/screens/TherapistDetailScreen.vue'),
@@ -195,6 +201,14 @@ const routes: RouteRecordRaw[] = [
     path: '/wallet/ledger',
     name: 'ledger',
     component: () => import('@/features/wallet/screens/LedgerScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  // Funding is deliberately role-free: every role spends from the same wallet,
+  // and only the client shell has a Wallet tab.
+  {
+    path: '/wallet/top-up',
+    name: 'wallet-top-up',
+    component: () => import('@/features/wallet/screens/WalletTopUpScreen.vue'),
     meta: { requiresAuth: true },
   },
   {

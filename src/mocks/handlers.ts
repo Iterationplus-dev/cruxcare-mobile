@@ -4,7 +4,8 @@ import type { RegisterPayload } from '@/api/auth.api';
 import type { CreateAppointmentPayload } from '@/api/appointments.api';
 import type { ProductQuery } from '@/api/products.api';
 import type { CartItem, CheckoutQuote, Order } from '@/types/marketplace';
-import type { HealthProfile } from '@/types/care';
+import type { CareRequest, HealthProfile } from '@/types/care';
+import type { WalletTopUpQuote } from '@/types/wallet';
 import type { TherapistPlanTier, User } from '@/types/user';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
@@ -66,7 +67,7 @@ const authHandlers: HttpHandler[] = [
       password: body.password,
     };
     db.users.push(user);
-    db.wallets.set(id, { available: 0, pending: 0, currency: 'USD', lastUpdatedAt: new Date().toISOString() });
+    db.wallets.set(id, { available: 0, pending: 0, currency: 'USD', lastUpdatedAt: new Date().toISOString(), local: null });
     db.ledgers.set(id, []);
     const token = issueToken(id);
     return HttpResponse.json({ user: db.toPublicUser(user), token });
@@ -413,6 +414,41 @@ const careHandlers: HttpHandler[] = [
     if (!user) return unauthorized();
     const { reason, therapistId } = (await request.json()) as { reason: string; therapistId?: string };
 
+    const therapist = therapistId ? db.therapists.find((t) => t.id === therapistId) : undefined;
+    if (therapistId && !therapist) {
+      return HttpResponse.json(
+        { message: 'That therapist is not taking requests.', code: 'therapist_unavailable' },
+        { status: 422 },
+      );
+    }
+
+    const now = new Date().toISOString();
+    const created: CareRequest = {
+      id: db.nextId('care-req'),
+      reference: `CR-${Date.now()}`,
+      // A named therapist already has it; an open request is waiting to be
+      // picked up. That is the difference the two statuses carry.
+      status: therapist ? 'in-review' : 'submitted',
+      reason,
+      therapistId: therapistId ?? null,
+      therapistName: therapist?.name ?? null,
+      therapistAvatarUrl: therapist?.avatarUrl ?? null,
+      createdAt: now,
+      updatedAt: now,
+      events: [
+        {
+          id: db.nextId('care-evt'),
+          status: therapist ? 'in-review' : 'submitted',
+          label: therapist ? `Request sent to ${therapist.name}` : 'Request submitted',
+          note: therapist
+            ? 'They have been notified and will respond shortly.'
+            : 'A coordinator will match you with an available therapist.',
+          at: now,
+        },
+      ],
+    };
+    db.careRequestsFor(user.id).unshift(created);
+
     // Mirrors the API: a named therapist is attached and notified, an
     // unnamed request stays open for staff matching.
     if (therapistId) {
@@ -425,21 +461,73 @@ const careHandlers: HttpHandler[] = [
         read: false,
         actionLabel: 'View requests',
         actionRoute: '/therapist/appointments',
-        createdAt: new Date().toISOString(),
+        createdAt: now,
       });
     }
 
-    return HttpResponse.json(
-      {
-        id: `case-${Date.now()}`,
-        reference: `CR-${Date.now()}`,
-        status: 'requested',
-        reason,
-        therapistId: therapistId ?? null,
-        createdAt: new Date().toISOString(),
-      },
-      { status: 202 },
-    );
+    // The client's own confirmation. Persist-then-push: the inbox row exists
+    // before any notification could reference it.
+    db.notifications.unshift({
+      id: `notif-care-sent-${Date.now()}`,
+      category: 'system',
+      title: 'Therapist request sent',
+      body: therapist
+        ? `${therapist.name} has been notified. We will tell you as soon as they respond.`
+        : 'CruxCare is matching you with an available therapist.',
+      read: false,
+      actionLabel: 'Track request',
+      actionRoute: '/care/requests',
+      createdAt: now,
+    });
+
+    return HttpResponse.json(created, { status: 202 });
+  }),
+
+  http.get(url('/care/requests'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    return HttpResponse.json(paginate(db.careRequestsFor(user.id)));
+  }),
+
+  http.get(url('/care/requests/:id'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const key = String(params.id);
+    const found = db.careRequestsFor(user.id).find((r) => r.id === key || r.reference === key);
+    // 404 rather than 403 on someone else's request: a 403 would confirm it exists.
+    if (!found) return HttpResponse.json({ message: 'Request not found.' }, { status: 404 });
+    return HttpResponse.json(found);
+  }),
+
+  http.post(url('/care/requests/:id/cancel'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const found = db.careRequestsFor(user.id).find((r) => r.id === params.id);
+    if (!found) return HttpResponse.json({ message: 'Request not found.' }, { status: 404 });
+
+    if (found.status === 'accepted' || found.status === 'closed' || found.status === 'cancelled') {
+      return HttpResponse.json(
+        {
+          message: 'This request can no longer be cancelled.',
+          code: 'request_not_cancellable',
+          // The client re-renders from this rather than trusting its own copy.
+          meta: { status: found.status },
+        },
+        { status: 422 },
+      );
+    }
+
+    const now = new Date().toISOString();
+    found.status = 'cancelled';
+    found.updatedAt = now;
+    found.events.push({
+      id: db.nextId('care-evt'),
+      status: 'cancelled',
+      label: 'You withdrew this request',
+      note: null,
+      at: now,
+    });
+    return HttpResponse.json(found);
   }),
 
   http.get(url('/appointments'), ({ request }) => {
@@ -573,7 +661,9 @@ const careHandlers: HttpHandler[] = [
 // ---------------------------------------------------------------------------
 // Wallet, server-quoted money actions, and notifications
 // ---------------------------------------------------------------------------
-const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string }; stepUpVerified: boolean }>();
+const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string; local: unknown }; stepUpVerified: boolean }>();
+const topUpQuotes = new Map<string, { userId: string; quote: WalletTopUpQuote }>();
+
 /** installationId -> push token, scoped per user. */
 const devices = new Map<string, string>();
 
@@ -602,15 +692,84 @@ const walletHandlers: HttpHandler[] = [
   http.get(url('/wallet'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
-    return HttpResponse.json(
-      db.wallets.get(user.id) ?? { available: 0, pending: 0, committed: 0, cooperativeSaved: 0, currency: 'USD', lastUpdatedAt: new Date().toISOString() },
-    );
+    const wallet = db.wallets.get(user.id) ?? {
+      available: 0,
+      pending: 0,
+      committed: 0,
+      cooperativeSaved: 0,
+      currency: 'USD',
+      lastUpdatedAt: new Date().toISOString(),
+      local: null,
+    };
+
+    // Converted at request time, from the rate in force now.
+    return HttpResponse.json({
+      ...wallet,
+      local: db.localBlockFor(user.id, {
+        available: wallet.available,
+        pending: wallet.pending,
+        cooperativeSaved: wallet.cooperativeSaved ?? 0,
+      }),
+    });
+  }),
+
+  http.get(url('/currencies'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    return HttpResponse.json({
+      ...db.currencyIndex,
+      mine: db.currencyFor(user.id)?.currency ?? null,
+    });
   }),
 
   http.get(url('/wallet/ledger'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
     return HttpResponse.json(paginate(db.ledgers.get(user.id) ?? []));
+  }),
+
+  // Funding quote. Separate from /wallet/quotes: money moves *in* through a
+  // gateway, so there is no balance to check and no step-up to clear.
+  http.post(url('/wallet/topups'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const body = (await request.json()) as { amount?: number };
+    const amount = Number(body.amount);
+    const wallet = db.wallets.get(user.id);
+    if (!wallet || !Number.isFinite(amount) || amount < 5) {
+      return HttpResponse.json(
+        {
+          message: 'Enter an amount of at least $5 to fund your wallet.',
+          code: 'invalid_amount',
+          meta: { minimum: 5 },
+        },
+        { status: 422 },
+      );
+    }
+
+    // Stands in for a gateway charge: 1.5% capped, quoted by the server so no
+    // screen has to work one out.
+    const fee = Math.min(Math.round(amount * 0.015 * 100) / 100, 20);
+    const quote = {
+      id: db.nextId('topup'),
+      amount,
+      fee,
+      totalCharge: Math.round((amount + fee) * 100) / 100,
+      walletCreditedWith: amount,
+      balanceAfter: Math.round((wallet.available + amount) * 100) / 100,
+      currency: wallet.currency,
+      // 30 minutes, not 5: a bank transfer means leaving the app to pay.
+      expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+      // Only the charged figures convert; `balanceAfter` stays in USD.
+      local: db.localBlockFor(user.id, {
+        amount,
+        fee,
+        totalCharge: Math.round((amount + fee) * 100) / 100,
+      }),
+    };
+    topUpQuotes.set(quote.id, { userId: user.id, quote });
+    return HttpResponse.json(quote);
   }),
 
   http.post(url('/wallet/quotes'), async ({ request }) => {
@@ -639,6 +798,15 @@ const walletHandlers: HttpHandler[] = [
       currency: wallet.currency,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
       recipient: body.recipient?.trim(),
+      // The quote carries its own rate: settlement honours what was shown,
+      // even if the rate moves before the action is executed.
+      local: db.localBlockFor(user.id, {
+        amount,
+        fee,
+        recipientReceives:
+          body.kind === 'cooperative-contribution' ? amount : Math.round((amount - fee) * 100) / 100,
+        balanceAfter: Math.round((wallet.available - amount) * 100) / 100,
+      }),
     };
     moneyQuotes.set(quote.id, { userId: user.id, quote, stepUpVerified: false });
     return HttpResponse.json(quote);
@@ -763,10 +931,62 @@ const walletHandlers: HttpHandler[] = [
 // ---------------------------------------------------------------------------
 const paymentIntents = new Map<
   string,
-  { userId: string; purpose: string; amount: number; currency: string; settled: boolean }
+  {
+    userId: string;
+    purpose: string;
+    amount: number;
+    currency: string;
+    settled: boolean;
+    /** Set on funding intents so settlement knows which quote to credit. */
+    topUpQuoteId?: string;
+  }
 >();
 
 const PLAN_PRICE_MINOR: Record<string, number> = { 'free-trial': 0, monthly: 1500, yearly: 20000 };
+
+/**
+ * Credits a wallet once its funding payment settles, and files the inbox row
+ * a push would point at. Idempotent: the quote is consumed, so a second
+ * confirm (a retry, or the polling GET) cannot credit the wallet twice.
+ */
+function creditSettledTopUp(userId: string, intent: { purpose: string; topUpQuoteId?: string }) {
+  if (intent.purpose !== 'wallet-topup' || !intent.topUpQuoteId) return;
+
+  const saved = topUpQuotes.get(intent.topUpQuoteId);
+  if (!saved || saved.userId !== userId) return;
+  topUpQuotes.delete(intent.topUpQuoteId);
+
+  const wallet = db.wallets.get(userId);
+  if (!wallet) return;
+
+  const now = new Date().toISOString();
+  wallet.available = Math.round((wallet.available + saved.quote.walletCreditedWith) * 100) / 100;
+  wallet.lastUpdatedAt = now;
+
+  const ledger = db.ledgers.get(userId) ?? [];
+  ledger.unshift({
+    id: db.nextId('txn'),
+    reference: `REF-${Math.floor(90000 + Math.random() * 9999)}`,
+    type: 'deposit',
+    amount: saved.quote.walletCreditedWith,
+    fee: saved.quote.fee,
+    currency: saved.quote.currency,
+    description: 'Wallet funding',
+    createdAt: now,
+  });
+  db.ledgers.set(userId, ledger);
+
+  db.notifications.unshift({
+    id: `notif-topup-${Date.now()}`,
+    category: 'wallet',
+    title: 'Wallet funded',
+    body: 'Your wallet top-up has been confirmed and your balance is updated.',
+    read: false,
+    actionLabel: 'View wallet',
+    actionRoute: '/tabs/wallet',
+    createdAt: now,
+  });
+}
 
 const paymentHandlers: HttpHandler[] = [
   http.post(url('/payments/intents'), async ({ request }) => {
@@ -781,37 +1001,60 @@ const paymentHandlers: HttpHandler[] = [
     };
 
     // The server prices the subject; `expectedAmount` only detects a stale quote.
-    const currency = db.wallets.get(user.id)?.currency ?? 'USD';
-    const amount =
-      body.purpose === 'therapist-plan' ? (PLAN_PRICE_MINOR[body.subject ?? ''] ?? 0) / 100 : 0;
+    // A top-up is priced from the quote the customer already reviewed, never
+    // from a figure the app supplied.
+    const topUp = body.purpose === 'wallet-topup' ? topUpQuotes.get(body.subject ?? '') : undefined;
+    if (body.purpose === 'wallet-topup' && (!topUp || topUp.userId !== user.id)) {
+      return HttpResponse.json(
+        { message: 'That top-up quote has expired. Please review it again.', code: 'stale_quote' },
+        { status: 422 },
+      );
+    }
 
-    if (!body.purpose || !body.subject || amount <= 0) {
+    const baseCurrency = topUp?.quote.currency ?? db.wallets.get(user.id)?.currency ?? 'USD';
+    const baseAmount = topUp
+      ? topUp.quote.totalCharge
+      : body.purpose === 'therapist-plan'
+        ? (PLAN_PRICE_MINOR[body.subject ?? ''] ?? 0) / 100
+        : 0;
+
+    if (!body.purpose || !body.subject || baseAmount <= 0) {
       return HttpResponse.json(
         { message: 'There is nothing to pay for on that request.', code: 'unpayable_subject' },
         { status: 422 },
       );
     }
 
-    if (typeof body.expectedAmount === 'number' && body.expectedAmount !== amount) {
+    // Compared against the base figure: the app only ever sends USD.
+    if (typeof body.expectedAmount === 'number' && body.expectedAmount !== baseAmount) {
       return HttpResponse.json(
         { message: 'That price has changed. Please review it again.', code: 'stale_quote' },
         { status: 422 },
       );
     }
 
+    // What the sheet actually charges. A payer in a supported country is
+    // charged in their own currency; everyone else stays on the base figure.
+    const payerCurrency = db.currencyFor(user.id);
+    const chargeCurrency = payerCurrency?.currency ?? baseCurrency;
+    const chargeAmount = payerCurrency?.rate
+      ? Math.round(baseAmount * payerCurrency.rate * 100) / 100
+      : baseAmount;
+
     const reference = `CCPAY-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
     paymentIntents.set(reference, {
       userId: user.id,
       purpose: body.purpose,
-      amount,
-      currency,
+      amount: chargeAmount,
+      currency: chargeCurrency,
       settled: false,
+      topUpQuoteId: topUp?.quote.id,
     });
 
     return HttpResponse.json({
       reference,
-      amount,
-      currency,
+      amount: chargeAmount,
+      currency: chargeCurrency,
       description: `CruxCare ${body.purpose} (${body.subject})`,
       customerName: `${user.firstName} ${user.lastName}`.trim(),
       customerEmail: user.email,
@@ -835,6 +1078,7 @@ const paymentHandlers: HttpHandler[] = [
     // pending once so no screen can be written against instant settlement.
     const status = intent.settled ? 'settled' : 'pending';
     intent.settled = true;
+    if (status === 'settled') creditSettledTopUp(user.id, intent);
 
     return HttpResponse.json({
       reference: String(params.reference),
@@ -857,6 +1101,8 @@ const paymentHandlers: HttpHandler[] = [
     if (!intent || intent.userId !== user.id) {
       return HttpResponse.json({ message: 'That payment could not be found.' }, { status: 404 });
     }
+
+    if (intent.settled) creditSettledTopUp(user.id, intent);
 
     return HttpResponse.json({
       reference: String(params.reference),

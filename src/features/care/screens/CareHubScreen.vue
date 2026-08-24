@@ -41,6 +41,16 @@
               clickable
               @click="router.push({ name: 'health-profile' })"
             />
+            <AppListRow
+              v-if="careRequests.length"
+              title="Your requests"
+              :subtitle="requestsSubtitle"
+              icon="assignment"
+              chevron
+              clickable
+              :divider="false"
+              @click="router.push({ name: 'care-requests' })"
+            />
           </AppCard>
 
           <template v-if="caseFile?.recommendations.length">
@@ -58,6 +68,18 @@
         </template>
 
         <template v-else>
+          <AppCard v-if="careRequests.length" style="padding: 0">
+            <AppListRow
+              title="Your requests"
+              :subtitle="requestsSubtitle"
+              icon="assignment"
+              chevron
+              clickable
+              :divider="false"
+              @click="router.push({ name: 'care-requests' })"
+            />
+          </AppCard>
+
           <EmptyState
             icon="health_and_safety"
             title="No therapist assigned yet"
@@ -144,16 +166,20 @@ import { EmptyState, LoadingState } from '@/components/state';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useTherapist, useTherapists } from '@/composables/useTherapists';
+import { useCareRequests } from '@/composables/useCareRequests';
+import { presentCareRequest } from '@/features/care/careRequestPresentation';
 import { therapistsApi } from '@/api/therapists.api';
 import { useChatThreads } from '@/composables/useChat';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
+import { useQueryClient } from '@tanstack/vue-query';
 import { fullName as formatFullName } from '@/types/user';
 import type { TherapistSummary } from '@/types/care';
 
 const router = useRouter();
 const auth = useAuthStore();
 const toast = useToast();
+const queryClient = useQueryClient();
 const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const { data: chatThreads } = useChatThreads();
 
@@ -179,6 +205,17 @@ const filteredTherapists = computed(() => {
   if (!term) return therapists.value;
   return therapists.value.filter((t) => t.name.toLowerCase().includes(term));
 });
+
+const { data: careRequestsPage } = useCareRequests();
+const careRequests = computed(() => careRequestsPage.value?.data ?? []);
+const openRequestCount = computed(
+  () => careRequests.value.filter((r) => presentCareRequest(r.status).open).length,
+);
+const requestsSubtitle = computed(() =>
+  openRequestCount.value
+    ? `${openRequestCount.value} in progress · track status`
+    : 'Track the status of requests you have sent',
+);
 
 const { data: appointmentsPage } = useAppointments();
 const nextVisit = computed(() =>
@@ -215,6 +252,7 @@ function goVideo() {
 async function requestMatching(reason = 'Please match me with an available therapist.') {
   try {
     await therapistsApi.requestAssignment(reason);
+    await showRequestTracking();
     await toast.show('Your request is on its way. CruxCare will contact you when a therapist is available.', 'success', {
       title: 'Matching request sent',
     });
@@ -226,6 +264,15 @@ async function requestMatching(reason = 'Please match me with an available thera
   }
 }
 
+/**
+ * A sent request is only useful if the client can follow it, so both request
+ * paths land on the tracking screen with the new row already refetched.
+ */
+async function showRequestTracking() {
+  await queryClient.invalidateQueries({ queryKey: ['care', 'requests'] });
+  await router.push({ name: 'care-requests' });
+}
+
 /** Named request: the therapist is attached to the case and notified. */
 async function requestTherapist(therapist: TherapistSummary) {
   try {
@@ -233,6 +280,7 @@ async function requestTherapist(therapist: TherapistSummary) {
       `${clientName.value} would like to work with ${therapist.name}.`,
       therapist.id,
     );
+    await showRequestTracking();
     await toast.show(`${therapist.name} has been notified of your request.`, 'success', {
       title: 'Request sent',
     });

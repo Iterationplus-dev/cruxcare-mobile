@@ -34,6 +34,7 @@ const auth = useAuthStore();
 const queryClient = useQueryClient();
 const isAuthenticatedRoute = computed(() => route.matched.some((record) => record.meta.requiresAuth));
 let backListener: PluginListenerHandle | undefined;
+let stateListener: PluginListenerHandle | undefined;
 let lastBackPressAt = 0;
 
 /**
@@ -49,11 +50,39 @@ let lastBackPressAt = 0;
 const pushReady = Capacitor.isNativePlatform()
   ? initPushNotifications({
       router,
-      onNotificationReceived: () => {
+      onNotificationReceived: (data) => {
         void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        for (const key of queryKeysForCategory(data.category)) {
+          void queryClient.invalidateQueries({ queryKey: key });
+        }
       },
     })
   : Promise.resolve();
+
+/**
+ * A push announces that something changed server-side, so the screen behind it
+ * should not keep showing the old value. The category is the only routing
+ * information the payload carries, so the refresh is scoped by that and
+ * deliberately kept broad — refetching a little too much is cheaper than
+ * leaving a settled payment reading as pending.
+ */
+function queryKeysForCategory(category: string | undefined): string[][] {
+  switch (category) {
+    case 'wallet':
+      return [['wallet'], ['wallet', 'ledger']];
+    case 'appointments':
+      return [['appointments'], ['care', 'requests']];
+    case 'orders':
+      return [['orders']];
+    case 'chat':
+      return [['chat', 'threads']];
+    case 'system':
+      // Care requests and plan/verification changes all arrive as `system`.
+      return [['care', 'requests'], ['case-files'], ['wallet']];
+    default:
+      return [];
+  }
+}
 
 /**
  * Push registration follows the session rather than app start: a token is only
@@ -90,10 +119,23 @@ onMounted(async () => {
       void toast.show('Press back again to exit', 'info', 2000);
     }
   });
+
+  /**
+   * Exchange rates move and a country can be switched off while the app sits
+   * in the background, so a resumed session must not keep showing a local
+   * figure derived from a stale rate — or offer a currency that has since
+   * stopped being fundable.
+   */
+  stateListener = await CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+    if (!isActive) return;
+    void queryClient.invalidateQueries({ queryKey: ['currencies'] });
+    void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+  });
 });
 
 onUnmounted(() => {
   void backListener?.remove();
+  void stateListener?.remove();
   void teardownPushNotifications();
 });
 </script>

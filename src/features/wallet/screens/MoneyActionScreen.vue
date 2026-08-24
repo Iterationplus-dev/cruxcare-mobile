@@ -18,12 +18,47 @@
           <div class="cc-money-action__eyebrow">SERVER QUOTE · EXPIRES IN 5 MIN</div>
           <h2 class="cc-money-action__title">Review before you submit</h2>
           <AppCard class="cc-money-action__quote">
-            <div><span>{{ amountLeavingLabel }}</span><MoneyAmount :value="quote.amount" :currency="quote.currency" /></div>
-            <div v-if="action !== 'cooperative-contribution'"><span>Admin charge</span><MoneyAmount :value="-quote.fee" :currency="quote.currency" /></div>
+            <div>
+              <span>{{ amountLeavingLabel }}</span>
+              <div class="cc-money-action__figure">
+                <MoneyAmount :value="quote.amount" :currency="quote.currency" />
+                <MoneyAmount v-if="local?.amount != null" :value="local.amount" :currency="local.currency" class="cc-money-action__local" />
+              </div>
+            </div>
+            <div v-if="action !== 'cooperative-contribution'">
+              <span>Admin charge</span>
+              <div class="cc-money-action__figure">
+                <MoneyAmount :value="-quote.fee" :currency="quote.currency" />
+                <MoneyAmount v-if="local?.fee != null" :value="-local.fee" :currency="local.currency" class="cc-money-action__local" />
+              </div>
+            </div>
             <div v-if="quote.recipient"><span>To</span><strong>{{ quote.recipient }}</strong></div>
-            <div class="cc-money-action__quote-total"><span>{{ receivingLabel }}</span><MoneyAmount :value="quote.recipientReceives" :currency="quote.currency" /></div>
-            <div><span>Wallet after action</span><MoneyAmount :value="quote.balanceAfter" :currency="quote.currency" /></div>
+            <!-- On a withdrawal the local figure is what actually lands in the
+                 bank, so it leads; the USD stays alongside because that is what
+                 the wallet is debited. -->
+            <div class="cc-money-action__quote-total">
+              <span>{{ receivingLabel }}</span>
+              <div class="cc-money-action__figure">
+                <MoneyAmount
+                  :value="local?.recipientReceives ?? quote.recipientReceives"
+                  :currency="local?.recipientReceives != null ? local.currency : quote.currency"
+                />
+                <MoneyAmount v-if="local?.recipientReceives != null" :value="quote.recipientReceives" :currency="quote.currency" class="cc-money-action__local" />
+              </div>
+            </div>
+            <div>
+              <span>Wallet after action</span>
+              <div class="cc-money-action__figure">
+                <MoneyAmount :value="quote.balanceAfter" :currency="quote.currency" />
+                <MoneyAmount v-if="local?.balanceAfter != null" :value="local.balanceAfter" :currency="local.currency" class="cc-money-action__local" />
+              </div>
+            </div>
           </AppCard>
+          <p v-if="local" class="cc-money-action__rate">
+            Converted at {{ formatMoney(local.rate, local.currency) }} per
+            {{ formatMoney(1, quote.currency) }}<template v-if="local.rateSource === 'system'">, an indicative rate</template>.
+            Your wallet is debited in {{ quote.currency }}.
+          </p>
           <div class="cc-money-action__notice"><AppIcon name="lock" :size="20" color="var(--cc-color-primary)" /><p>This quote came from CruxCare. Confirming opens step-up authentication; it does not imply immediate settlement.</p></div>
         </template>
 
@@ -55,6 +90,7 @@ import { AppButton, AppCard, AppHeader, AppIcon, AppInput, AppSheet, MoneyAmount
 import { walletApi } from '@/api/wallet.api';
 import { useWallet } from '@/composables/useWallet';
 import { useToast } from '@/composables/useToast';
+import { formatMoney } from '@/utils/money';
 import type { MoneyActionKind, MoneyQuote, MoneySubmission } from '@/types/wallet';
 
 const props = defineProps<{ action: MoneyActionKind }>();
@@ -72,6 +108,11 @@ const requestingCode = ref(false);
 const submitting = ref(false);
 const stepUpOpen = ref(false);
 const securityCode = ref('');
+
+/** The server-converted twin of the quote. Null for anyone with no supported
+ * country, which is the common case — the screen then reads exactly as before.
+ * Never re-converted here: the quote holds its own rate. */
+const local = computed(() => quote.value?.local ?? null);
 
 const isContribution = computed(() => props.action === 'cooperative-contribution');
 const title = computed(() => props.action === 'withdrawal' ? 'Withdraw' : props.action === 'transfer' ? 'Member transfer' : 'Contribute');
@@ -147,5 +188,5 @@ function finishAction() {
 }
 </script>
 <style scoped>
-.cc-screen { --background:var(--cc-surface-app); }.cc-screen__pad { display:flex; flex-direction:column; gap:14px; padding:16px 16px 28px; }.cc-money-action__intro { display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:var(--cc-radius-lg); background:var(--cc-color-mist); }.cc-money-action__intro h2,.cc-money-action__title { margin:0 0 4px; color:var(--cc-ink-900); font-family:var(--cc-font-interface); font-size:16px; line-height:22px; }.cc-money-action__intro p,.cc-money-action__submitted p { margin:0; color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:12px; line-height:18px; }.cc-money-action__balance { display:flex; flex-direction:column; gap:4px; }.cc-money-action__balance > span,.cc-money-action__eyebrow,.cc-money-action__receipt > span { color:var(--cc-color-primary); font-family:var(--cc-font-mono); font-size:10px; font-weight:600; letter-spacing:.07em; }.cc-money-action__balance :deep(.cc-money) { font-size:26px; }.cc-money-action__notice { display:flex; gap:10px; padding:13px; border-radius:var(--cc-radius-lg); background:var(--cc-color-warning-tint); }.cc-money-action__notice p { margin:0; color:var(--cc-color-warning-text); font-family:var(--cc-font-interface); font-size:12px; line-height:18px; }.cc-money-action__quote { padding:0; overflow:hidden; }.cc-money-action__quote > div { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 14px; border-bottom:1px solid var(--cc-divider); color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:12px; }.cc-money-action__quote > div:last-child { border-bottom:none; }.cc-money-action__quote :deep(.cc-money),.cc-money-action__quote strong { color:var(--cc-ink-900); font-family:var(--cc-font-mono); font-size:13px; }.cc-money-action__quote-total { background:var(--cc-color-mist); color:var(--cc-ink-900) !important; font-weight:600; }.cc-money-action__submitted { text-align:center; padding:24px 14px 8px; }.cc-money-action__submitted > div:first-child { display:grid; width:68px; height:68px; place-items:center; margin:0 auto 14px; border-radius:999px; background:var(--cc-color-warning-tint); }.cc-money-action__submitted h2 { margin:7px 0; color:var(--cc-ink-900); font-family:var(--cc-font-interface); font-size:21px; }.cc-money-action__submitted p { max-width:285px; margin:auto; }.cc-money-action__receipt { display:flex; flex-direction:column; gap:5px; text-align:center; }.cc-money-action__receipt strong { color:var(--cc-ink-900); font-family:var(--cc-font-mono); font-size:18px; }.cc-money-action__receipt small { color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:11px; }.cc-money-action__footer { display:flex; gap:8px; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--cc-divider); background:var(--cc-surface-0); }.cc-money-action__footer :deep(.cc-btn) { flex:1; font-size:13px; }.cc-money-action__sheet-copy { margin:0 0 14px; color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:12px; line-height:18px; }
+.cc-screen { --background:var(--cc-surface-app); }.cc-screen__pad { display:flex; flex-direction:column; gap:14px; padding:16px 16px 28px; }.cc-money-action__intro { display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:var(--cc-radius-lg); background:var(--cc-color-mist); }.cc-money-action__intro h2,.cc-money-action__title { margin:0 0 4px; color:var(--cc-ink-900); font-family:var(--cc-font-interface); font-size:16px; line-height:22px; }.cc-money-action__intro p,.cc-money-action__submitted p { margin:0; color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:12px; line-height:18px; }.cc-money-action__balance { display:flex; flex-direction:column; gap:4px; }.cc-money-action__balance > span,.cc-money-action__eyebrow,.cc-money-action__receipt > span { color:var(--cc-color-primary); font-family:var(--cc-font-mono); font-size:10px; font-weight:600; letter-spacing:.07em; }.cc-money-action__balance :deep(.cc-money) { font-size:26px; }.cc-money-action__notice { display:flex; gap:10px; padding:13px; border-radius:var(--cc-radius-lg); background:var(--cc-color-warning-tint); }.cc-money-action__notice p { margin:0; color:var(--cc-color-warning-text); font-family:var(--cc-font-interface); font-size:12px; line-height:18px; }.cc-money-action__quote { padding:0; overflow:hidden; }.cc-money-action__quote > div { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 14px; border-bottom:1px solid var(--cc-divider); color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:12px; }.cc-money-action__quote > div:last-child { border-bottom:none; }.cc-money-action__quote :deep(.cc-money),.cc-money-action__quote strong { color:var(--cc-ink-900); font-family:var(--cc-font-mono); font-size:13px; }.cc-money-action__quote-total { background:var(--cc-color-mist); color:var(--cc-ink-900) !important; font-weight:600; }.cc-money-action__figure { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }.cc-money-action__quote :deep(.cc-money.cc-money-action__local) { color:var(--cc-ink-400); font-size:11px; font-weight:400; }.cc-money-action__rate { margin:0; color:var(--cc-ink-400); font-family:var(--cc-font-interface); font-size:11.5px; line-height:16px; }.cc-money-action__submitted { text-align:center; padding:24px 14px 8px; }.cc-money-action__submitted > div:first-child { display:grid; width:68px; height:68px; place-items:center; margin:0 auto 14px; border-radius:999px; background:var(--cc-color-warning-tint); }.cc-money-action__submitted h2 { margin:7px 0; color:var(--cc-ink-900); font-family:var(--cc-font-interface); font-size:21px; }.cc-money-action__submitted p { max-width:285px; margin:auto; }.cc-money-action__receipt { display:flex; flex-direction:column; gap:5px; text-align:center; }.cc-money-action__receipt strong { color:var(--cc-ink-900); font-family:var(--cc-font-mono); font-size:18px; }.cc-money-action__receipt small { color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:11px; }.cc-money-action__footer { display:flex; gap:8px; padding:10px 16px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--cc-divider); background:var(--cc-surface-0); }.cc-money-action__footer :deep(.cc-btn) { flex:1; font-size:13px; }.cc-money-action__sheet-copy { margin:0 0 14px; color:var(--cc-ink-600); font-family:var(--cc-font-interface); font-size:12px; line-height:18px; }
 </style>

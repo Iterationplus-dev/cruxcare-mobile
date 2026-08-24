@@ -1,5 +1,10 @@
-import { Monnify, type MonnifyChargeResult, type MonnifyTransactionStatus } from '@cruxcare/capacitor-monnify';
-import type { PaymentGatewayConfig } from '@/types/payments';
+import {
+  Monnify,
+  type MonnifyChargeResult,
+  type MonnifyPaymentMethod,
+  type MonnifyTransactionStatus,
+} from '@cruxcare/capacitor-monnify';
+import type { PaymentChannel, PaymentGatewayConfig } from '@/types/payments';
 import type { PaymentOutcome, PaymentProvider, PaymentRequest, PaymentResult } from './PaymentProvider';
 
 /**
@@ -27,6 +32,7 @@ export class MonnifyPaymentProvider implements PaymentProvider {
 
     await this.configure(config);
 
+    const methods = methodsFor(request.channel);
     const result = await Monnify.charge({
       amount: request.amount,
       currencyCode: request.currency,
@@ -34,6 +40,7 @@ export class MonnifyPaymentProvider implements PaymentProvider {
       paymentDescription: request.description,
       customerName: request.customerName,
       customerEmail: request.customerEmail,
+      ...(methods ? { paymentMethods: methods } : {}),
     });
 
     return {
@@ -64,6 +71,23 @@ export class MonnifyPaymentProvider implements PaymentProvider {
       applicationMode: config.mode,
     });
     this.applied = fingerprint;
+  }
+}
+
+/**
+ * Narrows Monnify's sheet to the rail the customer chose. An unrecognised or
+ * absent channel returns undefined, which leaves the merchant's own default
+ * menu in place — safer than guessing a restriction that hides the only
+ * method a customer can actually use.
+ */
+function methodsFor(channel: PaymentChannel | undefined): MonnifyPaymentMethod[] | undefined {
+  switch (channel) {
+    case 'card':
+      return ['CARD'];
+    case 'bank-transfer':
+      return ['ACCOUNT_TRANSFER'];
+    default:
+      return undefined;
   }
 }
 

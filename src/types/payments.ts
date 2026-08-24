@@ -12,6 +12,13 @@ export type PaymentProviderId = 'monnify' | 'mock';
 
 export type PaymentPurpose = 'therapist-plan' | 'order' | 'wallet-topup';
 
+/**
+ * Which rail the customer picked. It is a *preference*, not a guarantee: the
+ * gateway decides what its sheet can actually offer, and the API records what
+ * was finally used. Omitted means "let the gateway show everything it has".
+ */
+export type PaymentChannel = 'card' | 'bank-transfer';
+
 export interface CreatePaymentIntentPayload {
   purpose: PaymentPurpose;
   /**
@@ -25,6 +32,12 @@ export interface CreatePaymentIntentPayload {
    */
   expectedAmount?: number;
   expectedCurrency?: string;
+  /**
+   * Sent so the server can prepare the rail — a bank transfer usually needs a
+   * reserved account before the sheet opens. The server may still return an
+   * intent the customer completes another way.
+   */
+  channel?: PaymentChannel;
 }
 
 /**

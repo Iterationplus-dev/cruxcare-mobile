@@ -1,16 +1,6 @@
 import { apiClient } from './client';
 import type { CursorPage } from '@/types/api';
-import type { TherapistSummary } from '@/types/care';
-
-export interface CareRequestResult {
-  id: string;
-  reference: string;
-  status: string;
-  reason: string;
-  /** Present when the request named a therapist, who has been notified. */
-  therapistId?: string | null;
-  createdAt: string;
-}
+import type { CareRequest, TherapistSummary } from '@/types/care';
 
 export const therapistsApi = {
   async list(cursor?: string): Promise<CursorPage<TherapistSummary>> {
@@ -28,12 +18,34 @@ export const therapistsApi = {
   /**
    * `therapistId` asks for that specific therapist, who is attached to the
    * case and notified. Omitted, it stays an open request for staff to match.
+   *
+   * Returns the created request in full so the tracking screen can show it
+   * without a second round trip.
    */
-  async requestAssignment(reason: string, therapistId?: string): Promise<CareRequestResult> {
-    const { data } = await apiClient.post<CareRequestResult>('/care/requests', {
+  async requestAssignment(reason: string, therapistId?: string): Promise<CareRequest> {
+    const { data } = await apiClient.post<CareRequest>('/care/requests', {
       reason,
       ...(therapistId ? { therapistId } : {}),
     });
+    return data;
+  },
+
+  /** The client's own requests, newest first, so they can follow progress. */
+  async listRequests(cursor?: string): Promise<CursorPage<CareRequest>> {
+    const { data } = await apiClient.get<CursorPage<CareRequest>>('/care/requests', {
+      params: { cursor },
+    });
+    return data;
+  },
+
+  async getRequest(id: string): Promise<CareRequest> {
+    const { data } = await apiClient.get<CareRequest>(`/care/requests/${id}`);
+    return data;
+  },
+
+  /** Withdraws a request that has not been accepted yet. */
+  async cancelRequest(id: string): Promise<CareRequest> {
+    const { data } = await apiClient.post<CareRequest>(`/care/requests/${id}/cancel`);
     return data;
   },
 };

@@ -1,8 +1,9 @@
-import type { Appointment, CaseFile, ChatMessage, ChatThread, HealthProfile, TherapistSummary } from '@/types/care';
+import type { Appointment, CareRequest, CaseFile, ChatMessage, ChatThread, HealthProfile, TherapistSummary } from '@/types/care';
 import type { Cart, Order, Product } from '@/types/marketplace';
 import type { AppNotification } from '@/types/notifications';
 import type { User } from '@/types/user';
 import type { Transaction, Wallet } from '@/types/wallet';
+import type { CurrencyIndex, LocalBlock, SupportedCurrency } from '@/types/money';
 import pCayenmis from '@/assets/images/p-cayenmis.jpg';
 import pGreenTea from '@/assets/images/p-green-tea.jpg';
 import pGimPowder from '@/assets/images/p-gim-powder.jpg';
@@ -323,6 +324,83 @@ chatMessages.set('thread-1', [
 ]);
 chatThreads[0].lastMessage = chatMessages.get('thread-1')![0];
 
+/**
+ * Which local currency each mock user resolves to, standing in for the country
+ * on their profile address. `user-1` has one so the local-display path is
+ * exercisable; a registered user has none, which is the common real case and
+ * must render as plain USD.
+ */
+export const userCurrency = new Map<string, string>([['user-1', 'NGN']]);
+
+export const currencyIndex: CurrencyIndex = {
+  base: 'USD',
+  source: 'official',
+  supported: [
+    {
+      countryId: 126,
+      country: 'Nigeria',
+      currency: 'NGN',
+      rate: 1351.051935,
+      rateSource: 'official',
+      fundable: true,
+    },
+    {
+      countryId: 83,
+      country: 'Ghana',
+      currency: 'GHS',
+      rate: 11.0632,
+      rateSource: 'official',
+      fundable: true,
+    },
+    // Supported but unpriced: the UI must hide it from funding rather than
+    // showing a zero rate.
+    {
+      countryId: 40,
+      country: 'Cameroon',
+      currency: 'XAF',
+      rate: null,
+      rateSource: 'system',
+      fundable: false,
+    },
+  ],
+  mine: null,
+};
+
+export function currencyFor(userId: string): SupportedCurrency | null {
+  const code = userCurrency.get(userId);
+  if (!code) return null;
+  const found = currencyIndex.supported.find((c) => c.currency === code);
+  return found?.rate === null ? null : (found ?? null);
+}
+
+/**
+ * Builds the display-only twin of a money object. The server converts, so the
+ * mock does too — the client must never do this arithmetic itself.
+ */
+export function localBlockFor<K extends string>(
+  userId: string,
+  amounts: Record<K, number | null | undefined>,
+): (LocalBlock<K> & { rate: number }) | null {
+  const currency = currencyFor(userId);
+  if (!currency || currency.rate === null) return null;
+
+  const rate = currency.rate;
+  const converted = Object.fromEntries(
+    Object.entries(amounts).map(([key, value]) => [
+      key,
+      typeof value === 'number' ? Math.round(value * rate * 100) / 100 : null,
+    ]),
+  ) as Record<K, number | null>;
+
+  return {
+    currency: currency.currency,
+    country: currency.country,
+    rate,
+    rateSource: currency.rateSource,
+    ...converted,
+  };
+}
+
 export const wallets = new Map<string, Wallet>();
 wallets.set('user-1', {
   available: 248.5,
@@ -331,6 +409,8 @@ wallets.set('user-1', {
   cooperativeSaved: 180,
   currency: 'USD',
   lastUpdatedAt: new Date().toISOString(),
+  // Filled in per request by the handler, which is where the live rate lives.
+  local: null,
 });
 
 export const ledgers = new Map<string, Transaction[]>();
@@ -366,6 +446,17 @@ ledgers.set('user-1', [
     createdAt: '2026-08-01T00:00:00Z',
   },
 ]);
+
+/** Care requests are per-client; the map key is the client's user id. */
+export const careRequests = new Map<string, CareRequest[]>();
+
+export function careRequestsFor(userId: string): CareRequest[] {
+  const existing = careRequests.get(userId);
+  if (existing) return existing;
+  const created: CareRequest[] = [];
+  careRequests.set(userId, created);
+  return created;
+}
 
 export const notifications: AppNotification[] = [
   {

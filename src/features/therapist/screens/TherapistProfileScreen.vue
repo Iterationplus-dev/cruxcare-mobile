@@ -22,6 +22,8 @@
           />
           <AppListRow title="Manage availability" icon="event_available" chevron clickable @click="router.push({ name: 'therapist-availability' })" />
           <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
+          <!-- The therapist shell has no Wallet tab, so funding is reached here. -->
+          <AppListRow title="Fund wallet" subtitle="Top up by card or bank transfer" icon="add_card" chevron clickable @click="router.push({ name: 'wallet-top-up' })" />
           <AppListRow title="Profile photo" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Help clients recognise you'" icon="photo_camera" chevron clickable @click="router.push({ name: 'personal-info', query: { focus: 'profile-photo' } })" />
           <AppListRow title="Switch to client context" icon="switch_account" chevron clickable :divider="false" @click="roleSheetOpen = true" />
         </AppCard>

@@ -156,3 +156,29 @@ describe('MonnifyPaymentProvider', () => {
     expect(provider.collectPaymentMethod).toBeUndefined();
   });
 });
+
+describe('payment channel', () => {
+  beforeEach(() => {
+    charge.mockReset();
+    charge.mockResolvedValue(result());
+    configure.mockClear();
+  });
+
+  it('restricts the sheet to cards when the customer chose card', async () => {
+    await new MonnifyPaymentProvider(buildTime).collectPayment(request({ channel: 'card' }));
+    expect(charge.mock.calls[0][0].paymentMethods).toEqual(['CARD']);
+  });
+
+  it('restricts the sheet to account transfer when the customer chose bank transfer', async () => {
+    await new MonnifyPaymentProvider(buildTime).collectPayment(
+      request({ channel: 'bank-transfer' }),
+    );
+    expect(charge.mock.calls[0][0].paymentMethods).toEqual(['ACCOUNT_TRANSFER']);
+  });
+
+  it('leaves the merchant default in place when no channel was chosen', async () => {
+    await new MonnifyPaymentProvider(buildTime).collectPayment(request());
+    // Sending an empty restriction would hide every method Monnify offers.
+    expect(charge.mock.calls[0][0]).not.toHaveProperty('paymentMethods');
+  });
+});

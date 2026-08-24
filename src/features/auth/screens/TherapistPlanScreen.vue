@@ -83,21 +83,39 @@
         <button
           type="button"
           class="cc-pay__option"
-          :class="{ 'cc-pay__option--selected': method === 'gateway' }"
-          @click="method = 'gateway'"
+          :class="{ 'cc-pay__option--selected': method === 'card' }"
+          @click="method = 'card'"
         >
-          <AppIcon name="credit_card" :size="22" :color="method === 'gateway' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
+          <AppIcon name="credit_card" :size="22" :color="method === 'card' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
           <div class="cc-pay__body">
-            <div class="cc-text-body-strong" style="font-size: 14.5px">Card or bank transfer</div>
-            <div class="cc-text-caption">Pay through our payment provider</div>
+            <div class="cc-text-body-strong" style="font-size: 14.5px">Card</div>
+            <div class="cc-text-caption">Debit or credit card, entered in our provider's secure sheet</div>
           </div>
-          <AppIcon v-if="method === 'gateway'" name="check_circle" :size="20" color="var(--cc-color-primary)" />
+          <AppIcon v-if="method === 'card'" name="check_circle" :size="20" color="var(--cc-color-primary)" />
+        </button>
+
+        <button
+          type="button"
+          class="cc-pay__option"
+          :class="{ 'cc-pay__option--selected': method === 'bank-transfer' }"
+          @click="method = 'bank-transfer'"
+        >
+          <AppIcon name="account_balance" :size="22" :color="method === 'bank-transfer' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
+          <div class="cc-pay__body">
+            <div class="cc-text-body-strong" style="font-size: 14.5px">Bank transfer</div>
+            <div class="cc-text-caption">Transfer to the account our provider shows you</div>
+          </div>
+          <AppIcon v-if="method === 'bank-transfer'" name="check_circle" :size="20" color="var(--cc-color-primary)" />
         </button>
       </div>
 
       <div v-if="walletShortfall" class="cc-pay__warning">
         <AppIcon name="account_balance_wallet" :size="20" color="var(--cc-color-warning-text)" />
-        <p>Your wallet is short for this plan. Top up, or pay by card instead.</p>
+        <p>
+          Your wallet is short for this plan.
+          <button type="button" class="cc-pay__warning-link" @click="goTopUp">Fund your wallet</button>
+          , or pay by card or bank transfer instead.
+        </p>
       </div>
 
       <AppButton :loading="submitting" :disabled="method === 'wallet' && walletShortfall" @click="onPay">
@@ -120,13 +138,14 @@ import {
 } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppBadge, AppButton, AppCard, AppIcon, AppSheet, MoneyAmount } from '@/components/ui';
-import { paymentProvider } from '@/services/payment';
+import { PaymentUnavailableError, resolvePaymentProvider } from '@/services/payment';
 import { paymentsApi } from '@/api/payments.api';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
 import { useWallet } from '@/composables/useWallet';
 import { ApiError } from '@/types/api';
 import type { TherapistPlanTier } from '@/types/user';
+import type { PaymentChannel } from '@/types/payments';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -158,12 +177,19 @@ const plan = ref<TherapistPlanTier>(currentPlan.value ?? 'monthly');
 const selectedPlan = computed(() => plans.find((p) => p.key === plan.value)!);
 const submitting = ref(false);
 const paySheetOpen = ref(false);
-const method = ref<'wallet' | 'gateway'>('wallet');
+/** Wallet settles server-side; the other two open the gateway on that rail. */
+const method = ref<'wallet' | PaymentChannel>('wallet');
 
 const { data: wallet } = useWallet();
 const walletShortfall = computed(
   () => !!wallet.value && wallet.value.available * 100 < selectedPlan.value.priceMinor,
 );
+
+/** Leaves the sheet open behind the push so returning lands back on payment. */
+function goTopUp() {
+  paySheetOpen.value = false;
+  void router.push({ name: 'wallet-top-up' });
+}
 
 /** Free plans skip payment entirely; priced plans must settle first. */
 function onContinue() {
@@ -172,7 +198,7 @@ function onContinue() {
     return;
   }
 
-  method.value = walletShortfall.value ? 'gateway' : 'wallet';
+  method.value = walletShortfall.value ? 'card' : 'wallet';
   paySheetOpen.value = true;
 }
 
@@ -182,7 +208,7 @@ async function onPay() {
     return;
   }
 
-  await payByGateway();
+  await payByGateway(method.value);
 }
 
 /**
@@ -191,7 +217,7 @@ async function onPay() {
  * then quotes that same reference back, and the server — not this screen —
  * decides whether the payment settled.
  */
-async function payByGateway() {
+async function payByGateway(channel: PaymentChannel) {
   submitting.value = true;
   try {
     const intent = await paymentsApi.createIntent({
@@ -199,9 +225,12 @@ async function payByGateway() {
       subject: plan.value,
       expectedAmount: selectedPlan.value.priceMinor / 100,
       expectedCurrency: 'USD',
+      channel,
     });
 
-    const result = await paymentProvider.collectPayment({
+    const provider = resolvePaymentProvider(intent.gateway);
+
+    const result = await provider.collectPayment({
       reference: intent.reference,
       amount: intent.amount,
       currency: intent.currency,
@@ -209,6 +238,7 @@ async function payByGateway() {
       customerName: intent.customerName,
       customerEmail: intent.customerEmail,
       gateway: intent.gateway,
+      channel,
     });
 
     if (result.outcome === 'cancelled') {
@@ -231,6 +261,11 @@ async function payByGateway() {
     // saw is a hint, and activation still returns 202 until Monnify confirms.
     await activate(intent.reference);
   } catch (e) {
+    if (e instanceof PaymentUnavailableError) {
+      await toast.show(e.message, 'danger', { title: 'Payment unavailable' });
+      return;
+    }
+
     const message =
       e instanceof ApiError ? e.message : 'We could not start that payment. Please try again.';
     await toast.show(message, 'danger', { title: 'Payment failed', dismissLabel: 'Try again' });
@@ -359,6 +394,16 @@ async function activate(paymentToken: string) {
   font-family: var(--cc-font-interface);
   font-size: 11.5px;
   line-height: 17px;
+}
+.cc-pay__warning-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .cc-feature {
   display: flex;

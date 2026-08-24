@@ -1,4 +1,4 @@
-import type { PaymentGatewayConfig, PaymentProviderId } from '@/types/payments';
+import type { PaymentChannel, PaymentGatewayConfig, PaymentProviderId } from '@/types/payments';
 
 /**
  * The provider-facing shape of a payment the API has already opened. Every
@@ -15,6 +15,12 @@ export interface PaymentRequest {
   customerEmail: string;
   /** Null falls back to the build-time gateway configuration. */
   gateway: PaymentGatewayConfig | null;
+  /**
+   * Opens the sheet on the rail the customer chose. Providers that cannot
+   * restrict their checkout ignore it and show their full menu — which is why
+   * no screen may present the choice as binding.
+   */
+  channel?: PaymentChannel;
 }
 
 /**

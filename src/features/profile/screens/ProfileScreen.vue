@@ -48,7 +48,8 @@
           <AppListRow title="Health profile" icon="medical_information" chevron clickable @click="router.push({ name: 'health-profile' })" />
           <AppListRow title="Security and privacy" icon="shield" chevron clickable @click="router.push({ name: 'security-privacy' })" />
           <AppListRow title="Notifications" icon="notifications" chevron clickable @click="router.push({ name: 'notification-settings' })" />
-          <AppListRow title="Payment methods" icon="credit_card" chevron clickable :divider="false" @click="router.push({ name: 'payment-methods' })" />
+          <AppListRow title="Payment methods" icon="credit_card" chevron clickable @click="router.push({ name: 'payment-methods' })" />
+          <AppListRow title="Fund wallet" subtitle="Top up by card or bank transfer" icon="add_card" chevron clickable :divider="false" @click="router.push({ name: 'wallet-top-up' })" />
         </AppCard>
 
         <AppCard v-if="auth.roles.includes('therapist')" style="padding: 0">

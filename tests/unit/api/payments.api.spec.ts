@@ -32,10 +32,15 @@ describe('paymentsApi', () => {
     });
 
     expect(intent.reference).toMatch(/^CCPAY-/);
-    expect(intent.amount).toBe(15);
+    // The plan is priced at 15 USD, but the sheet charges the payer in their
+    // own currency — the demo user resolves to NGN.
+    expect(intent.currency).toBe('NGN');
+    expect(intent.amount).toBeGreaterThan(15);
     expect(intent.customerEmail).toBeTruthy();
   });
 
+  // `expectedAmount` is always the base (USD) figure: the app never sends a
+  // local amount, whatever the sheet ends up charging.
   it('rejects a stale quote rather than charging a different figure', async () => {
     await expect(
       paymentsApi.createIntent({
@@ -74,7 +79,9 @@ describe('paymentsApi', () => {
 
     const settled = await paymentsApi.get(intent.reference);
 
-    expect(settled).toMatchObject({ status: 'settled', amountPaid: 200 });
+    expect(settled).toMatchObject({ status: 'settled', currency: intent.currency });
+    // Settlement reports what was actually charged, in the charged currency.
+    expect(settled.amountPaid).toBe(intent.amount);
   });
 
   it('does not expose another account’s payment', async () => {

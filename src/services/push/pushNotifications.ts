@@ -33,8 +33,12 @@ export const DEFAULT_CHANNEL_ID = 'cruxcare-default';
 
 export interface PushDeps {
   router: Router;
-  /** Lets a foreground push refresh the notifications inbox without a reload. */
-  onNotificationReceived?: () => void;
+  /**
+   * Lets a foreground push refresh the inbox, and whatever else it reports
+   * having changed, without a reload. The payload is passed through so the
+   * caller can scope that refresh by `category`.
+   */
+  onNotificationReceived?: (data: PushPayloadData) => void;
 }
 
 export type PushEnableResult =
@@ -210,8 +214,8 @@ export async function initPushNotifications(dependencies: PushDeps): Promise<voi
       pendingRegistration = null;
     }),
 
-    PushNotifications.addListener('pushNotificationReceived', (_: PushNotificationSchema) => {
-      deps?.onNotificationReceived?.();
+    PushNotifications.addListener('pushNotificationReceived', (message: PushNotificationSchema) => {
+      deps?.onNotificationReceived?.((message.data ?? {}) as PushPayloadData);
     }),
 
     PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
