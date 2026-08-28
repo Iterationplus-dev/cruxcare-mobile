@@ -196,10 +196,37 @@ export interface ChatMessage {
   readAt: string | null;
 }
 
+/**
+ * A conversation as the list returns it, shaped to what the server sends: the
+ * other person is flattened onto the thread rather than given as a participant
+ * array, because a thread is always between the caller and one other person.
+ *
+ * `lastMessage` is the preview text, not a message record — the list never
+ * needs the rest of it, and fetching the thread gives the full history.
+ */
 export interface ChatThread {
   id: string;
-  participants: ChatParticipant[];
-  lastMessage: ChatMessage | null;
+  participantId: string;
+  participantName: string;
+  participantAvatarUrl: string | null;
+  /** Preview text for the row, or null on a thread nobody has written in. */
+  lastMessage: string | null;
+  lastMessageAt: string | null;
   unreadCount: number;
-  scopeDisclaimer: string;
+  muted: boolean;
+  /**
+   * `open` while the conversation accepts messages. Chats stay open for a
+   * period after the last session and then become read-only, so the composer
+   * follows this rather than assuming a thread can always be written to.
+   */
+  status: ChatThreadStatus;
+  /** When an open thread will close, or null when nothing is scheduled. */
+  closesAt: string | null;
+  /** Why a closed thread closed — rendered verbatim, e.g. "sessions ended 12 Jul". */
+  closedReason: string | null;
 }
+
+/** Open-ended for the same reason the care statuses are: an unknown value
+ *  renders as read-only rather than breaking the screen. */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type ChatThreadStatus = 'open' | 'read-only' | (string & {});

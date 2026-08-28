@@ -301,13 +301,30 @@ export const caseFiles: CaseFile[] = [
 export const chatThreads: ChatThread[] = [
   {
     id: 'thread-1',
-    participants: [
-      { id: 'user-1', name: 'Amaka Obi', avatarUrl: null, online: true },
-      { id: 'therapist-1', name: 'Amaka Obi (Therapist)', avatarUrl: null, online: false },
-    ],
+    participantId: 'therapist-1',
+    participantName: 'Amaka Obi (Therapist)',
+    participantAvatarUrl: null,
     lastMessage: null,
+    lastMessageAt: null,
     unreadCount: 0,
-    scopeDisclaimer: 'This chat is for care coordination only — not for emergencies.',
+    muted: false,
+    status: 'open',
+    closesAt: null,
+    closedReason: null,
+  },
+  /** A closed thread, so the read-only composer state has something to render. */
+  {
+    id: 'thread-2',
+    participantId: 'therapist-2',
+    participantName: 'Chidi Nwosu',
+    participantAvatarUrl: null,
+    lastMessage: 'Take care, and book again whenever you need to.',
+    lastMessageAt: '2026-07-12T16:20:00Z',
+    unreadCount: 0,
+    muted: false,
+    status: 'read-only',
+    closesAt: null,
+    closedReason: 'Chat closed · sessions ended 12 Jul',
   },
 ];
 
@@ -323,7 +340,9 @@ chatMessages.set('thread-1', [
     readAt: '2026-08-07T09:05:00Z',
   },
 ]);
-chatThreads[0].lastMessage = chatMessages.get('thread-1')![0];
+// The list carries preview text, not a message record.
+chatThreads[0].lastMessage = chatMessages.get('thread-1')![0].body;
+chatThreads[0].lastMessageAt = chatMessages.get('thread-1')![0].sentAt;
 
 /**
  * Which local currency each mock user resolves to, standing in for the country

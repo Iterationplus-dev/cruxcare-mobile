@@ -44,6 +44,21 @@
           </div>
         </AppCard>
 
+        <!-- TD4 puts Messages on the client record beside the notes. Without it
+             a therapist could see an unread count on the dashboard and had no
+             route to the conversation it referred to. -->
+        <AppCard style="padding: 0">
+          <AppListRow
+            title="Messages"
+            :subtitle="messagesSubtitle"
+            icon="forum"
+            chevron
+            clickable
+            :divider="false"
+            @click="goMessages"
+          />
+        </AppCard>
+
         <div class="cc-section-head">
           <span class="cc-text-body-strong" style="font-size: 16px">Notes</span>
         </div>
@@ -112,10 +127,11 @@
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
-import { AppBadge, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
+import { AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { caseFilesApi } from '@/api/case-files.api';
 import { useCaseFile } from '@/composables/useCaseFiles';
+import { findThreadWith, useChatThreads } from '@/composables/useChat';
 import { ApiError } from '@/types/api';
 
 /** TD5 · Session notes — draft state, lock rule stated inline. */
@@ -149,6 +165,31 @@ async function onAddNote() {
   } finally {
     savingNote.value = false;
   }
+}
+
+/**
+ * The conversation with this client. A thread is opened server-side with the
+ * working relationship, so one normally exists by the time a case file does —
+ * but the client cannot open one, so its absence is a state, not an error.
+ */
+const { data: chatThreads } = useChatThreads();
+const clientThread = computed(() => findThreadWith(chatThreads.value, caseFile.value?.clientId));
+
+const messagesSubtitle = computed(() => {
+  const thread = clientThread.value;
+  if (!thread) return 'No conversation open yet';
+  if (thread.unreadCount > 0) {
+    return `${thread.unreadCount} unread`;
+  }
+  return thread.lastMessageAt ? `Last reply ${formatDate(thread.lastMessageAt)}` : 'No messages yet';
+});
+
+function goMessages() {
+  const thread = clientThread.value;
+  // Falling back to the inbox rather than dead-ending: the thread may exist
+  // under a participant this screen cannot see.
+  if (thread) router.push({ name: 'chat-thread', params: { id: thread.id } });
+  else router.push({ name: 'chat-inbox' });
 }
 
 /** Either end may be missing on a file nobody has filled in yet, so the two

@@ -169,7 +169,7 @@ import { useTherapist, useTherapists } from '@/composables/useTherapists';
 import { useCareRequests } from '@/composables/useCareRequests';
 import { presentCareRequest } from '@/features/care/careRequestPresentation';
 import { therapistsApi } from '@/api/therapists.api';
-import { useChatThreads } from '@/composables/useChat';
+import { findThreadWith, useChatThreads } from '@/composables/useChat';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
 import { useQueryClient } from '@tanstack/vue-query';
@@ -239,9 +239,7 @@ function formatSlot(iso: string) {
 }
 
 function goChat() {
-  const thread = chatThreads.value?.find((t) =>
-    t.participants.some((p) => p.id === caseFile.value?.therapistId),
-  );
+  const thread = findThreadWith(chatThreads.value, caseFile.value?.therapistId);
   if (thread) router.push({ name: 'chat-thread', params: { id: thread.id } });
   else router.push({ name: 'chat-inbox' });
 }

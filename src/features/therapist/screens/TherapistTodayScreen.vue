@@ -96,11 +96,13 @@
               <div class="cc-td__stat-label" style="margin-top: 4px">Notes to write</div>
               <div class="cc-td__stat-value">{{ draftNoteCount }}</div>
             </div>
-            <div class="cc-td__stat cc-td__stat--card">
+            <!-- Was a plain counter: it reported unread messages and gave the
+                 therapist no way to reach them. -->
+            <button type="button" class="cc-td__stat cc-td__stat--card cc-td__stat--button" @click="goMessages">
               <AppIcon name="forum" :size="20" color="var(--cc-color-primary)" />
               <div class="cc-td__stat-label" style="margin-top: 4px">Unread</div>
               <div class="cc-td__stat-value">{{ unreadCount }}</div>
-            </div>
+            </button>
           </div>
 
           <AppListRow
@@ -196,6 +198,9 @@ function goRequests() {
 function goCareRequests() {
   router.push({ name: 'therapist-care-requests' });
 }
+function goMessages() {
+  router.push({ name: 'chat-inbox' });
+}
 function goCalendar() {
   router.push({ name: 'therapist-calendar' });
 }
@@ -242,6 +247,13 @@ function goPlan() {
   border: 1px solid var(--cc-line);
   border-radius: 14px;
   padding: 10px 12px;
+}
+/* Border, background and radius come from .cc-td__stat; these only undo the
+   button element's own defaults so it matches the tile beside it. */
+.cc-td__stat--button {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 .cc-td__stat--card {
   padding: 12px;

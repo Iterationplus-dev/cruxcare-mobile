@@ -888,7 +888,10 @@ const careHandlers: HttpHandler[] = [
     list.push(message);
     db.chatMessages.set(threadId, list);
     const thread = db.chatThreads.find((t) => t.id === threadId);
-    if (thread) thread.lastMessage = message;
+    if (thread) {
+      thread.lastMessage = message.body;
+      thread.lastMessageAt = message.sentAt;
+    }
     return HttpResponse.json(message);
   }),
 ];

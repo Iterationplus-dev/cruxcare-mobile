@@ -6,12 +6,12 @@
           <ion-back-button default-href="/tabs/care" text="" />
         </ion-buttons>
         <div class="cc-thread-header__title">
-          <AppAvatar :name="other?.name ?? ''" :src="other?.avatarUrl ?? undefined" :size="36" />
+          <AppAvatar :name="thread?.participantName ?? ''" :src="thread?.participantAvatarUrl ?? undefined" :size="36" />
           <div>
-            <div class="cc-text-body-strong" style="font-size: 16px">{{ other?.name }}</div>
-            <div v-if="other?.online" class="cc-thread-header__online">
-              <span class="cc-thread-header__dot" /> Online
-            </div>
+            <div class="cc-text-body-strong" style="font-size: 16px">{{ thread?.participantName }}</div>
+            <!-- Presence is drawn on D4 but the thread list does not carry it,
+                 so nothing is claimed rather than showing a made-up state. -->
+            <div v-if="thread?.closedReason" class="cc-text-caption">{{ thread.closedReason }}</div>
           </div>
         </div>
         <ion-buttons slot="end">
@@ -36,7 +36,12 @@
         </div>
       </div>
     </ion-content>
-    <div class="cc-thread__composer">
+    <!-- A read-only thread shows why it closed instead of a composer that
+         would be refused server-side. -->
+    <p v-if="!canSend" class="cc-thread__closed cc-text-caption">
+      {{ thread?.closedReason || 'This conversation is closed.' }}
+    </p>
+    <div v-else class="cc-thread__composer">
       <button type="button" class="cc-thread__attach" aria-label="Attach file">
         <AppIcon name="attach_file" :size="22" color="var(--cc-ink-600)" />
       </button>
@@ -71,10 +76,11 @@ const auth = useAuthStore();
 const threadId = route.params.id as string;
 
 const { data: threads } = useChatThreads();
-const other = computed(() => {
-  const thread = threads.value?.find((t) => t.id === threadId);
-  return thread?.participants.find((p) => p.id !== auth.user?.id);
-});
+const thread = computed(() => threads.value?.find((t) => t.id === threadId));
+
+/** A chat goes read-only some time after the last session. Writing to one is
+ *  refused server-side, so the composer follows the server's status. */
+const canSend = computed(() => (thread.value ? thread.value.status === 'open' : true));
 
 const { data: messagesPage, isPending } = useChatMessages(threadId);
 const messages = computed(() => messagesPage.value?.data ?? []);
@@ -109,6 +115,13 @@ function goVideo() {
   align-items: center;
   gap: 10px;
   flex: 1;
+}
+.cc-thread__closed {
+  margin: 0;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  text-align: center;
+  border-top: 1px solid var(--cc-divider);
+  background: var(--cc-surface-0);
 }
 .cc-thread-header__online {
   display: flex;
