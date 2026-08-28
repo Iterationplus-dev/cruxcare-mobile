@@ -2,7 +2,11 @@
 
 **Audience:** Senior Laravel engineer
 
-**Status:** Frontend contract audit as of 12 August 2026, amended 18 August 2026. The mobile app has a working mock API layer for the Phase 0/1 surface. It is ready to switch to Laravel once the contracts below are available.
+**Status:** Frontend contract audit as of 12 August 2026, amended 18 and 28 August 2026. The mobile app has a working mock API layer for the Phase 0/1 surface. It is ready to switch to Laravel once the contracts below are available.
+
+> **Amended 28 August 2026 (backend).** The frontend revision of this note was written before the therapist care-request work landed, and marked those three routes "not built yet". They are built, tested, and now carry `caseFileId`. Their rows below and the note in §4.3 have been corrected in place. `gender` is built as specified. `GET`/`PATCH /me/therapist/profile` remain genuinely outstanding — see the note in §4.3.
+>
+> **Amended 28 August 2026 (frontend, replying).** Answers to the two questions the backend raised, and what the client now does about the empty case file, are in §4.3 under "Frontend answers".
 
 > **Amended 18 August 2026.** Push notifications and gateway payments are now wired end-to-end in the client, so the "not connected in current frontend code" caveats below no longer hold for them. Their contracts have moved to dedicated notes:
 > - **[`PUSH_NOTIFICATIONS_CONTRACT.md`](PUSH_NOTIFICATIONS_CONTRACT.md)** — `POST /devices/token`, `DELETE /devices/token/{installationId}`, `GET`/`PATCH /notifications/prefs`, and the FCM payload contract.
@@ -67,6 +71,7 @@ The following response is used by registration, login, `GET /me`, profile update
     "admin.approve"
   ],
   "referredBySource": "friends-family",
+  "gender": "female",
   "membership": {
     "cruxId": "CCI8804XO",
     "tier": "Bronze · Unit Leader",
@@ -90,6 +95,12 @@ The following response is used by registration, login, `GET /me`, profile update
 }
 ```
 
+`gender` is nullable and may be absent entirely on accounts created before the field existed; the mobile client treats absent and `null` alike and shows an unselected dropdown. It records self-described identity for the profile, not clinical sex-at-birth — anything care decisions depend on belongs to the health profile and is collected there.
+
+**Built 28 August 2026, with two caveats about existing accounts.** The key is always emitted, `null` included, so it is never absent and the mobile type can be tightened from optional to required-with-null. But registration still writes the platform default (`Male`), so an account that has never opened the Personal information screen reads back as `"male"` rather than `null` — the dropdown opens pre-filled, and members correct it themselves. And because the underlying column is shared with the older web profile form, a value it holds that is not one of the four reads back as `null` rather than as something the app has no label for. It is returned only to the signed-in member: it is not in the therapist directory or the therapist-facing client projection.
+
+**Frontend response.** The type stays optional-and-nullable rather than required-with-null — it costs nothing and keeps the client safe if any future endpoint omits the key. The pre-filled dropdown is the part worth revisiting: see "Frontend answers" in §4.3 for what the client now does about it and why the registration default should become `null`.
+
 Supported roles are `client`, `member`, `therapist`, and `admin`. The currently consumed capability strings are `orders.place`, `appointments.book`, `health-profile.write`, `case-files.manage`, `wallet.read`, `wallet.write`, and `admin.approve`. The capability list should be extensible.
 
 ## 4. Build-now API surface
@@ -110,7 +121,7 @@ These routes have typed frontend client methods and MSW equivalents today. This 
 | `POST /auth/password/reset` | `{ identifier, code, newPassword, signOutOtherDevices }` | Reset password, revoke devices as requested/policy, and return `204` or `{ reset: true }`. |
 | `POST /auth/recovery/assisted` | `{ identifier, contact, description }` | `{ caseNumber }`; creates a support recovery case. |
 | `GET /me` | — | Current authenticated `User`. |
-| `PATCH /me` | Any of `firstName`, `lastName`, `avatarUrl`, `payoutAccount` | Updated `User`. Do not allow arbitrary fields/roles to be mass assigned. |
+| `PATCH /me` | Any of `firstName`, `lastName`, `gender`, `avatarUrl`, `payoutAccount` | Updated `User`. Do not allow arbitrary fields/roles to be mass assigned. Valid gender values: `female`, `male`, `non-binary`, `prefer-not-to-say`; `null` clears it. Reject anything else with `422` + `errors.gender` rather than storing it. |
 | `POST /me/delete` | `{ password }` | `{ deletionCompletesAt }`; the UI displays a reversible 30-day deletion window. A cancellation/restore endpoint is not yet wired and needs agreement before implementation. |
 | `POST /me/membership/link` | `{ cruxId }` after OTP verification | Updated `User` with member role/capabilities. Validate an existing membership and its owner; the client validates `^[A-Z]{3}\d{4}[A-Z]{2}$`. Never accept a user-supplied Crux ID as proof of ownership. |
 | `POST /me/therapist/activate` | `{ plan: "free-trial" \| "monthly" \| "yearly", paymentToken }` | A priced plan is only activated once paid. A wallet token (`wallet` or `wallet:*`) settles against the ledger and returns the updated `User`/`therapistProfile`; any other token is an unverified gateway reference, so the subscription is stored `pending`, the therapist role is withheld, and the reply is `202 { status: "pending_payment", reference, plan, amount, currency, message }`. Free plans skip payment. `422 insufficient_funds` carries `meta.available`/`meta.required`/`meta.currency`. Member status, plan eligibility and payment stay server-enforced. |
@@ -155,13 +166,15 @@ The app currently sends an opaque single-use `paymentToken` from a hosted provid
 | --- | --- | --- |
 | `GET /therapists` | `cursor?` | Cursor page of `TherapistSummary`: `id`, `name`, `avatarUrl`, `specialties[]`, `rating`, `location`, `bio`, `experienceYears`, `languages[]`, `nextAvailableSlot`, `fullyBooked`. |
 | `GET /therapists/{id}` | — | `TherapistSummary`. |
+| `GET /me/therapist/profile` | — | **Not built yet.** The caller's own `TherapistSummary` — the same record clients read at `GET /therapists/{id}`. Resolve the therapist from the session; the app never sends a therapist id. `403` for an account with no therapist profile. |
+| `PATCH /me/therapist/profile` | `{ specialties: string[] }` | **Not built yet.** Updated `TherapistSummary`. The list replaces what is stored — it is not a merge, and `[]` legitimately clears it. Normalize each entry (trim, collapse inner whitespace) before storing, so what clients read matches what was typed. Reject with `422` + `errors.specialties` when: any entry is blank after trimming, any entry exceeds 40 characters, two entries match case-insensitively, or the list exceeds 8 entries. A rejected update must leave the stored list untouched. `403` for an account with no therapist profile. Only `specialties` is sent today; keep the route shaped for `bio`, `languages` and `experienceYears` later. |
 | `POST /care/requests` | `{ reason, therapistId? }` | Create care/therapist assignment request; return `201/202` with `therapistId`. A named therapist is attached to the case and notified so it reaches their queue; without one the request stays open. Final assignment remains a staff workflow either way. `422 therapist_unavailable` if the id is not a bookable therapist. Returns the full `CareRequest` (see `GET /care/requests`) so the client can show it immediately. `status` vocabulary: `submitted`, `in-review`, `accepted`, `declined`, `cancelled`, `closed`; an unknown value is rendered with a neutral "in progress" treatment rather than rejected. A request naming a therapist opens at `in-review` (someone has it); an unnamed one opens at `submitted` (nobody has looked yet). Creation always writes one event, so a fresh request never returns `events: []`. |
 | `GET /care/requests` | `cursor?` | Cursor page of the **caller's own** `CareRequest`, newest first: `id`, `reference`, `status`, `reason`, `therapistId`, `therapistName`, `therapistAvatarUrl`, `createdAt`, `updatedAt`, `events[]`. `events` is the progress trail the client screen renders — `{ id, status, label, note?, at }`, oldest first, one entry per real step. The app never invents a step, so a request with no recorded progress must return an empty array rather than a synthesised one. |
 | `GET /care/requests/{id}` | — | One `CareRequest`. Scope to the owning client. |
 | `POST /care/requests/{id}/cancel` | — | Updated `CareRequest` with `status: "cancelled"` and an appended event. `422 request_not_cancellable` once the request is `accepted`, `closed`, or already `cancelled` — carrying `meta.status` with the true state, which the client re-renders from rather than trusting its own copy. Accepts the `id` or the `reference`. Someone else's request is a `404`, never a `403`, which would confirm it exists. |
-| `GET /therapist/care-requests` | `cursor?` | **Not built yet — see the note below.** Cursor page of the caller's incoming `TherapistCareRequest`, newest first: `id`, `reference`, `status`, `reason`, `clientId`, `clientName`, `clientAvatarUrl`, `createdAt`, `updatedAt`, `events[]`. Same underlying record as the client's `CareRequest` and the same `events` trail — it carries the **client** instead of the therapist, because that is the identity being decided about. Scope server-side to requests whose `therapistId` is the caller's own therapist profile; the app never sends a therapist id. A caller with no therapist profile gets an empty page, not a `403`. Requests with no named therapist never appear here — nobody was asked. |
-| `POST /therapist/care-requests/{id}/accept` | — | **Not built yet.** Updated `TherapistCareRequest` with `status: "accepted"` and an appended event, written for the client who reads the same trail. Creates the working relationship — case file, chat thread, and whatever else assignment implies. `422 request_not_actionable` unless the request is `submitted` or `in-review`, carrying `meta.status` with the true state, which the app re-renders from rather than trusting its own copy. `422 therapist_plan_required` when the therapist has no active plan or is at their client limit: the app disables the button, but the limit is a server rule and must be enforced here. Someone else's request is a `404`, never a `403`. Must be idempotent enough that a double tap does not assign twice. |
-| `POST /therapist/care-requests/{id}/decline` | — | **Not built yet.** Updated `TherapistCareRequest` with `status: "declined"` and an appended event; notify the client so staff can re-match. Same `404`/`422 request_not_actionable` rules as accept. **Not** gated by the plan — passing on a case consumes no client slot. |
+| `GET /therapist/care-requests` | `cursor?` | **Built.** Cursor page of the caller's incoming `TherapistCareRequest`, newest first: `id`, `reference`, `status`, `reason`, `clientId`, `clientName`, `clientAvatarUrl`, `caseFileId`, `createdAt`, `updatedAt`, `events[]`. `caseFileId` is the id of the case file opened for this client, or `null` while there is none — it is a **case file** id, not the client's, and the app routes straight to `GET /case-files/{caseFileId}` with it. Sending a client id here renders a blank screen. Same underlying record as the client's `CareRequest` and the same `events` trail — it carries the **client** instead of the therapist, because that is the identity being decided about. Scope server-side to requests whose `therapistId` is the caller's own therapist profile; the app never sends a therapist id. A caller with no therapist profile gets an empty page, not a `403`. Requests with no named therapist never appear here — nobody was asked. |
+| `POST /therapist/care-requests/{id}/accept` | — | **Built, including the case file.** Updated `TherapistCareRequest` with `status: "accepted"` and an appended event, written for the client who reads the same trail. Creates the working relationship — case file, chat thread, and whatever else assignment implies. **The case file must exist before this call returns**, and the returned record must carry its id as `caseFileId`: the therapist screen offers "Open case file" the moment a request reads `accepted`, so an acceptance without one leaves a dead end. Re-accepting an already-accepted client must reuse the existing case file rather than opening a second. `422 request_not_actionable` unless the request is `submitted` or `in-review`, carrying `meta.status` with the true state, which the app re-renders from rather than trusting its own copy. `422 therapist_plan_required` when the therapist has no active plan or is at their client limit: the app disables the button, but the limit is a server rule and must be enforced here. Someone else's request is a `404`, never a `403`. Must be idempotent enough that a double tap does not assign twice. |
+| `POST /therapist/care-requests/{id}/decline` | — | **Built.** Updated `TherapistCareRequest` with `status: "declined"` and an appended event; notify the client so staff can re-match. Same `404`/`422 request_not_actionable` rules as accept. **Not** gated by the plan — passing on a case consumes no client slot. Opens no case file; `caseFileId` stays `null`. |
 | `GET /appointments` | `cursor?` | Cursor page of `Appointment`. Scope it to client, assigned therapist, or administrator. |
 | `POST /appointments` | `{ therapistId, slot, type }`, `type` is `in-person\|video\|chat` | Creates requested appointment. Revalidate live availability and care/plan access atomically. |
 | `PATCH /appointments/{id}` | `{ status }` | Updated appointment. Current UI supplies status only; Laravel must authorize valid transitions (`requested`, `confirmed`, `completed`, `cancelled`, `no-show`). A later rescheduling request needs an explicit slot payload/contract. |
@@ -189,28 +202,53 @@ The app currently sends an opaque single-use `paymentToken` from a hosted provid
 }
 ```
 
-#### Backend note — the therapist never receives a client's request
+#### The therapist's side of a care request — built 24 August 2026, case file added 28 August
 
-`POST /care/requests` already says a named therapist "is attached to the case and notified so it reaches their queue". **There is no queue to reach.** The only read route for a care request is `GET /care/requests`, which is scoped to *the caller's own* requests as a client — so a therapist calling it gets the requests they sent, never the ones sent to them. A client can name a therapist, the request is stored, and nothing ever puts it in front of that therapist. The therapist's Appointments screen is not it: an `Appointment` is a separate record with its own `requested` status, and nothing converts a `CareRequest` into one.
+`POST /care/requests` says a named therapist "is attached to the case and notified so it reaches their queue". Until this work there **was no queue to reach**: the only read route was `GET /care/requests`, scoped to *the caller's own* requests as a client, so a therapist calling it got the requests they sent, never the ones sent to them. A client could name a therapist and the request would sit in the database unseen. The Appointments screen was never it — an `Appointment` is a separate record with its own `requested` status, and nothing converts a `CareRequest` into one.
 
-The three routes above close that gap and **need building server-side**; the mobile side is done and calls them already:
+The three routes above now exist and are what the mobile side already calls:
 
 - `src/api/care-queue.api.ts` — `careQueueApi.list/accept/decline`
 - `src/composables/useTherapistCareRequests.ts`
 - `src/features/therapist/screens/TherapistCareRequestsScreen.vue` at `/therapist/care-requests`, with a waiting-requests banner on the therapist's Today dashboard
 
-Until the routes exist the screen renders its empty state, which is honest but wrong — the requests are real and sitting in the database unseen.
+Server-side they are one more projection of the same `cases` row, not a new entity — `CareService::incomingRequestsFor()` is the mirror of `requestsFor()`, scoped by `therapist_id` where the client's is scoped by `patient_id`.
 
-Three things to get right, none of which the app can do for you:
+How the requirements were met:
 
-1. **Scope by the caller's therapist profile, server-side.** The app never sends a therapist id, so there is nothing to tamper with. Keep it that way.
-2. **Enforce the plan and client limits on `accept`.** The screen disables the button when the therapist has no active plan, but that is a courtesy, not a control — the handoff already requires these limits be enforced server-side rather than inferred from `clientCount`.
-3. **Write the event for the client, not the therapist.** Both sides render the same `events[]` array, so a step reading "you accepted" would appear on the client's own tracking screen. Phrase it as `"{therapistName} accepted your request"`.
+1. **Scoped by the caller's therapist profile, server-side.** Neither the list nor the two actions accept a therapist id; every query starts from the authenticated user's own. A caller who is not a therapist owns no rows and gets an empty page, not a `403`.
+2. **The plan and client limits are enforced on `accept`.** The gate reads `config('cruxcare.therapist.limits.{slug}.clients')` — the same configuration the directory's `fullyBooked` flag uses — and runs inside the row lock alongside the status re-check, so two taps cannot both consume the same last slot. `decline` is not gated.
+3. **The event is written for the client.** `"{therapistName} accepted your request"`, never "you accepted" — both sides render the same `events[]`, and a test asserts the client's `GET /care/requests/{id}` returns an identical trail.
+4. **`caseFileId`, and the file exists before `accept` returns.** Opened inside the same transaction and row lock as the status change, so a double tap cannot open two files; re-accepting returns the id of the first. `decline` opens none and leaves it `null`.
 
-Two adjacent issues worth fixing at the same time:
+Three judgment calls worth knowing about:
 
-- **The notification deep-link.** `POST /care/requests` sends the therapist a notification whose `actionRoute` was `/therapist/appointments` — a screen that will never show the request. It should be `/therapist/care-requests`. Fixed in the mock; make sure the real payload matches.
-- **`GET /notifications` must be per-recipient.** The MSW mock serves one global array, so a therapist-addressed notification shows up in the client's inbox. That is a mock artifact and the contract at `GET /notifications` is already implicitly per-caller, but this flow is the first one where two different people are notified about the same record — worth confirming the real implementation scopes it.
+- **The case file opens empty, and the table changed to allow it.** `case_files` was built for the web workflow, where a file is written *after* a consultation: `diagnosis`, the treatment window, `package_plan_id` and `medication_total` were all `NOT NULL`. A therapist who has just accepted a request has none of them. Rather than fill the row with placeholder text that would read as real clinical data on the staff case file, those columns are now nullable and the new file carries only `case_id` and `created_by`. `GET /case-files/{id}` returns `diagnosis: null` and a null treatment window until the therapist writes one.
+- **Slots count accepted engagements, not open cases.** The directory's existing `atClientCapacity()` counts every open case including pending requests, which is right for `fullyBooked` — someone whose only free-trial slot is already spoken for should not be shown as open. Applying it at accept time would have been wrong: the request being decided *is* an open case on that therapist, so a free-trial therapist could never have accepted their first client. The accept gate therefore counts `Active` cases and excludes the one being decided.
+- **A second tap on `accept` returns `200`, not `422`.** The contract asks for `422 request_not_actionable` on anything past `submitted`/`in-review`, and separately that a double tap "does not assign twice". Both hold for another therapist's or another state's request. But when *the same therapist* re-accepts a request they already accepted, the outcome is identical to the first call, so it returns the record rather than an error for something that worked. The row lock is what prevents the double assignment; only one `accepted` event is ever written, and only one case file.
+
+The adjacent issues, resolved:
+
+- **The notification deep-link.** Worse than a wrong route: `PushDispatcher` stores the deep link under the data key `route`, while `GET /notifications` read `action_route`, so **every** notification in the inbox returned `actionRoute: null` — the push payload deep-linked correctly, the in-app list never did. The transform now reads `route` (falling back to `action_route` for older rows), and the therapist's "New client request" carries `/therapist/care-requests` plus an action label.
+- **`GET /notifications` is already per-recipient.** `NotificationController` filters on `user_id` for both read and update. That was purely an MSW artifact; nothing to change.
+
+**Still needed from the frontend:** the client-side route name for the tracking screen. The accept and decline notifications sent to the *client* deliberately carry no `actionRoute` — a wrong path is worse than an untappable notification. Send the route and they become tappable. — *Answered below.*
+
+#### Still outstanding — the therapist's own profile
+
+`GET`/`PATCH /me/therapist/profile` are **not built**, and unlike the queue they are not a projection of something that already exists. `specialties` is currently a single string — `users.specialization` — wrapped in a one-element array by `TherapistResource`. Storing a real list of up to eight entries needs a schema decision (a JSON column, or a related table), and it cannot be a delimited string: the web registration flow and the staff case-file query both read that column as a plain value. The validation rules in the row above are understood and are not the hard part; the storage is. Flagging it rather than guessing, since it changes a column the web app shares.
+
+#### Frontend answers — 28 August 2026
+
+**The client tracking screen is `/care/requests`** (route name `care-requests`). The accept and decline notifications sent to the *client* can carry `actionRoute: "/care/requests"`. The therapist's own queue is `/therapist/care-requests`, already in use.
+
+**A second accept should return the record, not a `422`.** The backend's current behaviour is right and the mock has been changed to match: re-accepting a request you already accepted is not a failure, and the outcome is identical. `422 request_not_actionable` still applies to every other settled state — `declined`, `cancelled`, `closed` — and another therapist's request stays a `404`. The mobile test now asserts idempotence in substance: same `caseFileId`, and exactly one `accepted` event on the client's trail.
+
+**The empty case file is handled.** `diagnosis`, `treatmentStartDate` and `treatmentEndDate` returning `null` now render as "Not recorded yet" / "Not set yet" in muted text rather than a blank line, and a file with no `clientName` or `sessionCount` no longer renders an empty title or "undefined session(s)". The mobile `CaseFile` type treats all of those as optional-and-nullable, so the nullable columns are safe to ship.
+
+**On `specialties` being one string column:** the read half alone does unblock the screen, but it cannot be saved — shipping read-only would put a Save button on a screen that always fails. Prefer holding the whole route until the storage decision is made. The mobile side is built and waiting either way; nothing else is blocked on it.
+
+**On the gender default.** Registration writing `"male"` means every account that has never opened Personal information reads back a gender its owner never stated, and the dropdown opens pre-filled with it. The client no longer launders that into an answer — `gender` is sent **only when the member changes it**, so saving an unrelated field leaves the stored value untouched. That covers the client's half, but the stored data is still an assertion nobody made. Recommend changing the registration default to `null`: "not stated" is a fact, `"male"` is a guess, and every downstream reader of that column currently cannot tell them apart.
 
 ```json
 {
@@ -221,6 +259,7 @@ Two adjacent issues worth fixing at the same time:
   "clientId": "user-123",
   "clientName": "Amaka Obi",
   "clientAvatarUrl": null,
+  "caseFileId": null,
   "createdAt": "2026-08-24T10:00:00Z",
   "updatedAt": "2026-08-24T10:00:00Z",
   "events": [

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { careQueueApi } from '@/api/care-queue.api';
 import { therapistsApi } from '@/api/therapists.api';
 import { useAuthStore } from '@/stores/auth';
-import { careRequests, demoCredentials, users } from '@/mocks/db';
+import { caseFiles, careRequests, demoCredentials, users } from '@/mocks/db';
 import { uiTestCredentials } from '@/mocks/testAccount';
 
 vi.mock('@/services/secureStorage', () => ({
@@ -104,17 +104,34 @@ describe('therapist care request queue', () => {
     expect(tracked.events.at(-1)?.status).toBe('declined');
   });
 
-  it('reports the true status when the request was already answered', async () => {
+  it('treats re-accepting your own accepted request as the same outcome', async () => {
     await asClient();
     const sent = await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
 
     await asTherapist();
-    await careQueueApi.accept(sent.id);
+    const first = await careQueueApi.accept(sent.id);
+    // A second tap did the same thing the first did, so it is not a failure.
+    const second = await careQueueApi.accept(sent.id);
 
-    // A second tap, or a stale screen, must not read as a fresh failure.
+    expect(second.status).toBe('accepted');
+    expect(second.caseFileId).toBe(first.caseFileId);
+
+    await asClient();
+    // Idempotent in substance too: one event, not two.
+    const tracked = await therapistsApi.getRequest(sent.id);
+    expect(tracked.events.filter((e) => e.status === 'accepted')).toHaveLength(1);
+  });
+
+  it('still refuses an accept once the request was declined', async () => {
+    await asClient();
+    const sent = await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
+
+    await asTherapist();
+    await careQueueApi.decline(sent.id);
+
     await expect(careQueueApi.accept(sent.id)).rejects.toMatchObject({
       code: 'request_not_actionable',
-      meta: { status: 'accepted' },
+      meta: { status: 'declined' },
     });
   });
 
@@ -154,5 +171,78 @@ describe('therapist care request queue', () => {
     await asClient();
     // Not a 403: an account with no therapist profile simply has nothing waiting.
     expect((await careQueueApi.list()).data).toHaveLength(0);
+  });
+
+  describe('case file handoff', () => {
+    /** Accepting appends to the shared fixture list, so each test starts from
+     *  whatever the module was seeded with. */
+    const seeded = [...caseFiles];
+    beforeEach(() => {
+      caseFiles.splice(0, caseFiles.length, ...seeded);
+    });
+
+    it('has no case file to open while the request is still waiting', async () => {
+      await asClient();
+      await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
+
+      await asTherapist();
+      const [incoming] = (await careQueueApi.list()).data;
+
+      // The screen hides "Open case file" on exactly this.
+      expect(incoming.caseFileId).toBeNull();
+    });
+
+    it('opens a case file when the request is accepted', async () => {
+      await asClient();
+      const sent = await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
+
+      await asTherapist();
+      const accepted = await careQueueApi.accept(sent.id);
+
+      expect(accepted.caseFileId).not.toBeNull();
+      const created = caseFiles.find((cf) => cf.id === accepted.caseFileId);
+      expect(created).toMatchObject({ clientId: 'ui-test-user', therapistId: 'therapist-1' });
+    });
+
+    it('points at the case file record, not the client', async () => {
+      await asClient();
+      const sent = await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
+
+      await asTherapist();
+      const accepted = await careQueueApi.accept(sent.id);
+
+      // The bug this replaces: routing by clientId 404s and renders a blank screen.
+      expect(accepted.caseFileId).not.toBe(accepted.clientId);
+    });
+
+    it('reuses the existing case file rather than opening a second one', async () => {
+      await asClient();
+      const first = await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
+      await asTherapist();
+      await careQueueApi.accept(first.id);
+
+      const countAfterFirst = caseFiles.length;
+
+      await asClient();
+      const second = await therapistsApi.requestAssignment('Again please.', 'therapist-1');
+      await asTherapist();
+      const accepted = await careQueueApi.accept(second.id);
+
+      expect(caseFiles).toHaveLength(countAfterFirst);
+      expect(accepted.caseFileId).toBe(
+        caseFiles.find((cf) => cf.clientId === 'ui-test-user')?.id,
+      );
+    });
+
+    it('leaves no case file behind when the request is declined', async () => {
+      await asClient();
+      const sent = await therapistsApi.requestAssignment('Work with me?', 'therapist-1');
+
+      await asTherapist();
+      const declined = await careQueueApi.decline(sent.id);
+
+      expect(declined.caseFileId).toBeNull();
+      expect(caseFiles.some((cf) => cf.clientId === 'ui-test-user')).toBe(false);
+    });
   });
 });

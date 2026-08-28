@@ -49,6 +49,7 @@ export const users: StoredUser[] = [
       'wallet.read',
     ],
     referredBySource: 'friends-family',
+    gender: 'female',
     membership: { cruxId: 'CCI8804XO', tier: 'Bronze · Unit Leader', joinedAt: '2025-11-02T00:00:00Z' },
     therapistProfile: {
       plan: 'monthly',

@@ -22,6 +22,23 @@ export type ReferredBySource =
   | 'friends-family'
   | 'other';
 
+/**
+ * Self-described gender, shown as a dropdown on the profile. Labels live with
+ * the values so the two cannot drift apart, and `Gender` is derived from the
+ * list rather than repeated — adding an option is a one-line change.
+ *
+ * This is identity, not clinical sex-at-birth; anything the health profile
+ * needs for care decisions is recorded there and asked for separately.
+ */
+export const genderOptions = [
+  { value: 'female', label: 'Female' },
+  { value: 'male', label: 'Male' },
+  { value: 'non-binary', label: 'Non-binary' },
+  { value: 'prefer-not-to-say', label: 'Prefer not to say' },
+] as const;
+
+export type Gender = (typeof genderOptions)[number]['value'];
+
 export type TherapistPlanTier = 'free-trial' | 'monthly' | 'yearly';
 
 export interface TherapistProfile {
@@ -62,6 +79,9 @@ export interface User {
   roles: Role[];
   capabilities: Capability[];
   referredBySource: ReferredBySource | null;
+  /** Optional: absent on accounts created before the field existed, and null
+   *  once a member has been asked but declined to record one. */
+  gender?: Gender | null;
   membership: Membership | null;
   therapistProfile: TherapistProfile | null;
   payoutAccount?: PayoutAccount | null;

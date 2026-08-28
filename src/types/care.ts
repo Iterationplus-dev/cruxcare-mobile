@@ -88,6 +88,12 @@ export interface TherapistCareRequest {
   clientId: string;
   clientName: string;
   clientAvatarUrl: string | null;
+  /**
+   * The case file opened when this request was accepted, or null while there
+   * is nothing to open. A care request and a case file are different records,
+   * so the id has to be carried rather than assumed from the client's.
+   */
+  caseFileId: string | null;
   createdAt: string;
   updatedAt: string;
   events: CareRequestEvent[];
@@ -148,12 +154,22 @@ export interface CaseFileRecommendation {
 export interface CaseFile {
   id: string;
   clientId: string;
-  clientName: string;
   therapistId: string;
   notes: CaseFileNote[];
   recommendations: CaseFileRecommendation[];
-  sessionCount: number;
-  lastSessionAt: string | null;
+  /**
+   * A file opened by accepting a care request carries nothing yet — the
+   * therapist has diagnosed nothing and set no treatment window. Everything
+   * below is therefore absent or null on a fresh file and must render as
+   * "not recorded", never as a blank line.
+   */
+  clientName?: string;
+  status?: string | null;
+  diagnosis?: string | null;
+  treatmentStartDate?: string | null;
+  treatmentEndDate?: string | null;
+  sessionCount?: number | null;
+  lastSessionAt?: string | null;
 }
 
 export interface ChatParticipant {

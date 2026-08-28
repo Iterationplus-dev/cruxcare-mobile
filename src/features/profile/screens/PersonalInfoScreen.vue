@@ -18,6 +18,15 @@
         <AppImageCropper v-model="cropping" :file="pendingPhoto" @confirm="onCropConfirmed" />
         <AppInput v-model="firstName" label="First name" placeholder="Amara" />
         <AppInput v-model="lastName" label="Last name" placeholder="Okafor" />
+        <AppSheetSelect
+          v-model="gender"
+          label="Gender"
+          title="Gender"
+          placeholder="Select your gender"
+          :options="genderSelectOptions"
+          clearable
+          clear-label="Remove my gender"
+        />
         <AppInput :model-value="auth.user?.email" label="Email" disabled helper="Verified · contact support to change" />
         <AppInput :model-value="auth.user?.phone" label="Phone" disabled helper="Verified · contact support to change" />
         <AppInput v-if="auth.user?.membership" :model-value="auth.user.membership.cruxId" label="Crux ID" disabled />
@@ -41,9 +50,10 @@
 import { computed, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute } from 'vue-router';
-import { AppAvatar, AppButton, AppHeader, AppIcon, AppImageCropper, AppInput } from '@/components/ui';
+import { AppAvatar, AppButton, AppHeader, AppIcon, AppImageCropper, AppInput, AppSheetSelect } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
+import { genderOptions, type Gender } from '@/types/user';
 import { useToast } from '@/composables/useToast';
 import { prepareAvatarUpload, type AvatarCrop } from '@/utils/avatarImage';
 import { ApiError } from '@/types/api';
@@ -55,6 +65,17 @@ const toast = useToast();
 const route = useRoute();
 const firstName = ref(auth.user?.firstName ?? '');
 const lastName = ref(auth.user?.lastName ?? '');
+/** Empty string, not null, so the placeholder option stays selected for an
+ * account that has never recorded one. It is mapped back on save. */
+const gender = ref<Gender | ''>(auth.user?.gender ?? '');
+/**
+ * What the server had when this screen opened. Registration writes a platform
+ * default, so a value arriving here is not evidence the member ever stated it —
+ * and saving an unrelated field must not turn that default into their answer.
+ * Only a value the member actually changed is sent.
+ */
+const genderOnOpen = gender.value;
+const genderSelectOptions = genderOptions.map((o) => ({ value: o.value, label: o.label }));
 const saving = ref(false);
 const savingPhoto = ref(false);
 const photoInput = ref<HTMLInputElement | null>(null);
@@ -120,7 +141,13 @@ async function onCropConfirmed(crop: AvatarCrop) {
 async function onSave() {
   saving.value = true;
   try {
-    const updated = await authApi.updateMe({ firstName: firstName.value, lastName: lastName.value });
+    const updated = await authApi.updateMe({
+      firstName: firstName.value,
+      lastName: lastName.value,
+      ...(gender.value === genderOnOpen
+        ? {}
+        : { gender: gender.value === '' ? null : gender.value }),
+    });
     auth.user = updated;
     await toast.show('Saved', 'success');
   } finally {

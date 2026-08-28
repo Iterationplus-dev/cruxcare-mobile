@@ -3,10 +3,45 @@
     <AppHeader :title="caseFile?.clientName ?? 'Case file'" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <LoadingState v-if="isPending" label="Loading case file…" />
-      <div v-else-if="caseFile" class="cc-screen__pad">
+      <!-- Without these the screen rendered nothing at all when the fetch
+           failed: a blank page under a "Case file" header, with no way to tell
+           a missing record from a broken request. The two are kept apart so
+           neither explanation is given for the other's cause. -->
+      <EmptyState
+        v-else-if="notFound"
+        icon="folder_off"
+        title="This case file isn't available"
+        message="It may not have been opened yet, or it belongs to another therapist. Try again from your clients list."
+        primary-action="Back to clients"
+        @primary="router.push({ name: 'therapist-clients' })"
+      />
+
+      <EmptyState
+        v-else-if="!caseFile"
+        icon="cloud_off"
+        title="Couldn't load this case file"
+        :message="loadErrorMessage"
+        primary-action="Try again"
+        @primary="refetch()"
+      />
+      <div v-else class="cc-screen__pad">
+        <!-- A file opened by accepting a request is empty by design, so every
+             row here states "not recorded yet" rather than rendering a blank. -->
         <AppCard>
-          <div class="cc-row"><span class="cc-text-caption">Sessions</span><span class="cc-text-body-strong" style="font-size: 13.5px">{{ caseFile.sessionCount }}</span></div>
+          <div class="cc-row"><span class="cc-text-caption">Sessions</span><span class="cc-text-body-strong" style="font-size: 13.5px">{{ caseFile.sessionCount ?? 0 }}</span></div>
           <div class="cc-row"><span class="cc-text-caption">Last session</span><span class="cc-text-body-strong" style="font-size: 13.5px">{{ caseFile.lastSessionAt ? formatDate(caseFile.lastSessionAt) : 'None yet' }}</span></div>
+          <div class="cc-row">
+            <span class="cc-text-caption">Diagnosis</span>
+            <span class="cc-text-body-strong" :class="{ 'cc-unset': !caseFile.diagnosis }" style="font-size: 13.5px">
+              {{ caseFile.diagnosis || 'Not recorded yet' }}
+            </span>
+          </div>
+          <div class="cc-row">
+            <span class="cc-text-caption">Treatment window</span>
+            <span class="cc-text-body-strong" :class="{ 'cc-unset': !treatmentWindow }" style="font-size: 13.5px">
+              {{ treatmentWindow ?? 'Not set yet' }}
+            </span>
+          </div>
         </AppCard>
 
         <div class="cc-section-head">
@@ -74,19 +109,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppBadge, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
-import { LoadingState } from '@/components/state';
+import { EmptyState, LoadingState } from '@/components/state';
 import { caseFilesApi } from '@/api/case-files.api';
 import { useCaseFile } from '@/composables/useCaseFiles';
+import { ApiError } from '@/types/api';
 
 /** TD5 · Session notes — draft state, lock rule stated inline. */
 const route = useRoute();
 const router = useRouter();
 const id = route.params.id as string;
-const { data: caseFile, isPending, refetch } = useCaseFile(id);
+const { data: caseFile, isPending, error: loadError, refetch } = useCaseFile(id);
+
+/** A 404 is the record genuinely not being there for this therapist; anything
+ *  else is the request failing, which is a different thing to tell them. */
+const notFound = computed(
+  () => loadError.value instanceof ApiError && loadError.value.status === 404,
+);
+
+const loadErrorMessage = computed(() =>
+  loadError.value instanceof ApiError
+    ? loadError.value.message
+    : 'Check your connection and try again.',
+);
 
 const draftNote = ref('');
 const savingNote = ref(false);
@@ -103,12 +151,27 @@ async function onAddNote() {
   }
 }
 
+/** Either end may be missing on a file nobody has filled in yet, so the two
+ *  dates are only shown as a range once both exist. */
+const treatmentWindow = computed(() => {
+  const start = caseFile.value?.treatmentStartDate;
+  const end = caseFile.value?.treatmentEndDate;
+  if (start && end) return `${formatDate(start)} — ${formatDate(end)}`;
+  if (start) return `From ${formatDate(start)}`;
+  if (end) return `Until ${formatDate(end)}`;
+  return null;
+});
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 }
 </script>
 
 <style scoped>
+.cc-unset {
+  color: var(--cc-ink-400);
+  font-weight: 500;
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

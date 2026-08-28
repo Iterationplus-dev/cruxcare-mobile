@@ -12,6 +12,7 @@ export { default as AppListRow } from './AppListRow.vue';
 export { default as AppPullToRefresh } from './AppPullToRefresh.vue';
 export { default as AppSelect } from './AppSelect.vue';
 export { default as AppSheet } from './AppSheet.vue';
+export { default as AppSheetSelect } from './AppSheetSelect.vue';
 export { default as AppStatTile } from './AppStatTile.vue';
 export { default as MoneyAmount } from './MoneyAmount.vue';
 export { default as OtpInput } from './OtpInput.vue';

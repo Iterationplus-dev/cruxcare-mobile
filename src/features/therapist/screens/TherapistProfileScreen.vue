@@ -20,6 +20,7 @@
             clickable
             @click="router.push({ name: 'therapist-plan' })"
           />
+          <AppListRow title="Areas of specialization" subtitle="What clients see you treat" icon="spa" chevron clickable @click="router.push({ name: 'therapist-specialties' })" />
           <AppListRow title="Manage availability" icon="event_available" chevron clickable @click="router.push({ name: 'therapist-availability' })" />
           <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
           <!-- The therapist shell has no Wallet tab, so funding is reached here. -->

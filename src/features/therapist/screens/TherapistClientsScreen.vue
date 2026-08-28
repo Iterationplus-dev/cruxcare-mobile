@@ -9,8 +9,8 @@
         <AppListRow
           v-for="cf in caseFiles.data"
           :key="cf.id"
-          :title="cf.clientName"
-          :subtitle="cf.notes.some((n) => n.draft) ? 'Unwritten notes' : `${cf.sessionCount} session(s)`"
+          :title="cf.clientName || 'CruxCare client'"
+          :subtitle="cf.notes.some((n) => n.draft) ? 'Unwritten notes' : `${cf.sessionCount ?? 0} session(s)`"
           icon="folder_shared"
           :icon-color="cf.notes.some((n) => n.draft) ? 'var(--cc-color-warning)' : 'var(--cc-color-primary)'"
           chevron

@@ -16,6 +16,21 @@ export const therapistsApi = {
   },
 
   /**
+   * The signed-in therapist's own public profile — the same record clients
+   * read. Resolved from the session, never from a therapist id supplied by the
+   * client, so one therapist cannot read or edit another's profile.
+   */
+  async myProfile(): Promise<TherapistSummary> {
+    const { data } = await apiClient.get<TherapistSummary>('/me/therapist/profile');
+    return data;
+  },
+
+  async updateMyProfile(patch: { specialties?: string[] }): Promise<TherapistSummary> {
+    const { data } = await apiClient.patch<TherapistSummary>('/me/therapist/profile', patch);
+    return data;
+  },
+
+  /**
    * `therapistId` asks for that specific therapist, who is attached to the
    * case and notified. Omitted, it stays an open request for staff to match.
    *

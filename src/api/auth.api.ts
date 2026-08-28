@@ -137,7 +137,7 @@ export const authApi = {
     return requireUser(data);
   },
 
-  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'avatarUrl' | 'payoutAccount'>>) {
+  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'gender' | 'avatarUrl' | 'payoutAccount'>>) {
     const { data } = await apiClient.patch<User>('/me', patch);
     return data;
   },

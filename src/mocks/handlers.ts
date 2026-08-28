@@ -7,6 +7,12 @@ import type { CartItem, CheckoutQuote, Order } from '@/types/marketplace';
 import type { CareRequest, HealthProfile, TherapistCareRequest } from '@/types/care';
 import type { WalletTopUpQuote } from '@/types/wallet';
 import type { TherapistPlanTier, User } from '@/types/user';
+import { genderOptions } from '@/types/user';
+import {
+  MAX_SPECIALTIES,
+  MAX_SPECIALTY_LENGTH,
+  normalizeSpecialty,
+} from '@/features/therapist/specialties';
 
 const BASE = import.meta.env.VITE_API_BASE_URL;
 const url = (path: string) => `${BASE}${path}`;
@@ -180,6 +186,20 @@ const authHandlers: HttpHandler[] = [
     const user = currentUser(request);
     if (!user) return unauthorized();
     const patch = (await request.json()) as Partial<User>;
+
+    // Null clears the field; anything outside the published list is rejected
+    // rather than stored, so a typo cannot become a value the UI can't render.
+    if ('gender' in patch && patch.gender !== null) {
+      const allowed = genderOptions.map((o) => o.value) as readonly string[];
+      if (!allowed.includes(String(patch.gender))) {
+        // Laravel's top-level message is the first field error, so the two
+        // cannot differ. Mirrored here so the mock cannot pass on a shape the
+        // real API will never send.
+        const message = 'That is not a gender we recognise.';
+        return HttpResponse.json({ message, errors: { gender: [message] } }, { status: 422 });
+      }
+    }
+
     Object.assign(user, patch);
     return HttpResponse.json(db.toPublicUser(user));
   }),
@@ -404,6 +424,9 @@ const marketplaceHandlers: HttpHandler[] = [
  * but carrying the client rather than the therapist. */
 function toTherapistCareRequest(clientId: string, request: CareRequest): TherapistCareRequest {
   const client = db.users.find((u) => u.id === clientId);
+  const caseFile = db.caseFiles.find(
+    (cf) => cf.clientId === clientId && cf.therapistId === request.therapistId,
+  );
   return {
     id: request.id,
     reference: request.reference,
@@ -412,6 +435,7 @@ function toTherapistCareRequest(clientId: string, request: CareRequest): Therapi
     clientId,
     clientName: client ? `${client.firstName} ${client.lastName}` : 'CruxCare client',
     clientAvatarUrl: client?.avatarUrl ?? null,
+    caseFileId: caseFile?.id ?? null,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
     events: request.events,
@@ -439,6 +463,13 @@ function respondToCareRequest(request: Request, id: string, action: 'accept' | '
 
   const { clientId, request: careRequest } = match;
 
+  // Re-accepting a request this therapist already accepted has the same
+  // outcome as the first call, so it returns the record rather than an error
+  // for something that worked. Every other settled state is still refused.
+  if (action === 'accept' && careRequest.status === 'accepted') {
+    return HttpResponse.json(toTherapistCareRequest(clientId, careRequest));
+  }
+
   if (!ANSWERABLE_STATUSES.includes(String(careRequest.status))) {
     return HttpResponse.json(
       {
@@ -464,6 +495,29 @@ function respondToCareRequest(request: Request, id: string, action: 'accept' | '
 
   const now = new Date().toISOString();
   const therapistName = careRequest.therapistName ?? 'Your therapist';
+
+  // Accepting is what opens the case file. Without this the therapist accepts
+  // a client and then has nothing to open — the record has to exist before the
+  // screen offers a way into it.
+  if (action === 'accept') {
+    const existing = db.caseFiles.find(
+      (cf) => cf.clientId === clientId && cf.therapistId === therapistId,
+    );
+    if (!existing) {
+      const client = db.users.find((u) => u.id === clientId);
+      db.caseFiles.push({
+        id: db.nextId('case'),
+        clientId,
+        clientName: client ? `${client.firstName} ${client.lastName}` : 'CruxCare client',
+        therapistId,
+        notes: [],
+        recommendations: [],
+        sessionCount: 0,
+        lastSessionAt: null,
+      });
+    }
+  }
+
   careRequest.status = action === 'accept' ? 'accepted' : 'declined';
   careRequest.updatedAt = now;
   careRequest.events.push({
@@ -495,6 +549,40 @@ function respondToCareRequest(request: Request, id: string, action: 'accept' | '
   return HttpResponse.json(toTherapistCareRequest(clientId, careRequest));
 }
 
+/** Resolves the therapist record the signed-in account practises as. */
+function currentTherapistProfile(request: Request) {
+  const user = currentUser(request);
+  if (!user) return null;
+  const therapistId = db.therapistIdForUser.get(user.id);
+  if (!therapistId) return null;
+  return db.therapists.find((t) => t.id === therapistId) ?? null;
+}
+
+function therapistProfileMissing(request: Request) {
+  if (!currentUser(request)) return unauthorized();
+  return HttpResponse.json({ message: 'You are not practising as a therapist.' }, { status: 403 });
+}
+
+/** Returns a message when the list is unusable, or null when it is fine. */
+function validateSpecialties(value: unknown): string | null {
+  if (!Array.isArray(value) || value.some((v) => typeof v !== 'string')) {
+    return 'Send areas of specialization as a list of text values.';
+  }
+
+  const cleaned = value.map((v) => normalizeSpecialty(v as string));
+
+  if (cleaned.some((v) => !v)) return 'Areas of specialization cannot be blank.';
+  if (cleaned.some((v) => v.length > MAX_SPECIALTY_LENGTH)) {
+    return `Keep each area under ${MAX_SPECIALTY_LENGTH} characters.`;
+  }
+  if (cleaned.length > MAX_SPECIALTIES) return `You can list up to ${MAX_SPECIALTIES} areas.`;
+
+  const seen = new Set(cleaned.map((v) => v.toLowerCase()));
+  if (seen.size !== cleaned.length) return 'That area is already on your profile.';
+
+  return null;
+}
+
 const careHandlers: HttpHandler[] = [
   http.get(url('/therapists'), () => HttpResponse.json(paginate(db.therapists))),
 
@@ -502,6 +590,34 @@ const careHandlers: HttpHandler[] = [
     const t = db.therapists.find((x) => x.id === params.id);
     if (!t) return HttpResponse.json({ message: 'Therapist not found.' }, { status: 404 });
     return HttpResponse.json(t);
+  }),
+
+  http.get(url('/me/therapist/profile'), ({ request }) => {
+    const profile = currentTherapistProfile(request);
+    if (!profile) return therapistProfileMissing(request);
+    return HttpResponse.json(profile);
+  }),
+
+  http.patch(url('/me/therapist/profile'), async ({ request }) => {
+    const profile = currentTherapistProfile(request);
+    if (!profile) return therapistProfileMissing(request);
+
+    const patch = (await request.json()) as { specialties?: unknown };
+
+    if ('specialties' in patch) {
+      const invalid = validateSpecialties(patch.specialties);
+      if (invalid) {
+        return HttpResponse.json(
+          { message: invalid, errors: { specialties: [invalid] } },
+          { status: 422 },
+        );
+      }
+      // Stored normalized so what clients read matches what was typed once
+      // whitespace is settled.
+      profile.specialties = (patch.specialties as string[]).map(normalizeSpecialty);
+    }
+
+    return HttpResponse.json(profile);
   }),
 
   http.post(url('/care/requests'), async ({ request }) => {

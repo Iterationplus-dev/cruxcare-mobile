@@ -87,11 +87,13 @@
 
           <div class="cc-cq__footer">
             <span class="cc-text-mono cc-cq__reference">{{ request.reference }}</span>
+            <!-- Routed by the case file's own id, not the client's. The two
+                 are different records, and the route resolves a case file. -->
             <AppButton
-              v-if="request.status === 'accepted'"
+              v-if="request.caseFileId"
               variant="text"
               :full-width="false"
-              @click="router.push({ name: 'case-file', params: { id: request.clientId } })"
+              @click="router.push({ name: 'case-file', params: { id: request.caseFileId } })"
             >
               Open case file
             </AppButton>

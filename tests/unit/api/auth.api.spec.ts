@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { authApi } from '@/api/auth.api';
+import { setAuthTokenGetter } from '@/api/client';
 import { server } from '@/mocks/server';
 
 describe('authApi login identifier resolution', () => {
@@ -58,4 +59,47 @@ describe('authApi login identifier resolution', () => {
     });
   });
 
+});
+
+describe('authApi.updateMe gender', () => {
+  afterEach(() => setAuthTokenGetter(() => null));
+
+  async function signIn() {
+    const session = await authApi.login('amaka.obi', 'Passw0rd!1');
+    setAuthTokenGetter(() => session.token);
+    return session;
+  }
+
+  it('returns the seeded gender before anything is changed', async () => {
+    const session = await signIn();
+
+    expect(session.user.gender).toBe('female');
+  });
+
+  it('saves a gender chosen from the dropdown', async () => {
+    await signIn();
+
+    const updated = await authApi.updateMe({ firstName: 'Amaka', lastName: 'Obi', gender: 'non-binary' });
+
+    expect(updated.gender).toBe('non-binary');
+  });
+
+  it('clears the gender when null is sent', async () => {
+    await signIn();
+
+    const updated = await authApi.updateMe({ gender: null });
+
+    expect(updated.gender).toBeNull();
+  });
+
+  it('rejects a value outside the published list instead of storing it', async () => {
+    await signIn();
+
+    await expect(
+      authApi.updateMe({ gender: 'wizard' as never }),
+    ).rejects.toMatchObject({ status: 422 });
+
+    const after = await authApi.me();
+    expect(after.gender).not.toBe('wizard');
+  });
 });
