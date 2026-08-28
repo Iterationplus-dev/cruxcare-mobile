@@ -25,7 +25,13 @@ export const therapistsApi = {
     return data;
   },
 
-  async updateMyProfile(patch: { specialties?: string[] }): Promise<TherapistSummary> {
+  /**
+   * `specialties` is required, not optional: the server treats an omitted key
+   * as a `422` rather than a clear, on the grounds that forgetting it is far
+   * more likely a bug than an intention to wipe a therapist's profile. Sending
+   * `[]` is how the list is cleared.
+   */
+  async updateMyProfile(patch: { specialties: string[] }): Promise<TherapistSummary> {
     const { data } = await apiClient.patch<TherapistSummary>('/me/therapist/profile', patch);
     return data;
   },

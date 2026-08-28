@@ -248,6 +248,12 @@ The adjacent issues, resolved:
 
 **On `specialties` being one string column:** the read half alone does unblock the screen, but it cannot be saved — shipping read-only would put a Save button on a screen that always fails. Prefer holding the whole route until the storage decision is made. The mobile side is built and waiting either way; nothing else is blocked on it.
 
+**The Clients list means sessions *sat*, not booked.** Counting completed appointments only is the right rule and the screen means exactly that. The subtitle sits next to a client the therapist is about to open, so a count inflated by cancellations and no-shows would misrepresent the relationship before they read a word of it. No second field needed.
+
+**Yes, the client always sends `specialties`.** There is one call site and it always passes the key; since an omitted key is a `422` rather than a clear, the parameter is now typed as required rather than optional so a future caller cannot omit it by accident. `[]` remains how the list is cleared.
+
+**On cases 13 and 14 — active with no `therapist_id`.** Nothing on the mobile side can produce that state, so the trace starts elsewhere. `POST /care/requests` without a `therapistId` creates an *unassigned* request that opens at `submitted` and stays there; the only thing that activates a case is `accept`, which is scoped to a therapist and cannot run without one. Both cases also date from March 2026, months before the care-request queue existed. They came from the older web workflow.
+
 **On the gender default.** Registration writing `"male"` means every account that has never opened Personal information reads back a gender its owner never stated, and the dropdown opens pre-filled with it. The client no longer launders that into an answer — `gender` is sent **only when the member changes it**, so saving an unrelated field leaves the stored value untouched. That covers the client's half, but the stored data is still an assertion nobody made. Recommend changing the registration default to `null`: "not stated" is a fact, `"male"` is a guess, and every downstream reader of that column currently cannot tell them apart.
 
 ```json
