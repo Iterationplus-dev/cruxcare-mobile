@@ -10,9 +10,10 @@
           v-for="cf in caseFiles.data"
           :key="cf.id"
           :title="cf.clientName || 'CruxCare client'"
-          :subtitle="cf.notes.some((n) => n.draft) ? 'Unwritten notes' : `${cf.sessionCount ?? 0} session(s)`"
+          :subtitle="presentClientRow(cf).subtitle"
+          :subtitle-tone="presentClientRow(cf).tone === 'attention' ? 'warning' : undefined"
           icon="folder_shared"
-          :icon-color="cf.notes.some((n) => n.draft) ? 'var(--cc-color-warning)' : 'var(--cc-color-primary)'"
+          :icon-color="presentClientRow(cf).tone === 'attention' ? 'var(--cc-color-warning)' : 'var(--cc-color-primary)'"
           chevron
           clickable
           @click="router.push({ name: 'case-file', params: { id: cf.id } })"
@@ -29,6 +30,7 @@ import { useRouter } from 'vue-router';
 import { AppCard, AppHeader, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useCaseFiles } from '@/composables/useCaseFiles';
+import { presentClientRow } from '@/features/therapist/clientListPresentation';
 
 /** TD4 · Client management — list plus record in one view, unwritten notes flagged. */
 const router = useRouter();

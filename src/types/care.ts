@@ -170,6 +170,12 @@ export interface CaseFile {
   treatmentEndDate?: string | null;
   sessionCount?: number | null;
   lastSessionAt?: string | null;
+  /** Soonest appointment still ahead that is not cancelled or missed. */
+  nextSessionAt?: string | null;
+  noShowCount?: number | null;
+  /** When the oldest draft note was started, or null when none waits. */
+  unwrittenNoteFrom?: string | null;
+  lastMessageAt?: string | null;
 }
 
 export interface ChatParticipant {
