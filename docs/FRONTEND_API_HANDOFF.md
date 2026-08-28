@@ -159,6 +159,9 @@ The app currently sends an opaque single-use `paymentToken` from a hosted provid
 | `GET /care/requests` | `cursor?` | Cursor page of the **caller's own** `CareRequest`, newest first: `id`, `reference`, `status`, `reason`, `therapistId`, `therapistName`, `therapistAvatarUrl`, `createdAt`, `updatedAt`, `events[]`. `events` is the progress trail the client screen renders — `{ id, status, label, note?, at }`, oldest first, one entry per real step. The app never invents a step, so a request with no recorded progress must return an empty array rather than a synthesised one. |
 | `GET /care/requests/{id}` | — | One `CareRequest`. Scope to the owning client. |
 | `POST /care/requests/{id}/cancel` | — | Updated `CareRequest` with `status: "cancelled"` and an appended event. `422 request_not_cancellable` once the request is `accepted`, `closed`, or already `cancelled` — carrying `meta.status` with the true state, which the client re-renders from rather than trusting its own copy. Accepts the `id` or the `reference`. Someone else's request is a `404`, never a `403`, which would confirm it exists. |
+| `GET /therapist/care-requests` | `cursor?` | **Not built yet — see the note below.** Cursor page of the caller's incoming `TherapistCareRequest`, newest first: `id`, `reference`, `status`, `reason`, `clientId`, `clientName`, `clientAvatarUrl`, `createdAt`, `updatedAt`, `events[]`. Same underlying record as the client's `CareRequest` and the same `events` trail — it carries the **client** instead of the therapist, because that is the identity being decided about. Scope server-side to requests whose `therapistId` is the caller's own therapist profile; the app never sends a therapist id. A caller with no therapist profile gets an empty page, not a `403`. Requests with no named therapist never appear here — nobody was asked. |
+| `POST /therapist/care-requests/{id}/accept` | — | **Not built yet.** Updated `TherapistCareRequest` with `status: "accepted"` and an appended event, written for the client who reads the same trail. Creates the working relationship — case file, chat thread, and whatever else assignment implies. `422 request_not_actionable` unless the request is `submitted` or `in-review`, carrying `meta.status` with the true state, which the app re-renders from rather than trusting its own copy. `422 therapist_plan_required` when the therapist has no active plan or is at their client limit: the app disables the button, but the limit is a server rule and must be enforced here. Someone else's request is a `404`, never a `403`. Must be idempotent enough that a double tap does not assign twice. |
+| `POST /therapist/care-requests/{id}/decline` | — | **Not built yet.** Updated `TherapistCareRequest` with `status: "declined"` and an appended event; notify the client so staff can re-match. Same `404`/`422 request_not_actionable` rules as accept. **Not** gated by the plan — passing on a case consumes no client slot. |
 | `GET /appointments` | `cursor?` | Cursor page of `Appointment`. Scope it to client, assigned therapist, or administrator. |
 | `POST /appointments` | `{ therapistId, slot, type }`, `type` is `in-person\|video\|chat` | Creates requested appointment. Revalidate live availability and care/plan access atomically. |
 | `PATCH /appointments/{id}` | `{ status }` | Updated appointment. Current UI supplies status only; Laravel must authorize valid transitions (`requested`, `confirmed`, `completed`, `cancelled`, `no-show`). A later rescheduling request needs an explicit slot payload/contract. |
@@ -183,6 +186,52 @@ The app currently sends an opaque single-use `paymentToken` from a hosted provid
   "status": "requested",
   "reason": null,
   "cancellationCutoff": "2026-08-20T08:00:00Z"
+}
+```
+
+#### Backend note — the therapist never receives a client's request
+
+`POST /care/requests` already says a named therapist "is attached to the case and notified so it reaches their queue". **There is no queue to reach.** The only read route for a care request is `GET /care/requests`, which is scoped to *the caller's own* requests as a client — so a therapist calling it gets the requests they sent, never the ones sent to them. A client can name a therapist, the request is stored, and nothing ever puts it in front of that therapist. The therapist's Appointments screen is not it: an `Appointment` is a separate record with its own `requested` status, and nothing converts a `CareRequest` into one.
+
+The three routes above close that gap and **need building server-side**; the mobile side is done and calls them already:
+
+- `src/api/care-queue.api.ts` — `careQueueApi.list/accept/decline`
+- `src/composables/useTherapistCareRequests.ts`
+- `src/features/therapist/screens/TherapistCareRequestsScreen.vue` at `/therapist/care-requests`, with a waiting-requests banner on the therapist's Today dashboard
+
+Until the routes exist the screen renders its empty state, which is honest but wrong — the requests are real and sitting in the database unseen.
+
+Three things to get right, none of which the app can do for you:
+
+1. **Scope by the caller's therapist profile, server-side.** The app never sends a therapist id, so there is nothing to tamper with. Keep it that way.
+2. **Enforce the plan and client limits on `accept`.** The screen disables the button when the therapist has no active plan, but that is a courtesy, not a control — the handoff already requires these limits be enforced server-side rather than inferred from `clientCount`.
+3. **Write the event for the client, not the therapist.** Both sides render the same `events[]` array, so a step reading "you accepted" would appear on the client's own tracking screen. Phrase it as `"{therapistName} accepted your request"`.
+
+Two adjacent issues worth fixing at the same time:
+
+- **The notification deep-link.** `POST /care/requests` sends the therapist a notification whose `actionRoute` was `/therapist/appointments` — a screen that will never show the request. It should be `/therapist/care-requests`. Fixed in the mock; make sure the real payload matches.
+- **`GET /notifications` must be per-recipient.** The MSW mock serves one global array, so a therapist-addressed notification shows up in the client's inbox. That is a mock artifact and the contract at `GET /notifications` is already implicitly per-caller, but this flow is the first one where two different people are notified about the same record — worth confirming the real implementation scopes it.
+
+```json
+{
+  "id": "care-req-1042",
+  "reference": "CR-1755000000000",
+  "status": "in-review",
+  "reason": "Amaka Obi would like to work with Chidi Nwosu.",
+  "clientId": "user-123",
+  "clientName": "Amaka Obi",
+  "clientAvatarUrl": null,
+  "createdAt": "2026-08-24T10:00:00Z",
+  "updatedAt": "2026-08-24T10:00:00Z",
+  "events": [
+    {
+      "id": "care-evt-1",
+      "status": "in-review",
+      "label": "Request sent to Chidi Nwosu",
+      "note": "They have been notified and will respond shortly.",
+      "at": "2026-08-24T10:00:00Z"
+    }
+  ]
 }
 ```
 

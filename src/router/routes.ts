@@ -408,6 +408,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresRole: 'therapist' },
   },
   {
+    path: '/therapist/care-requests',
+    name: 'therapist-care-requests',
+    component: () => import('@/features/therapist/screens/TherapistCareRequestsScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'therapist' },
+  },
+  {
     path: '/therapist/clients/:id',
     name: 'case-file',
     component: () => import('@/features/therapist/screens/CaseFileScreen.vue'),

@@ -4,7 +4,7 @@ import type { RegisterPayload } from '@/api/auth.api';
 import type { CreateAppointmentPayload } from '@/api/appointments.api';
 import type { ProductQuery } from '@/api/products.api';
 import type { CartItem, CheckoutQuote, Order } from '@/types/marketplace';
-import type { CareRequest, HealthProfile } from '@/types/care';
+import type { CareRequest, HealthProfile, TherapistCareRequest } from '@/types/care';
 import type { WalletTopUpQuote } from '@/types/wallet';
 import type { TherapistPlanTier, User } from '@/types/user';
 
@@ -400,6 +400,101 @@ const marketplaceHandlers: HttpHandler[] = [
 // ---------------------------------------------------------------------------
 // Client care
 // ---------------------------------------------------------------------------
+/** The therapist's projection of a stored request: same record, same events,
+ * but carrying the client rather than the therapist. */
+function toTherapistCareRequest(clientId: string, request: CareRequest): TherapistCareRequest {
+  const client = db.users.find((u) => u.id === clientId);
+  return {
+    id: request.id,
+    reference: request.reference,
+    status: request.status,
+    reason: request.reason,
+    clientId,
+    clientName: client ? `${client.firstName} ${client.lastName}` : 'CruxCare client',
+    clientAvatarUrl: client?.avatarUrl ?? null,
+    createdAt: request.createdAt,
+    updatedAt: request.updatedAt,
+    events: request.events,
+  };
+}
+
+/** Statuses a therapist can still answer. Anything else has been decided,
+ * withdrawn, or closed, and the answer would be meaningless. */
+const ANSWERABLE_STATUSES = ['submitted', 'in-review'];
+
+function respondToCareRequest(request: Request, id: string, action: 'accept' | 'decline') {
+  const user = currentUser(request);
+  if (!user) return unauthorized();
+
+  const therapistId = db.therapistIdForUser.get(user.id);
+  if (!therapistId) {
+    return HttpResponse.json({ message: 'You are not practising as a therapist.' }, { status: 403 });
+  }
+
+  const match = db
+    .careRequestsForTherapist(therapistId)
+    .find((entry) => entry.request.id === id);
+  // Someone else's request is a 404, never a 403, which would confirm it exists.
+  if (!match) return HttpResponse.json({ message: 'Request not found.' }, { status: 404 });
+
+  const { clientId, request: careRequest } = match;
+
+  if (!ANSWERABLE_STATUSES.includes(String(careRequest.status))) {
+    return HttpResponse.json(
+      {
+        message: 'This request has already moved on.',
+        code: 'request_not_actionable',
+        // The screen re-renders from this rather than trusting its own copy.
+        meta: { status: careRequest.status },
+      },
+      { status: 422 },
+    );
+  }
+
+  // Accepting takes on a client, so the plan is enforced here and not left to
+  // the screen's disabled button — the limit is a server rule.
+  const planActive =
+    !!user.therapistProfile?.plan && user.therapistProfile.status === 'active';
+  if (action === 'accept' && !planActive) {
+    return HttpResponse.json(
+      { message: 'Choose a plan before taking on a client.', code: 'therapist_plan_required' },
+      { status: 422 },
+    );
+  }
+
+  const now = new Date().toISOString();
+  const therapistName = careRequest.therapistName ?? 'Your therapist';
+  careRequest.status = action === 'accept' ? 'accepted' : 'declined';
+  careRequest.updatedAt = now;
+  careRequest.events.push({
+    id: db.nextId('care-evt'),
+    status: careRequest.status,
+    // Written for the client, who reads this same trail on their own screen.
+    label:
+      action === 'accept'
+        ? `${therapistName} accepted your request`
+        : `${therapistName} could not take this case`,
+    note:
+      action === 'accept'
+        ? 'You can now message them and book a session from Care.'
+        : 'CruxCare can match you with another therapist.',
+    at: now,
+  });
+
+  db.notifications.unshift({
+    id: `notif-care-${action}-${Date.now()}`,
+    category: 'system',
+    title: action === 'accept' ? 'Therapist accepted your request' : 'Therapist request declined',
+    body: careRequest.events[careRequest.events.length - 1].label,
+    read: false,
+    actionLabel: 'Track request',
+    actionRoute: '/care/requests',
+    createdAt: now,
+  });
+
+  return HttpResponse.json(toTherapistCareRequest(clientId, careRequest));
+}
+
 const careHandlers: HttpHandler[] = [
   http.get(url('/therapists'), () => HttpResponse.json(paginate(db.therapists))),
 
@@ -460,7 +555,7 @@ const careHandlers: HttpHandler[] = [
         body: reason,
         read: false,
         actionLabel: 'View requests',
-        actionRoute: '/therapist/appointments',
+        actionRoute: '/therapist/care-requests',
         createdAt: now,
       });
     }
@@ -529,6 +624,30 @@ const careHandlers: HttpHandler[] = [
     });
     return HttpResponse.json(found);
   }),
+
+  // -- Therapist side of the same request -----------------------------------
+  // `GET /care/requests` is scoped to the caller's own requests as a client, so
+  // it can never surface these. This is the therapist's queue.
+  http.get(url('/therapist/care-requests'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const therapistId = db.therapistIdForUser.get(user.id);
+    // Not practising as a therapist: an empty queue, not an error.
+    if (!therapistId) return HttpResponse.json(paginate([]));
+
+    const queue = db
+      .careRequestsForTherapist(therapistId)
+      .map(({ clientId, request: careRequest }) => toTherapistCareRequest(clientId, careRequest));
+    return HttpResponse.json(paginate(queue));
+  }),
+
+  http.post(url('/therapist/care-requests/:id/accept'), ({ request, params }) =>
+    respondToCareRequest(request, String(params.id), 'accept'),
+  ),
+
+  http.post(url('/therapist/care-requests/:id/decline'), ({ request, params }) =>
+    respondToCareRequest(request, String(params.id), 'decline'),
+  ),
 
   http.get(url('/appointments'), ({ request }) => {
     const user = currentUser(request);

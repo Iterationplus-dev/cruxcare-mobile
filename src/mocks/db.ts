@@ -458,6 +458,31 @@ export function careRequestsFor(userId: string): CareRequest[] {
   return created;
 }
 
+/**
+ * Which therapist profile a signed-in user practises as. Mock-only: the real
+ * API resolves this from the account server-side and never accepts a therapist
+ * id from the client. It exists here because the fixtures keep `users` and
+ * `therapists` as separate lists with no link between them.
+ */
+export const therapistIdForUser = new Map<string, string>([['user-1', 'therapist-1']]);
+
+/**
+ * Every request naming this therapist, across all clients, newest first. The
+ * per-client map cannot answer this on its own — which is exactly the shape
+ * the real backend has to provide for `GET /therapist/care-requests`.
+ */
+export function careRequestsForTherapist(
+  therapistId: string,
+): Array<{ clientId: string; request: CareRequest }> {
+  const matches: Array<{ clientId: string; request: CareRequest }> = [];
+  for (const [clientId, requests] of careRequests) {
+    for (const request of requests) {
+      if (request.therapistId === therapistId) matches.push({ clientId, request });
+    }
+  }
+  return matches.sort((a, b) => b.request.createdAt.localeCompare(a.request.createdAt));
+}
+
 export const notifications: AppNotification[] = [
   {
     id: 'notif-1',

@@ -71,6 +71,28 @@ export interface CareRequest {
   events: CareRequestEvent[];
 }
 
+/**
+ * The same request seen from the therapist's side of the case. It carries the
+ * client instead of the therapist, because that is the identity the therapist
+ * is deciding about — a therapist reading their queue already knows who they
+ * are. `events` is the same server-authored trail the client sees, so both
+ * sides read one history rather than two accounts of it.
+ */
+export interface TherapistCareRequest {
+  id: string;
+  /** Same reference the client quotes to support. */
+  reference: string;
+  status: CareRequestStatusLike;
+  /** What the client asked for, shown before any decision is taken. */
+  reason: string;
+  clientId: string;
+  clientName: string;
+  clientAvatarUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+  events: CareRequestEvent[];
+}
+
 export type AppointmentStatus =
   | 'requested'
   | 'confirmed'

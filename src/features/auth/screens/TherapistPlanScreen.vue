@@ -1,4 +1,4 @@
-<template>
+   <template>
   <ion-page>
     <ion-header class="cc-plain-header">
       <ion-toolbar class="cc-plain-header__bar">

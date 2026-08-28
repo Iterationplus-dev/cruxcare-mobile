@@ -1,7 +1,9 @@
 <template>
   <ion-page>
     <ion-content class="cc-screen">
-      <AppPullToRefresh :query-keys="[['appointments'], ['case-files'], ['chat', 'threads'], ['wallet']]" />
+      <AppPullToRefresh
+        :query-keys="[['appointments'], ['therapist', 'care-requests'], ['case-files'], ['chat', 'threads'], ['wallet']]"
+      />
       <div class="cc-td__header">
         <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="40" />
         <div class="cc-td__greeting">
@@ -37,6 +39,19 @@
           <span class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-color-primary)">
             Choose
           </span>
+        </AppCard>
+
+        <!-- A client asking for you comes before anything on the schedule, so
+             this sits above the dashboard and does not wait on it to load. -->
+        <AppCard v-if="incomingRequests.length" tint class="cc-td__banner" @click="goCareRequests">
+          <AppIcon name="assignment_ind" :size="20" color="#9A5B15" />
+          <div class="cc-td__banner-body">
+            <div class="cc-text-body-strong" style="font-size: 13.5px">
+              {{ incomingRequests.length }} client request{{ incomingRequests.length === 1 ? '' : 's' }} waiting
+            </div>
+            <div class="cc-text-caption">Someone asked to work with you</div>
+          </div>
+          <span class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-color-primary)">Review</span>
         </AppCard>
 
         <LoadingState v-if="appointmentsQuery.isPending.value" label="Loading your dashboard…" />
@@ -119,7 +134,9 @@ import { EmptyState, LoadingState } from '@/components/state';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useChatThreads } from '@/composables/useChat';
+import { useTherapistCareRequests } from '@/composables/useTherapistCareRequests';
 import { useWallet } from '@/composables/useWallet';
+import { canRespondToRequest } from '@/features/therapist/careQueuePresentation';
 import { useAuthStore } from '@/stores/auth';
 
 /** TD1 · Dashboard (Today). Earnings figure substituted with real wallet
@@ -145,6 +162,14 @@ const pendingRequests = computed(
   () => appointmentsQuery.data.value?.data.filter((a) => a.status === 'requested') ?? [],
 );
 
+/** Care requests, not bookings — a client asking to work with this therapist
+ * at all. Counted only while still answerable, so the banner clears once the
+ * therapist has dealt with them rather than counting decided ones forever. */
+const careRequestsQuery = useTherapistCareRequests();
+const incomingRequests = computed(
+  () => careRequestsQuery.data.value?.data.filter((r) => canRespondToRequest(r.status)) ?? [],
+);
+
 const { data: caseFiles } = useCaseFiles();
 const draftNoteCount = computed(
   () => caseFiles?.value?.data.reduce((sum, cf) => sum + cf.notes.filter((n) => n.draft).length, 0) ?? 0,
@@ -167,6 +192,9 @@ function formatTime(iso: string) {
 }
 function goRequests() {
   router.push({ name: 'appointment-management' });
+}
+function goCareRequests() {
+  router.push({ name: 'therapist-care-requests' });
 }
 function goCalendar() {
   router.push({ name: 'therapist-calendar' });
