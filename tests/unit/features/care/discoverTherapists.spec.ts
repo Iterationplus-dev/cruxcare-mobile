@@ -3,6 +3,7 @@ import {
   discoverTherapists,
   formatNextSlot,
   hasSpecialty,
+  isNearby,
   matchesTherapistQuery,
   specialtyChips,
 } from '@/features/care/discoverTherapists';
@@ -142,5 +143,68 @@ describe('formatNextSlot', () => {
 
   it('is null rather than "Invalid Date" on an unusable value', () => {
     expect(formatNextSlot('not-a-date', now)).toBeNull();
+  });
+});
+
+describe('isNearby', () => {
+  const uyo = therapist({ location: 'Uyo, Akwa Ibom, Nigeria' });
+
+  it('matches on the same city', () => {
+    expect(isNearby(uyo, { city: 'Uyo', state: 'Akwa Ibom', country: 'Nigeria' })).toBe(true);
+  });
+
+  it('falls back to the same state when the city differs', () => {
+    expect(isNearby(uyo, { city: 'Eket', state: 'Akwa Ibom', country: 'Nigeria' })).toBe(true);
+  });
+
+  it('does not call the same country near', () => {
+    // Two people 800km apart share a country; that is not "near me".
+    expect(isNearby(uyo, { city: 'Lagos', state: 'Lagos', country: 'Nigeria' })).toBe(false);
+  });
+
+  it('ignores casing on both sides', () => {
+    expect(isNearby(uyo, { city: 'uyo' })).toBe(true);
+  });
+
+  it('is false when we do not know where the client is', () => {
+    expect(isNearby(uyo, null)).toBe(false);
+    expect(isNearby(uyo, {})).toBe(false);
+  });
+
+  it('is false when the therapist lists no location', () => {
+    expect(isNearby(therapist({ location: null }), { city: 'Uyo' })).toBe(false);
+  });
+});
+
+describe('discoverTherapists with location', () => {
+  const near = therapist({ id: 'near', location: 'Uyo, Akwa Ibom, Nigeria' });
+  const far = therapist({ id: 'far', location: 'Lagos, Lagos, Nigeria' });
+  const me = { city: 'Uyo', state: 'Akwa Ibom', country: 'Nigeria' };
+
+  it('sorts nearby first without hiding anyone', () => {
+    const rows = discoverTherapists([far, near], '', null, { address: me });
+
+    expect(rows.map((t) => t.id)).toEqual(['near', 'far']);
+  });
+
+  it('narrows to nearby when asked', () => {
+    const rows = discoverTherapists([far, near], '', null, { address: me, nearbyOnly: true });
+
+    expect(rows.map((t) => t.id)).toEqual(['near']);
+  });
+
+  it('keeps a bookable far therapist above a fully-booked near one', () => {
+    // Being seen matters more than being close.
+    const bookedNear = therapist({ id: 'bookedNear', location: 'Uyo', fullyBooked: true });
+    const rows = discoverTherapists([bookedNear, far], '', null, { address: me });
+
+    expect(rows.map((t) => t.id)).toEqual(['far', 'bookedNear']);
+  });
+
+  it('returns nobody when Near me is on and the client has no address', () => {
+    // The screen hides the chip in this case; the rule holds regardless.
+    const rows = discoverTherapists([near, far], '', null, { address: null, nearbyOnly: true });
+
+    expect(rows).toEqual([]);
   });
 });

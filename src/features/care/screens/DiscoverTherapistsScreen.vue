@@ -31,7 +31,20 @@
 
         <AppInput v-model="query" placeholder="Condition, name or discipline" />
 
-        <div v-if="chips.length" class="cc-discover__chips" role="tablist" aria-label="Filter by condition">
+        <div class="cc-discover__chips" role="tablist" aria-label="Filter therapists">
+          <!-- Only offered when we know where the client is; without an address
+               it would be a filter that silently matches nobody. -->
+          <button
+            v-if="myAddress"
+            type="button"
+            role="tab"
+            class="cc-discover__chip"
+            :class="{ 'cc-discover__chip--on': nearbyOnly }"
+            :aria-selected="nearbyOnly"
+            @click="nearbyOnly = !nearbyOnly"
+          >
+            Near me {{ nearbyCount }}
+          </button>
           <button
             v-for="c in chips"
             :key="c.value"
@@ -48,13 +61,16 @@
 
         <p class="cc-text-caption cc-discover__count">
           {{ visible.length }} {{ visible.length === 1 ? 'therapist' : 'therapists' }}
+          <span v-if="nearbyOnly && myPlace">near {{ myPlace }}</span>
         </p>
 
         <EmptyState
           v-if="!visible.length"
           icon="search_off"
-          title="No match"
-          message="No therapist here matches what you searched for."
+          :title="nearbyOnly ? 'None near you' : 'No match'"
+          :message="nearbyOnly
+            ? `No therapist here is listed in ${myPlace ?? 'your area'}. Turn off Near me to see everyone.`
+            : 'No therapist here matches what you searched for.'"
         />
 
         <AppCard
@@ -129,8 +145,11 @@ import { useCareRequests } from '@/composables/useCareRequests';
 import {
   discoverTherapists,
   formatNextSlot,
+  isNearby,
   specialtyChips,
 } from '@/features/care/discoverTherapists';
+import { useAuthStore } from '@/stores/auth';
+import { formatAddress } from '@/types/user';
 
 /** CD2 · Discover therapists — the Care tab's own screen. */
 const router = useRouter();
@@ -140,7 +159,24 @@ const therapists = computed(() => page.value?.data);
 const query = ref('');
 const specialty = ref<string | null>(null);
 const chips = computed(() => specialtyChips(therapists.value));
-const visible = computed(() => discoverTherapists(therapists.value, query.value, specialty.value));
+const nearbyOnly = ref(false);
+
+/** Where this client is, as the server knows it. Absent until it returns an
+ *  address, which is what gates the Near me chip. */
+const auth = useAuthStore();
+const myAddress = computed(() => auth.user?.address ?? null);
+const myPlace = computed(() => formatAddress(myAddress.value));
+
+const visible = computed(() =>
+  discoverTherapists(therapists.value, query.value, specialty.value, {
+    address: myAddress.value,
+    nearbyOnly: nearbyOnly.value,
+  }),
+);
+
+const nearbyCount = computed(
+  () => (therapists.value ?? []).filter((t) => isNearby(t, myAddress.value)).length,
+);
 
 /** Whether this client has care of their own to return to, rather than only a
  *  directory to browse. */

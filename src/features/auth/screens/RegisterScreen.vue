@@ -62,6 +62,33 @@
           disrupting the drawn layout's density — see CLAUDE.md guidance on
           documenting and resolving spec conflicts.
         -->
+        <!-- Optional, and said so: it narrows who a client is shown and where a
+             therapist appears, but nobody is stopped from registering for
+             withholding it. -->
+        <AppInput
+          v-model="city"
+          label="City (optional)"
+          placeholder="Uyo"
+          autocomplete="address-level2"
+          :error="errors.city"
+        />
+        <div class="cc-register__pair">
+          <AppInput
+            v-model="state"
+            label="State (optional)"
+            placeholder="Akwa Ibom"
+            autocomplete="address-level1"
+            :error="errors.state"
+          />
+          <AppInput
+            v-model="country"
+            label="Country (optional)"
+            placeholder="Nigeria"
+            autocomplete="country-name"
+            :error="errors.country"
+          />
+        </div>
+
         <div class="cc-field">
           <label class="cc-field__label">How did you hear about CruxCare?</label>
           <button
@@ -203,7 +230,7 @@ import {
   referredBySourceOptions,
   registerSchema,
 } from '../schemas/register.schema';
-import type { ReferredBySource } from '@/types/user';
+import type { Address, ReferredBySource } from '@/types/user';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -215,6 +242,9 @@ const { defineField, errors, handleSubmit } = useForm({
     lastName: '',
     email: '',
     phone: '',
+    city: '',
+    state: '',
+    country: '',
     referredBySource: '' as ReferredBySource,
     password: '',
     confirmPassword: '',
@@ -226,6 +256,19 @@ const [firstName] = defineField('firstName');
 const [lastName] = defineField('lastName');
 const [email] = defineField('email');
 const [phone] = defineField('phone');
+/** Only the parts that were filled in — an address of empty strings would
+ *  claim a location nobody gave. */
+function addressFrom(values: { city?: string; state?: string; country?: string }): Address | null {
+  const address: Address = {};
+  if (values.city?.trim()) address.city = values.city.trim();
+  if (values.state?.trim()) address.state = values.state.trim();
+  if (values.country?.trim()) address.country = values.country.trim();
+  return Object.keys(address).length ? address : null;
+}
+
+const [city] = defineField('city');
+const [state] = defineField('state');
+const [country] = defineField('country');
 const [referredBySource] = defineField('referredBySource');
 const [password] = defineField('password');
 const [confirmPassword] = defineField('confirmPassword');
@@ -256,6 +299,7 @@ watch(password, (v) => (strength.value = passwordStrength(v ?? '')));
 const onSubmit = handleSubmit(async (values) => {
   submitting.value = true;
   const phone = `+234${values.phone}`;
+  const address = addressFrom(values);
 
   try {
     await auth.register({
@@ -265,6 +309,9 @@ const onSubmit = handleSubmit(async (values) => {
       phone,
       password: values.password,
       referredBySource: values.referredBySource as ReferredBySource,
+      // Sent only when something was given, so an untouched form does not
+      // register an address of empty strings.
+      ...(address ? { address } : {}),
     });
   } catch (e) {
     const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
@@ -305,6 +352,14 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <style scoped>
+.cc-register__pair {
+  display: flex;
+  gap: 10px;
+}
+.cc-register__pair > * {
+  flex: 1;
+  min-width: 0;
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

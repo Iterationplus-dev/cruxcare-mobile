@@ -1,4 +1,5 @@
 import type { TherapistSummary } from '@/types/care';
+import type { Address } from '@/types/user';
 
 /**
  * CD2 · Discover therapists — searching and narrowing the directory.
@@ -17,6 +18,35 @@ export function matchesTherapistQuery(therapist: TherapistSummary, query: string
   if (!needle) return true;
   if (therapist.name.toLowerCase().includes(needle)) return true;
   return therapist.specialties.some((s) => s.toLowerCase().includes(needle));
+}
+
+/**
+ * Whether a therapist is in the same place as the client.
+ *
+ * The directory gives a therapist's location as one composed string —
+ * "Uyo, Akwa Ibom, Nigeria" — and the client's address comes as parts. So this
+ * matches on the parts rather than pretending to measure distance: the same
+ * city is near, and failing that the same state is nearer than nothing.
+ *
+ * Real proximity needs coordinates on both sides and a server-side distance;
+ * `latitude`/`longitude` exist on the user record but are not returned yet.
+ */
+export function isNearby(
+  therapist: TherapistSummary,
+  address: Address | null | undefined,
+): boolean {
+  if (!address) return false;
+  const where = therapist.location?.toLowerCase();
+  if (!where) return false;
+
+  // City first: two people in the same city are near each other whatever the
+  // state says. State is the fallback, and country alone is too coarse to
+  // call "near", so it is not matched on.
+  const city = address.city?.trim().toLowerCase();
+  if (city && where.includes(city)) return true;
+
+  const state = address.state?.trim().toLowerCase();
+  return !!state && where.includes(state);
 }
 
 export function hasSpecialty(therapist: TherapistSummary, specialty: string): boolean {
@@ -59,13 +89,23 @@ export function discoverTherapists(
   therapists: TherapistSummary[] | undefined,
   query: string,
   specialty: string | null,
+  options: { address?: Address | null; nearbyOnly?: boolean } = {},
 ): TherapistSummary[] {
   if (!therapists) return [];
+
+  const { address, nearbyOnly = false } = options;
 
   return therapists
     .filter((t) => matchesTherapistQuery(t, query))
     .filter((t) => (specialty ? hasSpecialty(t, specialty) : true))
-    .sort((a, b) => Number(a.fullyBooked) - Number(b.fullyBooked));
+    .filter((t) => (nearbyOnly ? isNearby(t, address) : true))
+    .sort((a, b) => {
+      // Bookable before fully booked, then nearby before far — someone who can
+      // actually be seen matters more than someone who is merely close.
+      const booked = Number(a.fullyBooked) - Number(b.fullyBooked);
+      if (booked !== 0) return booked;
+      return Number(isNearby(b, address)) - Number(isNearby(a, address));
+    });
 }
 
 /** "Today 14:00" when it is today, otherwise "Fri 10:00". Null when there is

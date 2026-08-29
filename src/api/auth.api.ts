@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import { ApiError } from '@/types/api';
-import type { ReferredBySource, TherapistPlanTier, User } from '@/types/user';
+import type { Address, ReferredBySource, TherapistPlanTier, User } from '@/types/user';
 
 export interface RegisterPayload {
   firstName: string;
@@ -9,6 +9,9 @@ export interface RegisterPayload {
   phone: string;
   password: string;
   referredBySource: ReferredBySource;
+  /** Where they are. Used to show clients therapists near them, and to place
+   *  therapists in the directory. Omitted entirely when nothing was given. */
+  address?: Address;
 }
 
 export type OtpChannel = 'sms' | 'whatsapp' | 'email';
@@ -137,7 +140,7 @@ export const authApi = {
     return requireUser(data);
   },
 
-  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'gender' | 'avatarUrl' | 'payoutAccount'>>) {
+  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'gender' | 'address' | 'avatarUrl' | 'payoutAccount'>>) {
     const { data } = await apiClient.patch<User>('/me', patch);
     return data;
   },

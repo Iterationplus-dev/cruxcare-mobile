@@ -60,6 +60,28 @@ export interface PayoutAccount {
   accountNumber: string;
 }
 
+/**
+ * Where someone is, as the server stores it — `users.address` holds this shape
+ * and the therapist directory already composes its display string from it.
+ *
+ * Every part is optional: someone may give a country and no city, and a
+ * partially-known location is still useful for matching on what is known.
+ */
+export interface Address {
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+}
+
+/** "Uyo, Akwa Ibom, Nigeria" — the parts that are known, in that order. */
+export function formatAddress(address: Address | null | undefined): string | null {
+  if (!address) return null;
+  const parts = [address.city, address.state, address.country]
+    .map((p) => p?.trim())
+    .filter((p): p is string => !!p);
+  return parts.length ? parts.join(', ') : null;
+}
+
 export interface Membership {
   cruxId: string;
   /** e.g. "CCI8804XO" — three letters, four digits, two letters. */
@@ -82,6 +104,8 @@ export interface User {
   /** Optional: absent on accounts created before the field existed, and null
    *  once a member has been asked but declined to record one. */
   gender?: Gender | null;
+  /** Absent until the server returns it; the client never invents one. */
+  address?: Address | null;
   membership: Membership | null;
   therapistProfile: TherapistProfile | null;
   payoutAccount?: PayoutAccount | null;

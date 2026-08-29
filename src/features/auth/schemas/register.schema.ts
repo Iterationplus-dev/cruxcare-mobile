@@ -21,6 +21,11 @@ export const registerSchema = z
       .trim()
       .min(7, 'Enter a valid phone number.')
       .regex(/^\d+$/, 'Digits only.'),
+    // Location is optional: someone who will not say where they are should
+    // still be able to register. It only narrows discovery when given.
+    city: z.string().trim().max(80, 'Keep this under 80 characters.').optional(),
+    state: z.string().trim().max(80, 'Keep this under 80 characters.').optional(),
+    country: z.string().trim().max(80, 'Keep this under 80 characters.').optional(),
     referredBySource: z.enum(
       referredBySourceOptions.map((o) => o.value) as [string, ...string[]],
       { message: 'Let us know how you heard about CruxCare.' },
