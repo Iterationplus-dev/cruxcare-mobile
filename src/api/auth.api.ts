@@ -12,6 +12,12 @@ export interface RegisterPayload {
   /** Where they are. Used to show clients therapists near them, and to place
    *  therapists in the directory. Omitted entirely when nothing was given. */
   address?: Address;
+  /** From the device, and only when the person tapped to share it. Sent
+   *  alongside the address rather than instead of it: coordinates cannot be
+   *  turned into a city without a geocoder, and a city cannot be turned into
+   *  coordinates. */
+  latitude?: number;
+  longitude?: number;
 }
 
 export type OtpChannel = 'sms' | 'whatsapp' | 'email';

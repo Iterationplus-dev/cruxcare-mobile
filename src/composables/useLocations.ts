@@ -19,10 +19,10 @@ export function useCountries() {
   });
 }
 
-export function useStates(countryId: MaybeRef<number | null>) {
+export function useStates(countryId: MaybeRef<string | null>) {
   return useQuery({
     queryKey: computed(() => ['locations', 'states', unref(countryId)]),
-    queryFn: () => locationsApi.states(unref(countryId) as number),
+    queryFn: () => locationsApi.states(unref(countryId) as string),
     enabled: computed(() => unref(countryId) !== null),
     retry: false,
     // A country with no states on file is a normal answer, not a failure.
@@ -30,10 +30,10 @@ export function useStates(countryId: MaybeRef<number | null>) {
   });
 }
 
-export function useCities(stateId: MaybeRef<number | null>) {
+export function useCities(stateId: MaybeRef<string | null>) {
   return useQuery({
     queryKey: computed(() => ['locations', 'cities', unref(stateId)]),
-    queryFn: () => locationsApi.cities(unref(stateId) as number),
+    queryFn: () => locationsApi.cities(unref(stateId) as string),
     enabled: computed(() => unref(stateId) !== null),
     retry: false,
     throwOnError: false,

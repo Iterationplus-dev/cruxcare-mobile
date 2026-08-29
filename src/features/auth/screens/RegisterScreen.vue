@@ -65,6 +65,15 @@
         <!-- Country, then state, then city — each narrowing the one below.
              Optional throughout: nobody is stopped from registering for
              withholding where they are. -->
+        <div class="cc-register__locate">
+          <AppButton variant="secondary" :loading="locating" @click="useMyLocation">
+            {{ coordinates ? 'Location shared' : 'Use my current location' }}
+          </AppButton>
+          <p class="cc-text-caption cc-register__locate-note">
+            {{ locationNote }}
+          </p>
+        </div>
+
         <AppSheetSelect
           v-if="countryOptions.length"
           v-model="countryId"
@@ -271,6 +280,11 @@ import {
 } from '../schemas/register.schema';
 import type { Address, ReferredBySource } from '@/types/user';
 import { useCities, useCountries, useStates } from '@/composables/useLocations';
+import {
+  formatCoordinates,
+  readDeviceLocation,
+  type DeviceCoordinates,
+} from '@/services/deviceLocation';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -296,6 +310,38 @@ const [firstName] = defineField('firstName');
 const [lastName] = defineField('lastName');
 const [email] = defineField('email');
 const [phone] = defineField('phone');
+const locating = ref(false);
+const coordinates = ref<DeviceCoordinates | null>(null);
+const locationError = ref<'denied' | 'unavailable' | null>(null);
+
+const locationNote = computed(() => {
+  if (coordinates.value) {
+    // Shown so the fix is visible rather than taken silently. It does not fill
+    // the fields below: turning a point into a city needs a geocoder, and there
+    // is none — so the person still says where they are.
+    return `Shared: ${formatCoordinates(coordinates.value)}. Still choose your area below.`;
+  }
+  if (locationError.value === 'denied') {
+    return 'Location is off for CruxCare. You can still choose your area below.';
+  }
+  if (locationError.value === 'unavailable') {
+    return 'We could not read your location. Choose your area below instead.';
+  }
+  return 'Optional. Helps us show therapists near you.';
+});
+
+async function useMyLocation() {
+  locating.value = true;
+  locationError.value = null;
+  try {
+    const outcome = await readDeviceLocation();
+    if (outcome.ok) coordinates.value = outcome.coordinates;
+    else locationError.value = outcome.reason;
+  } finally {
+    locating.value = false;
+  }
+}
+
 const [city] = defineField('city');
 const [state] = defineField('state');
 const [country] = defineField('country');
@@ -312,19 +358,19 @@ const cityId = ref('');
 /** Switched-on countries, read without a session — registration has none. */
 const { data: countries } = useCountries();
 const countryOptions = computed(() =>
-  (countries.value ?? []).map((c) => ({ value: String(c.id), label: c.name })),
+  (countries.value ?? []).map((c) => ({ value: c.id, label: c.name })),
 );
 
-const selectedCountryId = computed(() => (countryId.value ? Number(countryId.value) : null));
+const selectedCountryId = computed(() => countryId.value || null);
 const { data: states } = useStates(selectedCountryId);
 const stateOptions = computed(() =>
-  (states.value ?? []).map((s) => ({ value: String(s.id), label: s.name })),
+  (states.value ?? []).map((s) => ({ value: s.id, label: s.name })),
 );
 
-const selectedStateId = computed(() => (stateId.value ? Number(stateId.value) : null));
+const selectedStateId = computed(() => stateId.value || null);
 const { data: cities } = useCities(selectedStateId);
 const cityOptions = computed(() =>
-  (cities.value ?? []).map((c) => ({ value: String(c.id), label: c.name })),
+  (cities.value ?? []).map((c) => ({ value: c.id, label: c.name })),
 );
 
 // Choosing a different country invalidates what was chosen below it.
@@ -404,6 +450,9 @@ const onSubmit = handleSubmit(async (values) => {
       // Sent only when something was given, so an untouched form does not
       // register an address of empty strings.
       ...(address ? { address } : {}),
+      ...(coordinates.value
+        ? { latitude: coordinates.value.latitude, longitude: coordinates.value.longitude }
+        : {}),
     });
   } catch (e) {
     const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
@@ -444,6 +493,14 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <style scoped>
+.cc-register__locate {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cc-register__locate-note {
+  margin: 0;
+}
 .cc-register__pair {
   display: flex;
   gap: 10px;

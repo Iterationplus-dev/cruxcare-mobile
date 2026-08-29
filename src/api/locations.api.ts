@@ -1,8 +1,14 @@
 import { apiClient } from './client';
+import type { CursorPage } from '@/types/api';
 
-/** A place the platform knows about, for the registration selects. */
+/**
+ * A place the platform knows about, for the registration selects.
+ *
+ * `id` is a string: the API sends `"126"`, not `126`, and coercing it would
+ * only invite a mismatch when it is sent back.
+ */
 export interface LocationOption {
-  id: number;
+  id: string;
   name: string;
 }
 
@@ -24,17 +30,21 @@ export interface CountryOption extends LocationOption {
  */
 export const locationsApi = {
   async countries(): Promise<CountryOption[]> {
-    const { data } = await apiClient.get<CountryOption[]>('/countries');
-    return data;
+    // All three come back in the standard { data, meta } envelope, like every
+    // other list on this API — not as a bare array.
+    const { data } = await apiClient.get<CursorPage<CountryOption>>('/countries');
+    return data.data;
   },
 
-  async states(countryId: number): Promise<LocationOption[]> {
-    const { data } = await apiClient.get<LocationOption[]>(`/countries/${countryId}/states`);
-    return data;
+  async states(countryId: string): Promise<LocationOption[]> {
+    const { data } = await apiClient.get<CursorPage<LocationOption>>(
+      `/countries/${countryId}/states`,
+    );
+    return data.data;
   },
 
-  async cities(stateId: number): Promise<LocationOption[]> {
-    const { data } = await apiClient.get<LocationOption[]>(`/states/${stateId}/cities`);
-    return data;
+  async cities(stateId: string): Promise<LocationOption[]> {
+    const { data } = await apiClient.get<CursorPage<LocationOption>>(`/states/${stateId}/cities`);
+    return data.data;
   },
 };

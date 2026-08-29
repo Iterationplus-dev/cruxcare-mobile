@@ -110,6 +110,22 @@ edit('android/app/src/main/AndroidManifest.xml', (source) => {
     );
   }
 
+  // @capacitor/geolocation ships an empty manifest and declares nothing, so the
+  // app has to. Coarse alone would do for "which city" — fine is requested
+  // because Android will not return a precise fix without it, and the user is
+  // still asked either way.
+  if (!next.includes('android.permission.ACCESS_COARSE_LOCATION')) {
+    next = next.replace(
+      '    <uses-permission android:name="android.permission.INTERNET" />',
+      [
+        '    <uses-permission android:name="android.permission.INTERNET" />',
+        '    <!-- Geolocation, requested only when the user taps to share it. -->',
+        '    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />',
+        '    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />',
+      ].join('\n'),
+    );
+  }
+
   // Without these, Firebase falls back to the app launcher icon (rendered as a
   // grey square) and files every message under a "Miscellaneous" channel the
   // user cannot tune. The channel id must match DEFAULT_CHANNEL_ID in
