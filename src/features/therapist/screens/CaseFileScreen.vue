@@ -36,6 +36,12 @@
               {{ caseFile.diagnosis || 'Not recorded yet' }}
             </span>
           </div>
+          <div class="cc-row">
+            <span class="cc-text-caption">Treatment window</span>
+            <span class="cc-text-body-strong" :class="{ 'cc-unset': !treatmentWindow }" style="font-size: 13.5px">
+              {{ treatmentWindow ?? 'Not set yet' }}
+            </span>
+          </div>
           <!-- No clear control: the server refuses null and blank, because a
                file never diagnosed and one wiped would otherwise read alike.
                No edit control on a settled case either — that write is a 404. -->
@@ -55,12 +61,6 @@
             >
               {{ caseFile.diagnosis ? 'Update diagnosis' : 'Record diagnosis' }}
             </AppButton>
-          </div>
-          <div class="cc-row">
-            <span class="cc-text-caption">Treatment window</span>
-            <span class="cc-text-body-strong" :class="{ 'cc-unset': !treatmentWindow }" style="font-size: 13.5px">
-              {{ treatmentWindow ?? 'Not set yet' }}
-            </span>
           </div>
         </AppCard>
 
