@@ -114,7 +114,10 @@ const routes: RouteRecordRaw[] = [
       { path: '', redirect: '/tabs/home' },
       { path: 'home', name: 'tabs-home', component: () => import('@/features/home/screens/HomeScreen.vue') },
       { path: 'shop', name: 'catalog', component: () => import('@/features/marketplace/screens/CatalogScreen.vue') },
-      { path: 'care', name: 'care-hub', component: () => import('@/features/care/screens/CareHubScreen.vue') },
+      // CD2 is the Care tab: the directory is what a client opens Care to
+      // browse. Their own care keeps its screen, reached from the top of it.
+      { path: 'care', name: 'care-hub', component: () => import('@/features/care/screens/DiscoverTherapistsScreen.vue') },
+      { path: 'care/mine', name: 'care-mine', component: () => import('@/features/care/screens/CareHubScreen.vue') },
       { path: 'wallet', name: 'wallet-home', component: () => import('@/features/wallet/screens/WalletHomeScreen.vue') },
       { path: 'profile', name: 'profile', component: () => import('@/features/profile/screens/ProfileScreen.vue') },
       { path: 'member-home', name: 'tabs-member-home', component: () => import('@/features/member/screens/MemberHomeScreen.vue'), meta: { requiresRole: 'member' } },
