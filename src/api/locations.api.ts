@@ -6,17 +6,28 @@ export interface LocationOption {
   name: string;
 }
 
+export interface CountryOption extends LocationOption {
+  currencyCode: string;
+}
+
 /**
- * States and cities, for the country → state → city cascade.
+ * The country → state → city cascade.
  *
- * Active countries already come from `GET /currencies` — that list is the only
- * source of truth for which countries are switched on, so this deliberately
- * does not offer a second one.
+ * All three are readable without a token, which they have to be: registration
+ * happens before there is a session, and a list behind auth renders as an empty
+ * control. `/countries` reads the same switched-on list `/currencies` does, so
+ * there is one definition rather than two that drift.
  *
- * These two routes do not exist yet. The screens fall back to a plain text
- * field when a list comes back empty, so registration keeps working either way.
+ * Coverage is partial by design — an empty state or city list is a normal
+ * answer, and the form falls back to a text field rather than treating it as a
+ * failure.
  */
 export const locationsApi = {
+  async countries(): Promise<CountryOption[]> {
+    const { data } = await apiClient.get<CountryOption[]>('/countries');
+    return data;
+  },
+
   async states(countryId: number): Promise<LocationOption[]> {
     const { data } = await apiClient.get<LocationOption[]>(`/countries/${countryId}/states`);
     return data;

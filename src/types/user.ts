@@ -68,6 +68,11 @@ export interface PayoutAccount {
  * partially-known location is still useful for matching on what is known.
  */
 export interface Address {
+  /** Collected by the web app, not the phone. Present so a profile read does
+   *  not silently drop them — `PATCH /me` merges, so omitting a key leaves it
+   *  alone, but an explicit null would clear it. */
+  street?: string | null;
+  town?: string | null;
   city?: string | null;
   state?: string | null;
   country?: string | null;

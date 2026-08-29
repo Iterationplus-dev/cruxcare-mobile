@@ -270,8 +270,7 @@ import {
   registerSchema,
 } from '../schemas/register.schema';
 import type { Address, ReferredBySource } from '@/types/user';
-import { useCurrencies } from '@/composables/useCurrencies';
-import { useCities, useStates } from '@/composables/useLocations';
+import { useCities, useCountries, useStates } from '@/composables/useLocations';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -310,14 +309,10 @@ const countryId = ref('');
 const stateId = ref('');
 const cityId = ref('');
 
-/** Active countries come from the currency index, which is already the only
- *  source of truth for which countries are switched on. */
-const { data: currencies } = useCurrencies();
+/** Switched-on countries, read without a session — registration has none. */
+const { data: countries } = useCountries();
 const countryOptions = computed(() =>
-  (currencies.value?.supported ?? []).map((c) => ({
-    value: String(c.countryId),
-    label: c.country,
-  })),
+  (countries.value ?? []).map((c) => ({ value: String(c.id), label: c.name })),
 );
 
 const selectedCountryId = computed(() => (countryId.value ? Number(countryId.value) : null));

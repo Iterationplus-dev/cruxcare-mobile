@@ -7,6 +7,18 @@ import { locationsApi } from '@/api/locations.api';
  * and a failure resolves to an empty list rather than an error: a missing
  * lookup should degrade the field to free text, not block registration.
  */
+/** Readable without a session, so registration can populate its first select. */
+export function useCountries() {
+  return useQuery({
+    queryKey: ['locations', 'countries'],
+    queryFn: () => locationsApi.countries(),
+    retry: false,
+    throwOnError: false,
+    // The switched-on list changes rarely and never mid-signup.
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useStates(countryId: MaybeRef<number | null>) {
   return useQuery({
     queryKey: computed(() => ['locations', 'states', unref(countryId)]),
