@@ -881,8 +881,8 @@ const careHandlers: HttpHandler[] = [
       senderId: user.id,
       body,
       attachments: [],
-      sentAt: new Date().toISOString(),
-      readAt: null,
+      createdAt: new Date().toISOString(),
+      read: false,
     };
     const list = db.chatMessages.get(threadId) ?? [];
     list.push(message);
@@ -890,7 +890,7 @@ const careHandlers: HttpHandler[] = [
     const thread = db.chatThreads.find((t) => t.id === threadId);
     if (thread) {
       thread.lastMessage = message.body;
-      thread.lastMessageAt = message.sentAt;
+      thread.lastMessageAt = message.createdAt;
     }
     return HttpResponse.json(message);
   }),

@@ -79,6 +79,7 @@ import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
 import { appointmentsApi } from '@/api/appointments.api';
+import { ApiError } from '@/types/api';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
 import type { AppointmentType } from '@/types/care';
@@ -125,6 +126,17 @@ async function onSubmit() {
     await appointmentsApi.create({ therapistId, slot: slotDate.toISOString(), type: type.value });
     await toast.show('Appointment requested — you will be notified once confirmed.', 'success');
     router.replace({ name: 'care-hub' });
+  } catch (error) {
+    // Without this the screen simply stayed put on a rejected booking: no
+    // error, no navigation, nothing to tell the client it had not worked.
+    // The server's reasons are specific and worth showing — that the slot went
+    // while they were choosing, or that they are not assigned to this
+    // therapist yet — so its message is preferred to a generic one.
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not request that appointment. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Appointment not requested' });
   } finally {
     submitting.value = false;
   }

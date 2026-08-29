@@ -1,4 +1,4 @@
-import type { CareRequestStatusLike } from '@/types/care';
+import type { CareRequest, CareRequestStatusLike } from '@/types/care';
 
 /**
  * How a request status reads to the client. Kept out of the screen so the
@@ -72,4 +72,24 @@ export function presentCareRequest(status: CareRequestStatusLike): CareRequestPr
 /** Only an unfinished request can be withdrawn. */
 export function canCancelCareRequest(status: CareRequestStatusLike): boolean {
   return presentCareRequest(status).open;
+}
+
+/**
+ * The request already standing with this therapist, if there is one.
+ *
+ * A request still in progress, or one already accepted, is a relationship the
+ * client has — asking again would put a second copy of the same ask in the
+ * therapist's queue. A declined, cancelled or closed request is finished, so
+ * the client is free to ask again.
+ */
+export function findStandingRequestTo(
+  requests: Pick<CareRequest, 'therapistId' | 'status'>[] | undefined,
+  therapistId: string | undefined,
+): Pick<CareRequest, 'therapistId' | 'status'> | undefined {
+  if (!requests || !therapistId) return undefined;
+  return requests.find(
+    (r) =>
+      r.therapistId === therapistId &&
+      (presentCareRequest(r.status).open || r.status === 'accepted'),
+  );
 }

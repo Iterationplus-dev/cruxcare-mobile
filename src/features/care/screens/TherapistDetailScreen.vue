@@ -67,7 +67,19 @@
       />
 
       <div v-if="therapist" class="cc-screen__footer">
-        <AppButton :loading="requesting" @click="requestTherapist">Request therapist</AppButton>
+        <!-- A second request would land in the therapist's queue as a duplicate
+             of one they are already deciding on, so the state is stated rather
+             than the tap being silently refused. -->
+        <p v-if="standingRequest" class="cc-text-caption cc-therapist-detail__standing">
+          {{ standingRequestMessage }}
+        </p>
+        <AppButton
+          :loading="requesting"
+          :disabled="!!standingRequest"
+          @click="requestTherapist"
+        >
+          {{ standingRequest ? 'Request already sent' : 'Request therapist' }}
+        </AppButton>
       </div>
     </ion-content>
   </ion-page>
@@ -84,6 +96,8 @@ import { therapistsApi } from '@/api/therapists.api';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
+import { useCareRequests } from '@/composables/useCareRequests';
+import { findStandingRequestTo } from '@/features/care/careRequestPresentation';
 import { fullName as formatFullName } from '@/types/user';
 
 const route = useRoute();
@@ -94,6 +108,18 @@ const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A cl
 const therapistId = computed(() => String(route.params.id ?? ''));
 const { data: therapist, isPending } = useTherapist(therapistId);
 const requesting = ref(false);
+
+/** The client's own requests, so a therapist they have already asked cannot be
+ *  asked twice. The server is the enforcer; this stops the trip. */
+const { data: myRequests } = useCareRequests();
+const standingRequest = computed(() =>
+  findStandingRequestTo(myRequests.value?.data, therapistId.value),
+);
+const standingRequestMessage = computed(() =>
+  standingRequest.value?.status === 'accepted'
+    ? 'You are already working with this therapist.'
+    : 'You have already asked this therapist. They will respond to your first request.',
+);
 
 async function requestTherapist() {
   if (!therapist.value) return;
@@ -149,6 +175,10 @@ async function requestTherapist() {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.cc-therapist-detail__standing {
+  margin: 0 0 8px;
+  text-align: center;
 }
 .cc-therapist-detail__rating,
 .cc-therapist-detail__location {

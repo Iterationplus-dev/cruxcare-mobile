@@ -185,11 +185,13 @@ export interface ChatParticipant {
   online: boolean;
 }
 
+/** The server sends only a url today; the rest is optional so a richer
+ *  attachment does not need a type change to start rendering. */
 export interface ChatAttachment {
-  id: string;
   url: string;
-  kind: 'image' | 'file';
-  name: string;
+  id?: string;
+  kind?: 'image' | 'file';
+  name?: string;
 }
 
 export interface ChatMessage {
@@ -198,8 +200,12 @@ export interface ChatMessage {
   senderId: string;
   body: string;
   attachments: ChatAttachment[];
-  sentAt: string;
-  readAt: string | null;
+  /** When it was sent. Named for the wire: reading `sentAt` here is what put
+   *  "Invalid Date" under every message on both sides of the conversation. */
+  createdAt: string;
+  /** Whether the other side has read it. The server sends a flag, not a time,
+   *  so a read receipt can say that it was read but not when. */
+  read: boolean;
 }
 
 /**

@@ -32,7 +32,7 @@
           :class="{ 'cc-bubble--mine': m.senderId === auth.user?.id }"
         >
           <div class="cc-bubble__body">{{ m.body }}</div>
-          <div class="cc-bubble__meta">{{ formatTime(m.sentAt) }}</div>
+          <div class="cc-bubble__meta">{{ formatTime(m.createdAt) }}</div>
         </div>
       </div>
     </ion-content>
@@ -95,7 +95,10 @@ function send() {
 }
 
 function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const at = new Date(iso);
+  // A message with no usable timestamp shows nothing rather than "Invalid Date".
+  if (Number.isNaN(at.getTime())) return '';
+  return at.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 function goVideo() {
   router.push({ name: 'video-visit', params: { id: threadId } });

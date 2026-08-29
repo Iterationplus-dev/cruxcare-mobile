@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
+import { findStandingRequestTo,
   canCancelCareRequest,
   presentCareRequest,
 } from '@/features/care/careRequestPresentation';
@@ -44,5 +44,41 @@ describe('canCancelCareRequest', () => {
     expect(canCancelCareRequest('accepted')).toBe(false);
     expect(canCancelCareRequest('cancelled')).toBe(false);
     expect(canCancelCareRequest('closed')).toBe(false);
+  });
+});
+
+describe('findStandingRequestTo', () => {
+  const req = (therapistId: string, status: string) =>
+    ({ therapistId, status }) as { therapistId: string; status: string };
+
+  it('finds a request still being decided', () => {
+    const found = findStandingRequestTo([req('t-1', 'in-review')], 't-1');
+
+    expect(found).toMatchObject({ therapistId: 't-1' });
+  });
+
+  it('treats an accepted request as standing — that is a relationship, not a queue item', () => {
+    expect(findStandingRequestTo([req('t-1', 'accepted')], 't-1')).toBeDefined();
+  });
+
+  it('lets the client ask again after a decline', () => {
+    expect(findStandingRequestTo([req('t-1', 'declined')], 't-1')).toBeUndefined();
+  });
+
+  it('lets the client ask again after withdrawing', () => {
+    expect(findStandingRequestTo([req('t-1', 'cancelled')], 't-1')).toBeUndefined();
+  });
+
+  it('does not block a different therapist', () => {
+    expect(findStandingRequestTo([req('t-1', 'submitted')], 't-2')).toBeUndefined();
+  });
+
+  it('is undefined before the requests have loaded', () => {
+    expect(findStandingRequestTo(undefined, 't-1')).toBeUndefined();
+  });
+
+  it('treats an unknown status as still in progress, so it blocks', () => {
+    // Unknown statuses render as "in progress"; asking again would duplicate.
+    expect(findStandingRequestTo([req('t-1', 'escalated')], 't-1')).toBeDefined();
   });
 });

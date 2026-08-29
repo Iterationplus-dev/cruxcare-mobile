@@ -35,6 +35,8 @@
         </AppCard>
 
         <button type="button" class="cc-logout" @click="logoutSheetOpen = true">Log out</button>
+
+        <p class="cc-text-caption cc-version">{{ appVersion }}</p>
       </div>
     </ion-content>
 
@@ -50,7 +52,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { App as CapacitorApp } from '@capacitor/app';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppListRow, AppSheet } from '@/components/ui';
@@ -62,6 +65,21 @@ import { fullName as formatFullName } from '@/types/user';
  * deletion stays in client settings per README. */
 const router = useRouter();
 const auth = useAuthStore();
+
+/**
+ * Shown so a therapist reporting a problem can say which build they are on.
+ * Native gives the real version; on web there is none to read, so the field
+ * says so rather than inventing a number.
+ */
+const appVersion = ref('Version unavailable');
+onMounted(async () => {
+  try {
+    const info = await CapacitorApp.getInfo();
+    appVersion.value = `Version ${info.version} (${info.build})`;
+  } catch {
+    // Web build, or the plugin is unavailable — leave the fallback.
+  }
+});
 const fullName = computed(() => (auth.user ? formatFullName(auth.user) : ''));
 
 const PLAN_LABELS: Record<string, string> = {
@@ -106,6 +124,11 @@ async function onLogout() {
   display: flex;
   gap: 14px;
   align-items: center;
+}
+.cc-version {
+  margin: 14px 0 0;
+  text-align: center;
+  color: var(--cc-ink-300);
 }
 .cc-logout {
   text-align: center;

@@ -336,13 +336,13 @@ chatMessages.set('thread-1', [
     senderId: 'therapist-1',
     body: 'Hi Amaka, how has the stretching routine been going?',
     attachments: [],
-    sentAt: '2026-08-07T09:00:00Z',
-    readAt: '2026-08-07T09:05:00Z',
+    createdAt: '2026-08-07T09:00:00Z',
+    read: true,
   },
 ]);
 // The list carries preview text, not a message record.
 chatThreads[0].lastMessage = chatMessages.get('thread-1')![0].body;
-chatThreads[0].lastMessageAt = chatMessages.get('thread-1')![0].sentAt;
+chatThreads[0].lastMessageAt = chatMessages.get('thread-1')![0].createdAt;
 
 /**
  * Which local currency each mock user resolves to, standing in for the country
