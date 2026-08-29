@@ -395,7 +395,10 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', redirect: '/therapist/today' },
       { path: 'today', name: 'therapist-today', component: () => import('@/features/therapist/screens/TherapistTodayScreen.vue') },
-      { path: 'calendar', name: 'therapist-calendar', component: () => import('@/features/therapist/screens/TherapistCalendarScreen.vue') },
+      // TD2 is drawn with the Calendar tab active: appointments are what a
+      // therapist opens the calendar for, so it is the tab's own screen rather
+      // than something reached by tapping a row in a thinner list.
+      { path: 'calendar', name: 'therapist-calendar', component: () => import('@/features/therapist/screens/AppointmentManagementScreen.vue') },
       { path: 'clients', name: 'therapist-clients', component: () => import('@/features/therapist/screens/TherapistClientsScreen.vue') },
       { path: 'earnings', name: 'therapist-earnings', component: () => import('@/features/therapist/screens/TherapistEarningsScreen.vue') },
       { path: 'profile', name: 'therapist-profile', component: () => import('@/features/therapist/screens/TherapistProfileScreen.vue') },

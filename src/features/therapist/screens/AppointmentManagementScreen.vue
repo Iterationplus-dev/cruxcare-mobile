@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <AppHeader title="Appointments" show-back :botanical="false" />
+    <AppHeader title="Appointments" :show-back="!isTabRoot" :botanical="false" />
     <ion-content class="cc-screen">
       <AppPullToRefresh :query-keys="[['appointments']]" />
       <LoadingState v-if="isPending" label="Loading appointments…" />
@@ -78,6 +78,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
+import { useRoute } from 'vue-router';
 import {
   AppAvatar,
   AppBadge,
@@ -100,7 +101,13 @@ import {
 import { ApiError } from '@/types/api';
 import type { AppointmentStatus } from '@/types/care';
 
-/** TD2 · Appointment management — the reason is visible before deciding. */
+/** TD2 · Appointment management — the reason is visible before deciding.
+ *
+ * Serves both the Calendar tab and the push from the dashboard. As a tab root
+ * there is nothing to go back to, so the header drops its back button. */
+const route = useRoute();
+const isTabRoot = computed(() => route.name === 'therapist-calendar');
+
 const { data, isPending, refetch } = useAppointments();
 const toast = useToast();
 
