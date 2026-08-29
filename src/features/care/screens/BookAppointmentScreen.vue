@@ -11,36 +11,7 @@
           </div>
         </AppCard>
 
-        <div class="cc-book__daystrip">
-          <button
-            v-for="d in days"
-            :key="d.iso"
-            type="button"
-            class="cc-book__day"
-            :class="{ 'cc-book__day--selected': d.iso === selectedDay }"
-            @click="selectedDay = d.iso"
-          >
-            <div class="cc-book__day-label">{{ d.label }}</div>
-            <div class="cc-book__day-num">{{ d.num }}</div>
-          </button>
-        </div>
-
-        <div class="cc-text-body-strong" style="font-size: 16px">{{ selectedDayFull }}</div>
-        <div class="cc-book__slots">
-          <button
-            v-for="s in slots"
-            :key="s.time"
-            type="button"
-            class="cc-book__slot"
-            :class="{ 'cc-book__slot--selected': s.time === selectedSlot, 'cc-book__slot--taken': s.taken }"
-            :disabled="s.taken"
-            @click="selectedSlot = s.time"
-          >
-            {{ s.time }}
-          </button>
-        </div>
-
-        <div class="cc-text-body-strong" style="font-size: 16px">Visit type</div>
+        <!-- CD3 leads with how the session happens, then when. -->
         <div class="cc-book__types">
           <button
             type="button"
@@ -48,7 +19,7 @@
             :class="{ 'cc-book__type--selected': type === 'video' }"
             @click="type = 'video'"
           >
-            <AppIcon name="videocam" :size="22" color="var(--cc-color-primary)" />
+            <AppIcon name="videocam" :size="22" :color="type === 'video' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
             <div class="cc-text-body-strong" style="font-size: 14.5px">Video</div>
           </button>
           <button
@@ -57,17 +28,77 @@
             :class="{ 'cc-book__type--selected': type === 'in-person' }"
             @click="type = 'in-person'"
           >
-            <AppIcon name="store" :size="22" color="var(--cc-ink-600)" />
-            <div class="cc-text-body-strong" style="font-size: 14.5px">In person</div>
+            <AppIcon name="store" :size="22" :color="type === 'in-person' ? 'var(--cc-color-primary)' : 'var(--cc-ink-600)'" />
+            <div class="cc-text-body-strong" style="font-size: 14.5px">In clinic</div>
           </button>
         </div>
+
+        <div class="cc-book__month">
+          <button type="button" class="cc-book__month-nav" aria-label="Previous month" @click="shiftMonth(-1)">
+            <AppIcon name="chevron_left" :size="20" color="var(--cc-ink-600)" />
+          </button>
+          <span class="cc-text-body-strong" style="font-size: 15px">{{ monthTitle }}</span>
+          <button type="button" class="cc-book__month-nav" aria-label="Next month" @click="shiftMonth(1)">
+            <AppIcon name="chevron_right" :size="20" color="var(--cc-ink-600)" />
+          </button>
+        </div>
+
+        <AppCard class="cc-book__calendar">
+          <div class="cc-book__weekdays">
+            <span v-for="(w, i) in WEEKDAY_LABELS" :key="i">{{ w }}</span>
+          </div>
+          <div class="cc-book__grid">
+            <template v-for="(cell, i) in grid" :key="i">
+              <span v-if="!cell.iso" class="cc-book__cell cc-book__cell--blank" />
+              <button
+                v-else
+                type="button"
+                class="cc-book__cell"
+                :class="{
+                  'cc-book__cell--selected': cell.iso === selectedDay,
+                  'cc-book__cell--disabled': cell.disabled,
+                }"
+                :disabled="cell.disabled"
+                :aria-pressed="cell.iso === selectedDay"
+                @click="selectDay(cell.iso)"
+              >
+                {{ cell.day }}
+              </button>
+            </template>
+          </div>
+        </AppCard>
+
+        <div v-if="selectedDay" class="cc-text-body-strong" style="font-size: 16px">
+          {{ selectedDayFull }}
+        </div>
+        <div v-if="selectedDay" class="cc-book__slots">
+          <button
+            v-for="time in SLOT_TIMES"
+            :key="time"
+            type="button"
+            class="cc-book__slot"
+            :class="{ 'cc-book__slot--selected': time === selectedSlot }"
+            @click="selectedSlot = time"
+          >
+            {{ time }}
+          </button>
+        </div>
+        <!-- No slot is marked taken: the directory carries no availability, and
+             a struck-through time we invented would be a lie either way. The
+             server refuses a slot it cannot honour and that reason is shown. -->
+        <p class="cc-text-caption">
+          Times are requests. Your therapist confirms the one that works, and the
+          cost is set once they have assessed you and agreed a treatment plan.
+        </p>
       </div>
 
       <div class="cc-screen__footer">
-        <div class="cc-book__summary">
-          <span class="cc-text-caption">{{ selectedDayFull }} · {{ selectedSlot }} · {{ type }}</span>
+        <div v-if="selectedSlot" class="cc-book__summary">
+          <span class="cc-text-caption">{{ selectedDayFull }} · {{ selectedSlot }} · {{ type === 'video' ? 'video' : 'in clinic' }}</span>
         </div>
-        <AppButton :disabled="!selectedSlot" :loading="submitting" @click="onSubmit">Request this slot</AppButton>
+        <AppButton :disabled="!selectedSlot" :loading="submitting" @click="onSubmit">
+          Request this time
+        </AppButton>
       </div>
     </ion-content>
   </ion-page>
@@ -75,6 +106,13 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import {
+  SLOT_TIMES,
+  WEEKDAY_LABELS,
+  formatDayHeading,
+  monthGrid,
+  monthLabel,
+} from '@/features/care/bookingCalendar';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
@@ -96,33 +134,36 @@ const toast = useToast();
 const therapistId = (route.query.therapistId as string) ?? '';
 const { data: therapist } = useTherapist(therapistId);
 
-const days = Array.from({ length: 5 }).map((_, i) => {
-  const d = new Date();
-  d.setDate(d.getDate() + i + 1);
-  return {
-    iso: d.toISOString().slice(0, 10),
-    label: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-    num: d.getDate(),
-    full: d.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' }),
-  };
-});
-const selectedDay = ref(days[0].iso);
-const selectedDayFull = computed(() => days.find((d) => d.iso === selectedDay.value)?.full ?? '');
+const today = new Date();
+const viewYear = ref(today.getFullYear());
+const viewMonth = ref(today.getMonth());
 
-const slots = [
-  { time: '09:00', taken: false },
-  { time: '10:30', taken: false },
-  { time: '11:00', taken: true },
-  { time: '14:00', taken: false },
-  { time: '15:30', taken: false },
-  { time: '16:30', taken: true },
-];
+const monthTitle = computed(() => monthLabel(viewYear.value, viewMonth.value));
+const grid = computed(() => monthGrid(viewYear.value, viewMonth.value, today));
+
+const selectedDay = ref<string | null>(null);
+const selectedDayFull = computed(() =>
+  selectedDay.value ? formatDayHeading(selectedDay.value) : '',
+);
 const selectedSlot = ref<string | null>(null);
+
+function selectDay(iso: string) {
+  selectedDay.value = iso;
+  // A time chosen for one day means nothing on another.
+  selectedSlot.value = null;
+}
+
+function shiftMonth(delta: number) {
+  const next = new Date(viewYear.value, viewMonth.value + delta, 1);
+  viewYear.value = next.getFullYear();
+  viewMonth.value = next.getMonth();
+}
+
 const type = ref<AppointmentType>('video');
 const submitting = ref(false);
 
 async function onSubmit() {
-  if (!selectedSlot.value) return;
+  if (!selectedSlot.value || !selectedDay.value) return;
   if (!therapistId) {
     await toast.show('Open this from a therapist so we know who to book with.', 'warning', {
       title: 'No therapist chosen',
@@ -132,7 +173,9 @@ async function onSubmit() {
   submitting.value = true;
   try {
     const [h, m] = selectedSlot.value.split(':').map(Number);
-    const slotDate = new Date(selectedDay.value);
+    // Parsed as local time: a bare YYYY-MM-DD is treated as UTC, which shifts
+    // the booking a day for anyone behind it.
+    const slotDate = new Date(`${selectedDay.value}T00:00:00`);
     slotDate.setHours(h, m, 0, 0);
     await appointmentsApi.create({ therapistId, slot: slotDate.toISOString(), type: type.value });
     await toast.show('Appointment requested — you will be notified once confirmed.', 'success');
@@ -195,6 +238,65 @@ async function onSubmit() {
   font-family: var(--cc-font-mono);
   font-weight: 700;
   font-size: 19px;
+}
+.cc-book__month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cc-book__month-nav {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-pill);
+  background: var(--cc-surface-0);
+  cursor: pointer;
+}
+.cc-book__calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cc-book__weekdays,
+.cc-book__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cc-book__weekdays span {
+  text-align: center;
+  font-family: var(--cc-font-interface);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cc-ink-400);
+}
+.cc-book__cell {
+  aspect-ratio: 1;
+  min-height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--cc-radius-pill);
+  background: transparent;
+  font-family: var(--cc-font-interface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cc-ink-900);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.cc-book__cell--blank {
+  cursor: default;
+}
+.cc-book__cell--disabled {
+  color: var(--cc-ink-300);
+  cursor: not-allowed;
+}
+.cc-book__cell--selected {
+  background: var(--cc-color-primary);
+  color: #fff;
 }
 .cc-book__slots {
   display: grid;

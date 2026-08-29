@@ -62,32 +62,70 @@
           disrupting the drawn layout's density — see CLAUDE.md guidance on
           documenting and resolving spec conflicts.
         -->
-        <!-- Optional, and said so: it narrows who a client is shown and where a
-             therapist appears, but nobody is stopped from registering for
-             withholding it. -->
-        <AppInput
-          v-model="city"
-          label="City (optional)"
-          placeholder="Uyo"
-          autocomplete="address-level2"
-          :error="errors.city"
+        <!-- Country, then state, then city — each narrowing the one below.
+             Optional throughout: nobody is stopped from registering for
+             withholding where they are. -->
+        <AppSheetSelect
+          v-if="countryOptions.length"
+          v-model="countryId"
+          label="Country (optional)"
+          title="Where are you?"
+          placeholder="Select your country"
+          :options="countryOptions"
+          clearable
+          clear-label="Remove my location"
         />
-        <div class="cc-register__pair">
+        <!-- The active-country list is only readable once signed in, and this
+             screen is not. Until a public list exists the field asks rather
+             than offering an empty menu. -->
+        <AppInput
+          v-else
+          v-model="country"
+          label="Country (optional)"
+          placeholder="Nigeria"
+          autocomplete="country-name"
+          :error="errors.country"
+        />
+
+        <template v-if="countryId || country">
+          <AppSheetSelect
+            v-if="stateOptions.length"
+            v-model="stateId"
+            label="State (optional)"
+            title="Select your state"
+            placeholder="Select your state"
+            :options="stateOptions"
+          />
+          <!-- No list for this country yet, so the field asks rather than
+               offering an empty menu that cannot be answered. -->
           <AppInput
+            v-else
             v-model="state"
             label="State (optional)"
             placeholder="Akwa Ibom"
             autocomplete="address-level1"
             :error="errors.state"
           />
-          <AppInput
-            v-model="country"
-            label="Country (optional)"
-            placeholder="Nigeria"
-            autocomplete="country-name"
-            :error="errors.country"
+        </template>
+
+        <template v-if="countryId && (stateId || state)">
+          <AppSheetSelect
+            v-if="cityOptions.length"
+            v-model="cityId"
+            label="City (optional)"
+            title="Select your city"
+            placeholder="Select your city"
+            :options="cityOptions"
           />
-        </div>
+          <AppInput
+            v-else
+            v-model="city"
+            label="City (optional)"
+            placeholder="Uyo"
+            autocomplete="address-level2"
+            :error="errors.city"
+          />
+        </template>
 
         <div class="cc-field">
           <label class="cc-field__label">How did you hear about CruxCare?</label>
@@ -220,6 +258,7 @@ import { useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import AppSheetSelect from '@/components/ui/AppSheetSelect.vue';
 import AppSheet from '@/components/ui/AppSheet.vue';
 import { authApi, type OtpRequestResult } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
@@ -231,6 +270,8 @@ import {
   registerSchema,
 } from '../schemas/register.schema';
 import type { Address, ReferredBySource } from '@/types/user';
+import { useCurrencies } from '@/composables/useCurrencies';
+import { useCities, useStates } from '@/composables/useLocations';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -256,19 +297,75 @@ const [firstName] = defineField('firstName');
 const [lastName] = defineField('lastName');
 const [email] = defineField('email');
 const [phone] = defineField('phone');
-/** Only the parts that were filled in — an address of empty strings would
- *  claim a location nobody gave. */
-function addressFrom(values: { city?: string; state?: string; country?: string }): Address | null {
-  const address: Address = {};
-  if (values.city?.trim()) address.city = values.city.trim();
-  if (values.state?.trim()) address.state = values.state.trim();
-  if (values.country?.trim()) address.country = values.country.trim();
-  return Object.keys(address).length ? address : null;
-}
-
 const [city] = defineField('city');
 const [state] = defineField('state');
 const [country] = defineField('country');
+
+/**
+ * The three selects, by id. Names are what the address stores — the therapist
+ * directory composes its location string from them — so ids are resolved back
+ * to names on submit rather than sent.
+ */
+const countryId = ref('');
+const stateId = ref('');
+const cityId = ref('');
+
+/** Active countries come from the currency index, which is already the only
+ *  source of truth for which countries are switched on. */
+const { data: currencies } = useCurrencies();
+const countryOptions = computed(() =>
+  (currencies.value?.supported ?? []).map((c) => ({
+    value: String(c.countryId),
+    label: c.country,
+  })),
+);
+
+const selectedCountryId = computed(() => (countryId.value ? Number(countryId.value) : null));
+const { data: states } = useStates(selectedCountryId);
+const stateOptions = computed(() =>
+  (states.value ?? []).map((s) => ({ value: String(s.id), label: s.name })),
+);
+
+const selectedStateId = computed(() => (stateId.value ? Number(stateId.value) : null));
+const { data: cities } = useCities(selectedStateId);
+const cityOptions = computed(() =>
+  (cities.value ?? []).map((c) => ({ value: String(c.id), label: c.name })),
+);
+
+// Choosing a different country invalidates what was chosen below it.
+watch([countryId, country], () => {
+  stateId.value = '';
+  cityId.value = '';
+  state.value = '';
+  city.value = '';
+});
+watch(stateId, () => {
+  cityId.value = '';
+  city.value = '';
+});
+
+function labelFor(options: { value: string; label: string }[], value: string): string | undefined {
+  return options.find((o) => o.value === value)?.label;
+}
+
+/** Only the parts that were given — an address of empty strings would claim a
+ *  location nobody stated. Takes the selected name, or the typed one where the
+ *  platform has no list to choose from. */
+function addressFrom(values: { city?: string; state?: string; country?: string }): Address | null {
+  const address: Address = {};
+
+  const countryName = labelFor(countryOptions.value, countryId.value) ?? values.country?.trim();
+  if (countryName) address.country = countryName;
+
+  const stateName = labelFor(stateOptions.value, stateId.value) ?? values.state?.trim();
+  if (stateName) address.state = stateName;
+
+  const cityName = labelFor(cityOptions.value, cityId.value) ?? values.city?.trim();
+  if (cityName) address.city = cityName;
+
+  return Object.keys(address).length ? address : null;
+}
+
 const [referredBySource] = defineField('referredBySource');
 const [password] = defineField('password');
 const [confirmPassword] = defineField('confirmPassword');
