@@ -64,10 +64,37 @@
           </div>
         </AppCard>
 
+        <p class="cc-record__label">Client record · {{ (caseFile.clientName || 'CruxCare client').toUpperCase() }}</p>
+
+        <!-- TD4's three tiles. Adherence is not among them: the backend has
+             asked what it is a percentage of and nobody has answered, so a
+             number here would be invented rather than measured. -->
+        <AppCard class="cc-record__tiles">
+          <div class="cc-record__tile">
+            <span class="cc-record__tile-label">Sessions</span>
+            <span class="cc-record__tile-value">{{ caseFile.sessionCount ?? 0 }}</span>
+          </div>
+          <div class="cc-record__tile">
+            <span class="cc-record__tile-label">No-shows</span>
+            <span class="cc-record__tile-value">{{ caseFile.noShowCount ?? 0 }}</span>
+          </div>
+          <div class="cc-record__tile">
+            <span class="cc-record__tile-label">Notes</span>
+            <span class="cc-record__tile-value">{{ caseFile.notes.length }}</span>
+          </div>
+        </AppCard>
+
         <!-- TD4 puts Messages on the client record beside the notes. Without it
              a therapist could see an unread count on the dashboard and had no
              route to the conversation it referred to. -->
         <AppCard style="padding: 0">
+          <AppListRow
+            title="Session notes"
+            :subtitle="notesSubtitle"
+            :subtitle-tone="hasUnwrittenNotes ? 'warning' : undefined"
+            icon="description"
+            :icon-color="hasUnwrittenNotes ? 'var(--cc-color-warning)' : 'var(--cc-color-primary)'"
+          />
           <AppListRow
             title="Messages"
             :subtitle="messagesSubtitle"
@@ -245,6 +272,20 @@ async function onAddNote() {
 const { data: chatThreads } = useChatThreads();
 const clientThread = computed(() => findThreadWith(chatThreads.value, caseFile.value?.clientId));
 
+/** Read from the notes themselves rather than `unwrittenNoteFrom`: the two
+ *  can disagree while a save is in flight, and the list is what is rendered. */
+const hasUnwrittenNotes = computed(() => (caseFile.value?.notes ?? []).some((n) => n.draft));
+
+const notesSubtitle = computed(() => {
+  const file = caseFile.value;
+  if (!file) return '';
+  const written = file.notes.filter((n) => !n.draft).length;
+  const unwritten = file.notes.filter((n) => n.draft).length;
+  const base = `${written} written`;
+  // The count matters: "one unwritten" beside two drafts understates the work.
+  return unwritten ? `${base} · ${unwritten} unwritten` : base;
+});
+
 const messagesSubtitle = computed(() => {
   const thread = clientThread.value;
   if (!thread) return 'No conversation open yet';
@@ -279,6 +320,39 @@ function formatDate(iso: string) {
 </script>
 
 <style scoped>
+.cc-record__label {
+  margin: 4px 0 -4px;
+  font-family: var(--cc-font-interface);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--cc-ink-400);
+}
+.cc-record__tiles {
+  display: flex;
+  gap: 8px;
+}
+.cc-record__tile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cc-record__tile-label {
+  font-family: var(--cc-font-interface);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cc-ink-400);
+}
+.cc-record__tile-value {
+  font-family: var(--cc-font-interface);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cc-ink-900);
+  font-variant-numeric: tabular-nums;
+}
 .cc-diagnosis {
   display: flex;
   flex-direction: column;

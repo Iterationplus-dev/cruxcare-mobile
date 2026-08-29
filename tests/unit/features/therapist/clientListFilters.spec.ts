@@ -4,6 +4,7 @@ import {
   filterClients,
   isPast,
   matchesFilter,
+  matchesQuery,
   needsFollowUp,
 } from '@/features/therapist/clientListFilters';
 import type { CaseFile } from '@/types/care';
@@ -38,41 +39,41 @@ describe('isPast', () => {
 });
 
 describe('needsFollowUp', () => {
-  it('flags an unwritten note', () => {
-    expect(needsFollowUp(caseFile({ unwrittenNoteFrom: '2026-07-30T00:00:00Z' }))).toBe(true);
+  it('flags a client scheduled for a session', () => {
+    expect(needsFollowUp(caseFile({ nextSessionAt: '2026-09-01T10:00:00Z' }))).toBe(true);
   });
 
-  it('flags a client who has been seen with nothing booked next', () => {
-    expect(needsFollowUp(caseFile({ sessionCount: 3, nextSessionAt: null }))).toBe(true);
-  });
-
-  it('leaves a client alone when the next session is booked', () => {
+  it('flags a client who has been sent notes', () => {
     expect(
-      needsFollowUp(caseFile({ sessionCount: 3, nextSessionAt: '2026-09-01T10:00:00Z' })),
-    ).toBe(false);
+      needsFollowUp(
+        caseFile({
+          notes: [{ id: 'n1', authorId: 't1', body: 'Stretch daily.', createdAt: '2026-08-01', draft: false }],
+        }),
+      ),
+    ).toBe(true);
   });
 
-  it('does not flag a newly accepted client who has had no sessions', () => {
-    // Nothing has lapsed yet — the relationship has only just started.
-    expect(needsFollowUp(caseFile({ sessionCount: 0, nextSessionAt: null }))).toBe(false);
+  it('leaves a client with neither out', () => {
+    expect(needsFollowUp(caseFile({ nextSessionAt: null, notes: [] }))).toBe(false);
   });
 
-  it('never flags a past client, who is not waiting on anything', () => {
+  it('never flags a past client, who is owed nothing', () => {
     expect(
-      needsFollowUp(caseFile({ status: 'closed', unwrittenNoteFrom: '2026-07-30T00:00:00Z' })),
+      needsFollowUp(caseFile({ status: 'closed', nextSessionAt: '2026-09-01T10:00:00Z' })),
     ).toBe(false);
   });
 });
 
 describe('the three filters together', () => {
-  const active = caseFile({ id: 'a', sessionCount: 2, nextSessionAt: '2026-09-01T10:00:00Z' });
-  const waiting = caseFile({ id: 'b', unwrittenNoteFrom: '2026-07-30T00:00:00Z' });
+  // Nothing scheduled and no notes — active, but nothing to come back to.
+  const active = caseFile({ id: 'a', sessionCount: 2 });
+  const waiting = caseFile({ id: 'b', nextSessionAt: '2026-09-01T10:00:00Z' });
   const past = caseFile({ id: 'c', status: 'closed' });
   const all = [active, waiting, past];
 
   it('counts a client needing follow-up in Active as well', () => {
-    // TD4 shows the unwritten-note client inside the Active list, so the tabs
-    // are not a partition and the counts deliberately overlap.
+    // TD4 shows the flagged client inside the Active list, so the tabs are not
+    // a partition and the counts deliberately overlap.
     expect(countFor(all, 'active')).toBe(2);
     expect(countFor(all, 'needs-follow-up')).toBe(1);
     expect(matchesFilter(waiting, 'active')).toBe(true);
@@ -92,5 +93,37 @@ describe('the three filters together', () => {
   it('counts nothing before the list has loaded', () => {
     expect(countFor(undefined, 'active')).toBe(0);
     expect(filterClients(undefined, 'active')).toEqual([]);
+  });
+});
+
+describe('matchesQuery', () => {
+  const sandra = caseFile({ clientName: 'Sandra Adams' });
+
+  it('matches on a surname, not just the start of the name', () => {
+    expect(matchesQuery(sandra, 'adams')).toBe(true);
+  });
+
+  it('ignores case and surrounding space', () => {
+    expect(matchesQuery(sandra, '  SANDRA ')).toBe(true);
+  });
+
+  it('does not match a different client', () => {
+    expect(matchesQuery(sandra, 'tunde')).toBe(false);
+  });
+
+  it('matches everything on an empty query', () => {
+    expect(matchesQuery(sandra, '   ')).toBe(true);
+  });
+
+  it('excludes a case file with no name rather than matching it', () => {
+    // A fresh file the server has not named would otherwise appear in every
+    // search, which is worse than not being findable by name yet.
+    expect(matchesQuery(caseFile({ clientName: undefined }), 'adams')).toBe(false);
+  });
+
+  it('narrows the filtered list', () => {
+    const list = [sandra, caseFile({ id: 'b', clientName: 'Tunde Ajayi' })];
+
+    expect(filterClients(list, 'active', 'tunde').map((c) => c.clientName)).toEqual(['Tunde Ajayi']);
   });
 });

@@ -6,6 +6,10 @@
       <LoadingState v-if="isPending" label="Loading your clients…" />
       <EmptyState v-else-if="!caseFiles?.data.length" icon="groups" title="No clients yet" message="Clients assigned to you will appear here." />
       <template v-else>
+        <div class="cc-clients__search">
+          <AppInput v-model="query" placeholder="Search clients by name" />
+        </div>
+
         <!-- TD4's three filters. Needs follow-up is a subset of Active rather
              than a separate bucket, so a client waiting on a note is counted
              in both — which is what the design shows. -->
@@ -56,6 +60,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { AppCard, AppHeader, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
+import { AppInput } from '@/components/ui';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { presentClientRow } from '@/features/therapist/clientListPresentation';
 import {
@@ -70,12 +75,17 @@ const router = useRouter();
 const { data: caseFiles, isPending } = useCaseFiles();
 
 const filter = ref<ClientFilter>('active');
-const visible = computed(() => filterClients(caseFiles.value?.data, filter.value));
+const query = ref('');
+const visible = computed(() => filterClients(caseFiles.value?.data, filter.value, query.value));
 
-const emptyTitle = computed(() =>
-  filter.value === 'needs-follow-up' ? 'Nothing waiting' : 'No clients here',
-);
+const emptyTitle = computed(() => {
+  if (query.value.trim()) return 'No match';
+  return filter.value === 'needs-follow-up' ? 'Nothing waiting' : 'No clients here';
+});
 const emptyMessage = computed(() => {
+  // A search that finds nothing is a different situation from an empty tab,
+  // and saying so stops it reading as "you have no clients".
+  if (query.value.trim()) return `No client here matches “${query.value.trim()}”.`;
   if (filter.value === 'needs-follow-up') return 'No client is waiting on a note or a next session.';
   if (filter.value === 'past') return 'Clients whose care has ended will appear here.';
   return 'Clients you are currently working with will appear here.';
@@ -83,6 +93,9 @@ const emptyMessage = computed(() => {
 </script>
 
 <style scoped>
+.cc-clients__search {
+  padding: 12px 16px 0;
+}
 .cc-clients__filters {
   display: flex;
   gap: 8px;

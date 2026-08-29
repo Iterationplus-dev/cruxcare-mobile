@@ -24,24 +24,19 @@ export function isPast(caseFile: Pick<CaseFile, 'status'>): boolean {
 }
 
 /**
- * PROVISIONAL — this rule belongs to the server, not here.
+ * "Needs follow-up", as defined by product: a client who has been scheduled for
+ * a session, or who has been sent notes. Both are engagements with something
+ * still to come back to — a session to prepare for, or notes to be picked up.
  *
- * The backend has asked which definition is intended: a client with a completed
- * session and nothing next booked, an unwritten note past some age, or a missed
- * session not yet rearranged. Until that is answered there is no
- * `relationshipState` on the payload, so this stands in.
+ * A past client is never included: nothing is owed on a case that has stopped.
  *
- * It deliberately covers the two the app can see honestly:
- *   - a note the therapist has not written up, which TD4 already flags in amber
- *   - a client who has been seen and has nothing booked next, who will quietly
- *     lapse if nobody looks
- *
- * When the server sends the classification, delete this and read that field.
+ * Still client-side. The backend has no `relationshipState` on the payload, so
+ * this is the rule until they own it, and the counts below only see the page
+ * that is loaded.
  */
 export function needsFollowUp(caseFile: CaseFile): boolean {
   if (isPast(caseFile)) return false;
-  if (caseFile.unwrittenNoteFrom) return true;
-  return (caseFile.sessionCount ?? 0) > 0 && !caseFile.nextSessionAt;
+  return !!caseFile.nextSessionAt || caseFile.notes.length > 0;
 }
 
 export function matchesFilter(caseFile: CaseFile, filter: ClientFilter): boolean {
@@ -56,6 +51,17 @@ export function matchesFilter(caseFile: CaseFile, filter: ClientFilter): boolean
   }
 }
 
+/**
+ * Name search. Matches on any word so "adams" finds "Sandra Adams", and a
+ * client with no name yet — a fresh case file the server has not filled in —
+ * is excluded rather than matching everything.
+ */
+export function matchesQuery(caseFile: CaseFile, query: string): boolean {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return true;
+  return (caseFile.clientName ?? '').toLowerCase().includes(needle);
+}
+
 export function countFor(caseFiles: CaseFile[] | undefined, filter: ClientFilter): number {
   if (!caseFiles) return 0;
   return caseFiles.filter((cf) => matchesFilter(cf, filter)).length;
@@ -64,7 +70,8 @@ export function countFor(caseFiles: CaseFile[] | undefined, filter: ClientFilter
 export function filterClients(
   caseFiles: CaseFile[] | undefined,
   filter: ClientFilter,
+  query = '',
 ): CaseFile[] {
   if (!caseFiles) return [];
-  return caseFiles.filter((cf) => matchesFilter(cf, filter));
+  return caseFiles.filter((cf) => matchesFilter(cf, filter) && matchesQuery(cf, query));
 }
