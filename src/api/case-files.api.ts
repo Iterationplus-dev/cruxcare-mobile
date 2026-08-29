@@ -15,6 +15,17 @@ export const caseFilesApi = {
     return data;
   },
 
+  /**
+   * Record or correct the diagnosis. There is no clearing it: the server
+   * refuses null and blank with `diagnosis_not_clearable`, because a file that
+   * was never diagnosed and one whose diagnosis was deleted would otherwise
+   * read the same. Every change is recorded with what it replaced.
+   */
+  async setDiagnosis(id: string, diagnosis: string): Promise<CaseFile> {
+    const { data } = await apiClient.patch<CaseFile>(`/case-files/${id}`, { diagnosis });
+    return data;
+  },
+
   async addNote(id: string, body: string, draft: boolean): Promise<CaseFile> {
     const { data } = await apiClient.patch<CaseFile>(`/case-files/${id}`, {
       note: { body, draft },

@@ -36,6 +36,26 @@
               {{ caseFile.diagnosis || 'Not recorded yet' }}
             </span>
           </div>
+          <!-- No clear control: the server refuses null and blank, because a
+               file never diagnosed and one wiped would otherwise read alike.
+               No edit control on a settled case either — that write is a 404. -->
+          <div v-if="canEdit" class="cc-diagnosis">
+            <AppInput
+              v-model="diagnosisDraft"
+              label="Record or correct the diagnosis"
+              placeholder="e.g. Lumbar strain with reduced flexion"
+              :error="diagnosisError"
+              helper="Corrections are kept with what they replaced."
+            />
+            <AppButton
+              variant="secondary"
+              :loading="savingDiagnosis"
+              :disabled="!diagnosisChanged"
+              @click="onSaveDiagnosis"
+            >
+              {{ caseFile.diagnosis ? 'Update diagnosis' : 'Record diagnosis' }}
+            </AppButton>
+          </div>
           <div class="cc-row">
             <span class="cc-text-caption">Treatment window</span>
             <span class="cc-text-body-strong" :class="{ 'cc-unset': !treatmentWindow }" style="font-size: 13.5px">
@@ -124,19 +144,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
-import { AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
+import { AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppInput, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { caseFilesApi } from '@/api/case-files.api';
 import { useCaseFile } from '@/composables/useCaseFiles';
 import { findThreadWith, useChatThreads } from '@/composables/useChat';
+import { canEditDiagnosis } from '@/features/therapist/caseFilePermissions';
+import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 
 /** TD5 · Session notes — draft state, lock rule stated inline. */
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 const id = route.params.id as string;
 const { data: caseFile, isPending, error: loadError, refetch } = useCaseFile(id);
 
@@ -153,6 +176,53 @@ const loadErrorMessage = computed(() =>
 );
 
 const draftNote = ref('');
+
+/** Seeded from the file and re-seeded when it changes underneath, so the field
+ *  shows what is stored rather than a stale edit. */
+const diagnosisDraft = ref('');
+const diagnosisError = ref('');
+const savingDiagnosis = ref(false);
+const canEdit = computed(() => canEditDiagnosis(caseFile.value));
+const diagnosisChanged = computed(
+  () => diagnosisDraft.value.trim() !== (caseFile.value?.diagnosis ?? '').trim(),
+);
+
+watch(
+  () => caseFile.value?.diagnosis,
+  (next) => {
+    diagnosisDraft.value = next ?? '';
+  },
+  { immediate: true },
+);
+
+async function onSaveDiagnosis() {
+  const value = diagnosisDraft.value.trim();
+  if (!value) {
+    // Mirrors the server's rule rather than sending a blank to be refused.
+    diagnosisError.value = 'A diagnosis can be corrected, but not erased.';
+    return;
+  }
+
+  savingDiagnosis.value = true;
+  diagnosisError.value = '';
+  try {
+    await caseFilesApi.setDiagnosis(id, value);
+    await refetch();
+    await toast.show('Diagnosis recorded', 'success');
+  } catch (error) {
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not save the diagnosis. Please try again.';
+    if (error instanceof ApiError && error.code === 'diagnosis_not_clearable') {
+      diagnosisError.value = message;
+    } else {
+      await toast.show(message, 'danger', { title: 'Could not save diagnosis' });
+    }
+  } finally {
+    savingDiagnosis.value = false;
+  }
+}
 const savingNote = ref(false);
 
 async function onAddNote() {
@@ -209,6 +279,14 @@ function formatDate(iso: string) {
 </script>
 
 <style scoped>
+.cc-diagnosis {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cc-divider);
+}
 .cc-unset {
   color: var(--cc-ink-400);
   font-weight: 500;
