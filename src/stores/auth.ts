@@ -4,6 +4,7 @@ import { authApi, type RegisterPayload } from '@/api/auth.api';
 import { setAuthTokenGetter, setUnauthorizedHandler } from '@/api/client';
 import { secureStorage, SECURE_STORAGE_KEYS } from '@/services/secureStorage';
 import { ApiError } from '@/types/api';
+import { useLocationStore } from '@/stores/location';
 import { disablePushNotifications } from '@/services/push/pushNotifications';
 import type { Capability, Role, TherapistPlanTier, User } from '@/types/user';
 
@@ -69,6 +70,9 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null;
     activeRole.value = 'client';
     verificationRequired.value = false;
+    // One person's whereabouts must not survive into the next person's
+    // session on a shared device.
+    useLocationStore().reset();
   }
 
   setAuthTokenGetter(() => token.value);

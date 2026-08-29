@@ -16,6 +16,27 @@
         <p class="cc-text-caption">Off means password is required every time you open the app.</p>
 
         <AppCard style="padding: 0">
+          <AppListRow
+            title="Location"
+            :subtitle="locationSubtitle"
+            icon="location_on"
+            :icon-color="location.enabled ? 'var(--cc-color-primary)' : 'var(--cc-ink-400)'"
+            :divider="false"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input type="checkbox" :checked="location.enabled" @change="onToggleLocation" />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+        </AppCard>
+        <p class="cc-text-caption">
+          On, the app keeps your current location so it can show therapists near you. Off, it stops
+          and forgets the last one. You can change this at any time.
+        </p>
+
+        <AppCard style="padding: 0">
           <AppListRow title="Active devices" subtitle="This device is one of them" icon="devices" :divider="false">
             <template #trailing><span class="cc-text-mono">1</span></template>
           </AppListRow>
@@ -38,18 +59,46 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppCard, AppHeader, AppListRow } from '@/components/ui';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useTherapist } from '@/composables/useTherapists';
 import { useAuthStore } from '@/stores/auth';
+import { useLocationStore } from '@/stores/location';
+import { formatCoordinates } from '@/services/deviceLocation';
 import { biometric } from '@/services/biometric';
 import { useToast } from '@/composables/useToast';
 
 /** PR4 · Security and privacy — each toggle states what the off state means. */
 const auth = useAuthStore();
 const toast = useToast();
+
+const location = useLocationStore();
+onMounted(() => location.hydrate());
+
+const locationSubtitle = computed(() => {
+  if (!location.enabled) return 'Off · therapists are not filtered by distance';
+  if (location.busy) return 'Finding you…';
+  if (location.error === 'unavailable') return 'On · could not read a position yet';
+  if (location.coordinates) return `On · ${formatCoordinates(location.coordinates)}`;
+  return 'On';
+});
+
+async function onToggleLocation(event: Event) {
+  const wanted = (event.target as HTMLInputElement).checked;
+  await location.setEnabled(wanted);
+
+  // The OS can refuse after the app-level switch is flipped, in which case the
+  // store turns itself back off — say why rather than letting it snap back.
+  if (wanted && !location.enabled) {
+    await toast.show(
+      'Location is turned off for CruxCare in your device settings.',
+      'warning',
+      { title: 'Permission needed' },
+    );
+  }
+}
 
 const { data: caseFiles } = useCaseFiles();
 const myCaseFile = computed(() => caseFiles.value?.data.find((cf) => cf.clientId === auth.user?.id));

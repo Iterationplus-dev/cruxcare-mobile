@@ -29,6 +29,14 @@
           />
         </AppCard>
 
+        <!-- Where they are now, when they have asked the app to keep track.
+             Coordinates rather than a place name: turning a point into a city
+             needs a geocoder and there is none. -->
+        <p v-if="location.enabled" class="cc-text-caption cc-discover__here">
+          <AppIcon name="location_on" :size="14" color="var(--cc-color-primary)" />
+          {{ hereLabel }}
+        </p>
+
         <AppInput v-model="query" placeholder="Condition, name or discipline" />
 
         <div class="cc-discover__chips" role="tablist" aria-label="Filter therapists">
@@ -126,7 +134,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import {
@@ -149,6 +157,8 @@ import {
   specialtyChips,
 } from '@/features/care/discoverTherapists';
 import { useAuthStore } from '@/stores/auth';
+import { useLocationStore } from '@/stores/location';
+import { formatCoordinates } from '@/services/deviceLocation';
 import { formatAddress } from '@/types/user';
 
 /** CD2 · Discover therapists — the Care tab's own screen. */
@@ -160,6 +170,19 @@ const query = ref('');
 const specialty = ref<string | null>(null);
 const chips = computed(() => specialtyChips(therapists.value));
 const nearbyOnly = ref(false);
+
+/** Kept current while this screen is open, if the user has location on. */
+const location = useLocationStore();
+onMounted(async () => {
+  await location.hydrate();
+  await location.refresh();
+});
+
+const hereLabel = computed(() => {
+  if (location.busy) return 'Finding your location…';
+  if (location.coordinates) return `You are at ${formatCoordinates(location.coordinates)}`;
+  return 'Location is on, but no position yet';
+});
 
 /** Where this client is, as the server knows it. Absent until it returns an
  *  address, which is what gates the Near me chip. */
@@ -237,6 +260,12 @@ const ownCareSubtitle = computed(() =>
   background: var(--cc-color-primary);
   border-color: var(--cc-color-primary);
   color: #fff;
+}
+.cc-discover__here {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
 }
 .cc-discover__count {
   margin: 0;
