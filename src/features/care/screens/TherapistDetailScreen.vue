@@ -73,7 +73,12 @@
         <p v-if="standingRequest" class="cc-text-caption cc-therapist-detail__standing">
           {{ standingRequestMessage }}
         </p>
+        <!-- Once the therapist has accepted, the useful action is booking, not
+             asking again. Before that, booking would be rejected server-side
+             for want of an accepted request, so it is not offered. -->
+        <AppButton v-if="isAccepted" @click="bookVisit">Book a visit</AppButton>
         <AppButton
+          v-else
           :loading="requesting"
           :disabled="!!standingRequest"
           @click="requestTherapist"
@@ -95,8 +100,10 @@ import { EmptyState, LoadingState } from '@/components/state';
 import { therapistsApi } from '@/api/therapists.api';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
+import { useQueryClient } from '@tanstack/vue-query';
 import { useAuthStore } from '@/stores/auth';
-import { useCareRequests } from '@/composables/useCareRequests';
+import { ApiError } from '@/types/api';
+import { useCareRequests, CARE_REQUESTS_KEY } from '@/composables/useCareRequests';
 import { findStandingRequestTo } from '@/features/care/careRequestPresentation';
 import { fullName as formatFullName } from '@/types/user';
 
@@ -107,6 +114,7 @@ const auth = useAuthStore();
 const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const therapistId = computed(() => String(route.params.id ?? ''));
 const { data: therapist, isPending } = useTherapist(therapistId);
+const queryClient = useQueryClient();
 const requesting = ref(false);
 
 /** The client's own requests, so a therapist they have already asked cannot be
@@ -115,6 +123,12 @@ const { data: myRequests } = useCareRequests();
 const standingRequest = computed(() =>
   findStandingRequestTo(myRequests.value?.data, therapistId.value),
 );
+const isAccepted = computed(() => standingRequest.value?.status === 'accepted');
+
+function bookVisit() {
+  router.push({ name: 'book-appointment', query: { therapistId: therapistId.value } });
+}
+
 const standingRequestMessage = computed(() =>
   standingRequest.value?.status === 'accepted'
     ? 'You are already working with this therapist.'
@@ -134,8 +148,27 @@ async function requestTherapist() {
       title: 'Request sent',
     });
     router.replace({ name: 'care-hub' });
-  } catch {
-    await toast.show(`We could not send your request to ${target.name}. Please try again.`, 'danger', {
+  } catch (error) {
+    // The server refuses a second ask at a therapist who has not answered the
+    // first, and sends the standing one back. Say which request already exists
+    // rather than only refusing, and refresh so the button settles into its
+    // disabled state instead of inviting another tap.
+    if (error instanceof ApiError && error.code === 'duplicate_request') {
+      const reference = typeof error.meta?.reference === 'string' ? error.meta.reference : null;
+      await queryClient.invalidateQueries({ queryKey: CARE_REQUESTS_KEY });
+      await toast.show(
+        reference ? `${error.message} Your request is ${reference}.` : error.message,
+        'warning',
+        { title: 'Already requested' },
+      );
+      return;
+    }
+
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : `We could not send your request to ${target.name}. Please try again.`;
+    await toast.show(message, 'danger', {
       title: 'Could not send request',
       dismissLabel: 'Try again',
     });

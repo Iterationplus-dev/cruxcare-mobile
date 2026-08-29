@@ -18,7 +18,12 @@
             </div>
             <div class="cc-care__actions">
               <AppButton @click="goChat">Message</AppButton>
-              <AppButton variant="secondary" @click="router.push({ name: 'book-appointment' })">Book</AppButton>
+              <AppButton
+                variant="secondary"
+                @click="router.push({ name: 'book-appointment', query: { therapistId: therapist.id } })"
+              >
+                Book
+              </AppButton>
               <button type="button" class="cc-care__video-btn" aria-label="Start video visit" @click="goVideo">
                 <AppIcon name="videocam" :size="20" color="var(--cc-ink-600)" />
               </button>

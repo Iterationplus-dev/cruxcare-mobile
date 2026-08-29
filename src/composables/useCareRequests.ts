@@ -6,9 +6,12 @@ import { therapistsApi } from '@/api/therapists.api';
  * progresses server-side with no event the app can observe, so this refetches
  * on focus rather than leaving a stale status on screen after a push arrives.
  */
+/** Shared so a screen that changes these can invalidate them by the same key. */
+export const CARE_REQUESTS_KEY = ['care', 'requests'] as const;
+
 export function useCareRequests() {
   return useQuery({
-    queryKey: ['care', 'requests'],
+    queryKey: CARE_REQUESTS_KEY,
     queryFn: () => therapistsApi.listRequests(),
     refetchOnWindowFocus: true,
   });

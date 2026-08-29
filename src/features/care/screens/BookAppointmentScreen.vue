@@ -88,7 +88,12 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 
-const therapistId = (route.query.therapistId as string) ?? 'therapist-1';
+/**
+ * No fallback. This defaulted to a hard-coded `therapist-1`, so a caller that
+ * forgot the query param booked against a therapist that does not exist —
+ * which the server rejected, silently, from a screen that looked fine.
+ */
+const therapistId = (route.query.therapistId as string) ?? '';
 const { data: therapist } = useTherapist(therapistId);
 
 const days = Array.from({ length: 5 }).map((_, i) => {
@@ -118,6 +123,12 @@ const submitting = ref(false);
 
 async function onSubmit() {
   if (!selectedSlot.value) return;
+  if (!therapistId) {
+    await toast.show('Open this from a therapist so we know who to book with.', 'warning', {
+      title: 'No therapist chosen',
+    });
+    return;
+  }
   submitting.value = true;
   try {
     const [h, m] = selectedSlot.value.split(':').map(Number);

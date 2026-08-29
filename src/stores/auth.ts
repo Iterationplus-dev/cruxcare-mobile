@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { authApi, type RegisterPayload } from '@/api/auth.api';
 import { setAuthTokenGetter, setUnauthorizedHandler } from '@/api/client';
 import { secureStorage, SECURE_STORAGE_KEYS } from '@/services/secureStorage';
+import { ApiError } from '@/types/api';
 import { disablePushNotifications } from '@/services/push/pushNotifications';
 import type { Capability, Role, TherapistPlanTier, User } from '@/types/user';
 
@@ -15,6 +16,12 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(null);
   const user = ref<User | null>(null);
   const hydrated = ref(false);
+  /**
+   * The session is real but the account has not verified its email. Kept apart
+   * from a failed session: the token is good, and throwing it away would strand
+   * the account at Welcome with no route to the one thing that fixes it.
+   */
+  const verificationRequired = ref(false);
   /** Which dashboard context is active for a multi-role account (client/therapist/admin). */
   const activeRole = ref<Role>('client');
 
@@ -61,6 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     await persistToken(null);
     user.value = null;
     activeRole.value = 'client';
+    verificationRequired.value = false;
   }
 
   setAuthTokenGetter(() => token.value);
@@ -77,8 +85,15 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         user.value = await authApi.me();
         activeRole.value = defaultRoleContext(user.value);
-      } catch {
-        await clearSession();
+        verificationRequired.value = false;
+      } catch (error) {
+        // An unverified account is not a broken session. Hold the token so the
+        // router can send them to verification, which is the only way out.
+        if (error instanceof ApiError && error.code === 'signup_verification_required') {
+          verificationRequired.value = true;
+        } else {
+          await clearSession();
+        }
       }
     }
     hydrated.value = true;
@@ -104,6 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function refreshUser() {
     user.value = await authApi.me();
+    verificationRequired.value = false;
     return user.value;
   }
 
@@ -158,6 +174,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     hydrated,
+    verificationRequired,
     activeRole,
     isAuthenticated,
     roles,
