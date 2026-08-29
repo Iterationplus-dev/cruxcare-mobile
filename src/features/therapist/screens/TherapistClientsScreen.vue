@@ -4,7 +4,14 @@
     <ion-content class="cc-screen">
       <AppPullToRefresh :query-keys="[['case-files']]" />
       <LoadingState v-if="isPending" label="Loading your clients…" />
-      <EmptyState v-else-if="!caseFiles?.data.length" icon="groups" title="No clients yet" message="Clients assigned to you will appear here." />
+      <!-- Only when the therapist has nobody at all — a tab that happens to be
+           empty is a different message, handled below the chips. -->
+      <EmptyState
+        v-else-if="!hasAnyClients"
+        icon="groups"
+        title="No clients yet"
+        message="Clients assigned to you will appear here."
+      />
       <template v-else>
         <div class="cc-clients__search">
           <AppInput v-model="query" placeholder="Search clients by name" />
@@ -24,19 +31,19 @@
             :aria-selected="filter === f.value"
             @click="filter = f.value"
           >
-            {{ f.label }} {{ countFor(caseFiles.data, f.value) }}
+            {{ f.label }} {{ counts?.[f.countKey] ?? 0 }}
           </button>
         </div>
 
         <EmptyState
-          v-if="!visible.length"
+          v-if="!rows.length"
           icon="groups"
           :title="emptyTitle"
           :message="emptyMessage"
         />
         <AppCard v-else style="margin: 16px; padding: 0">
         <AppListRow
-          v-for="cf in visible"
+          v-for="cf in rows"
           :key="cf.id"
           :title="cf.clientName || 'CruxCare client'"
           :subtitle="presentClientRow(cf).subtitle"
@@ -56,27 +63,45 @@
 <script setup lang="ts">
 import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { AppCard, AppHeader, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { AppInput } from '@/components/ui';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { presentClientRow } from '@/features/therapist/clientListPresentation';
-import {
-  CLIENT_FILTERS,
-  countFor,
-  filterClients,
-  type ClientFilter,
-} from '@/features/therapist/clientListFilters';
+import { CLIENT_FILTERS, type ClientFilter } from '@/features/therapist/clientListFilters';
 
 /** TD4 · Client management — list plus record in one view, unwritten notes flagged. */
 const router = useRouter();
-const { data: caseFiles, isPending } = useCaseFiles();
-
 const filter = ref<ClientFilter>('active');
 const query = ref('');
-const visible = computed(() => filterClients(caseFiles.value?.data, filter.value, query.value));
+
+/** Debounced so a search does not fire a request per keystroke. */
+const debouncedQuery = ref('');
+let queryTimer: ReturnType<typeof setTimeout> | undefined;
+watch(query, (next) => {
+  clearTimeout(queryTimer);
+  queryTimer = setTimeout(() => {
+    debouncedQuery.value = next;
+  }, 250);
+});
+
+const { data: caseFiles, isPending } = useCaseFiles(
+  computed(() => ({ state: filter.value, q: debouncedQuery.value })),
+);
+
+const rows = computed(() => caseFiles.value?.data ?? []);
+/** Totals over everything the therapist can see, not the loaded page. */
+const counts = computed(() => caseFiles.value?.meta?.counts);
+
+const hasAnyClients = computed(() => {
+  const c = counts.value;
+  // Before the first response there is nothing to say either way; showing the
+  // list shell beats flashing "no clients yet" at someone who has some.
+  if (!c) return true;
+  return c.active + c.past > 0;
+});
 
 const emptyTitle = computed(() => {
   if (query.value.trim()) return 'No match';

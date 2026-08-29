@@ -1,11 +1,34 @@
 import { apiClient } from './client';
 import type { CursorPage } from '@/types/api';
-import type { CaseFile, HealthProfile } from '@/types/care';
+import type {
+  CaseFile,
+  ClientRelationshipState,
+  ClientStateCounts,
+  HealthProfile,
+} from '@/types/care';
+
+export interface CaseFileListParams {
+  cursor?: string;
+  state?: ClientRelationshipState;
+  q?: string;
+}
+
+export type CaseFilePage = CursorPage<CaseFile> & { meta: { counts?: ClientStateCounts } };
 
 export const caseFilesApi = {
-  async list(cursor?: string): Promise<CursorPage<CaseFile>> {
-    const { data } = await apiClient.get<CursorPage<CaseFile>>('/case-files', {
-      params: { cursor },
+  /**
+   * `state` and `q` filter server-side, and the counts in `meta` are computed
+   * over every accessible row rather than the page — a count derived from one
+   * cursor page is a false statement the client cannot correct.
+   */
+  async list(params: CaseFileListParams = {}): Promise<CaseFilePage> {
+    const { data } = await apiClient.get<CaseFilePage>('/case-files', {
+      params: {
+        cursor: params.cursor,
+        state: params.state,
+        // Omitted rather than sent empty, so a cleared search is not a filter.
+        q: params.q?.trim() || undefined,
+      },
     });
     return data;
   },

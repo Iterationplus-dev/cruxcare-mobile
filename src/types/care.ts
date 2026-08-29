@@ -176,6 +176,24 @@ export interface CaseFile {
   /** When the oldest draft note was started, or null when none waits. */
   unwrittenNoteFrom?: string | null;
   lastMessageAt?: string | null;
+  /**
+   * Which of the Clients tabs this client belongs in, decided server-side.
+   * The client no longer derives it: a classification the counts are built
+   * from has to come from the same place the counts do.
+   */
+  relationshipState?: ClientRelationshipState;
+}
+
+/** Matches the server's vocabulary exactly. */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type ClientRelationshipState = 'active' | 'needs-follow-up' | 'past' | (string & {});
+
+/** How many clients sit in each state, across everything the caller can see —
+ *  not just the loaded page, and unaffected by the current filter. */
+export interface ClientStateCounts {
+  active: number;
+  needsFollowUp: number;
+  past: number;
 }
 
 export interface ChatParticipant {
