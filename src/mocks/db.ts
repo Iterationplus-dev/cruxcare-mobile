@@ -4,6 +4,7 @@ import type { AppNotification } from '@/types/notifications';
 import type { User } from '@/types/user';
 import type { Transaction, Wallet } from '@/types/wallet';
 import type { CurrencyIndex, LocalBlock, SupportedCurrency } from '@/types/money';
+import type { SupportTicket } from '@/types/support';
 import pCayenmis from '@/assets/images/p-cayenmis.jpg';
 import pGreenTea from '@/assets/images/p-green-tea.jpg';
 import pGimPowder from '@/assets/images/p-gim-powder.jpg';
@@ -537,8 +538,29 @@ export function findUserByCredentials(identifier: string): StoredUser | undefine
 }
 
 export function toPublicUser(user: StoredUser): User {
-  const { password: _password, username: _username, ...publicUser } = user;
+  // `username` is kept: it is the handle people sign in with, and the profile
+  // shows it precisely because a shared email address is refused and they are
+  // told to use it instead. Only the password is withheld.
+  const { password: _password, ...publicUser } = user;
   return publicUser;
+}
+
+/**
+ * Support tickets raised from the phone, newest first.
+ *
+ * `userId` is local to the fixture. The real API never sends it — it scopes to
+ * the session instead — so it is not on the wire type, and the handler filters
+ * on it here to reproduce that scoping rather than trusting the caller.
+ */
+export type StoredSupportTicket = SupportTicket & { userId: string };
+
+export const supportTickets: StoredSupportTicket[] = [];
+
+let nextTicketSequence = 1;
+
+export function nextTicketReference(): string {
+  const letter = String.fromCharCode(65 + (nextTicketSequence % 26));
+  return `${letter}${Date.now()}${nextTicketSequence++}`;
 }
 
 /**

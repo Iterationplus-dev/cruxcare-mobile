@@ -1,6 +1,6 @@
 <template>
   <ion-page>
-    <AppHeader title="Book a visit" show-back :botanical="false" />
+    <AppHeader :title="isRescheduling ? 'Move this visit' : 'Book a visit'" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
         <AppCard v-if="therapist" class="cc-book__therapist">
@@ -86,14 +86,14 @@
              invented availability the server was producing. -->
         <div v-if="selectedDay && daySlots.length" class="cc-book__slots">
           <button
-            v-for="time in daySlots"
-            :key="time"
+            v-for="slot in daySlots"
+            :key="slot.iso"
             type="button"
             class="cc-book__slot"
-            :class="{ 'cc-book__slot--selected': time === selectedSlot }"
-            @click="selectedSlot = time"
+            :class="{ 'cc-book__slot--selected': slot.iso === selectedSlot?.iso }"
+            @click="selectedSlot = slot"
           >
-            {{ time }}
+            {{ slot.label }}
           </button>
         </div>
         <p v-else-if="selectedDay" class="cc-text-caption">
@@ -107,10 +107,10 @@
 
       <div class="cc-screen__footer">
         <div v-if="selectedSlot" class="cc-book__summary">
-          <span class="cc-text-caption">{{ selectedDayFull }} · {{ selectedSlot }} · {{ type === 'video' ? 'video' : 'in clinic' }}</span>
+          <span class="cc-text-caption">{{ selectedDayFull }} · {{ selectedSlot.label }} · {{ type === 'video' ? 'video' : 'in clinic' }}</span>
         </div>
         <AppButton :disabled="!selectedSlot" :loading="submitting" @click="onSubmit">
-          Request this time
+          {{ isRescheduling ? 'Move to this time' : 'Request this time' }}
         </AppButton>
       </div>
     </ion-content>
@@ -126,13 +126,14 @@ import {
   monthLabel,
   openDayIndex,
   slotsFor,
+  type OpenSlot,
 } from '@/features/care/bookingCalendar';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
 import { appointmentsApi } from '@/api/appointments.api';
 import { therapistsApi } from '@/api/therapists.api';
-import { useQuery } from '@tanstack/vue-query';
+import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { ApiError } from '@/types/api';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
@@ -141,6 +142,7 @@ import type { AppointmentType } from '@/types/care';
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const queryClient = useQueryClient();
 
 /**
  * No fallback. This defaulted to a hard-coded `therapist-1`, so a caller that
@@ -148,6 +150,14 @@ const toast = useToast();
  * which the server rejected, silently, from a screen that looked fine.
  */
 const therapistId = (route.query.therapistId as string) ?? '';
+
+/**
+ * Set when the screen was opened to move an existing appointment rather than
+ * create one. Without it, "Reschedule" produced a second booking and left the
+ * original where it was — two sessions where the client asked for one moved.
+ */
+const rescheduleId = (route.query.rescheduleId as string) ?? '';
+const isRescheduling = !!rescheduleId;
 const { data: therapist } = useTherapist(therapistId);
 
 const today = new Date();
@@ -218,7 +228,7 @@ const selectedDay = ref<string | null>(null);
 const selectedDayFull = computed(() =>
   selectedDay.value ? formatDayHeading(selectedDay.value) : '',
 );
-const selectedSlot = ref<string | null>(null);
+const selectedSlot = ref<OpenSlot | null>(null);
 const daySlots = computed(() => slotsFor(selectedDay.value, openDays.value));
 
 function selectDay(iso: string) {
@@ -246,13 +256,17 @@ async function onSubmit() {
   }
   submitting.value = true;
   try {
-    const [h, m] = selectedSlot.value.split(':').map(Number);
-    // Parsed as local time: a bare YYYY-MM-DD is treated as UTC, which shifts
-    // the booking a day for anyone behind it.
-    const slotDate = new Date(`${selectedDay.value}T00:00:00`);
-    slotDate.setHours(h, m, 0, 0);
-    await appointmentsApi.create({ therapistId, slot: slotDate.toISOString(), type: type.value });
-    await toast.show('Appointment requested — you will be notified once confirmed.', 'success');
+    // The exact instant the server offered, carried through untouched. Rebuilding
+    // it from the label here is what made a tap on "10:00" book 09:00 UTC.
+    const slot = selectedSlot.value.iso;
+    if (isRescheduling) {
+      await appointmentsApi.reschedule(rescheduleId, slot, type.value);
+      await toast.show('Your session has been moved — your therapist will confirm the new time.', 'success');
+    } else {
+      await appointmentsApi.create({ therapistId, slot, type: type.value });
+      await toast.show('Appointment requested — you will be notified once confirmed.', 'success');
+    }
+    await queryClient.invalidateQueries({ queryKey: ['appointments'] });
     router.replace({ name: 'care-hub' });
   } catch (error) {
     // Without this the screen simply stayed put on a rejected booking: no

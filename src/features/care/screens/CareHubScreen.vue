@@ -30,10 +30,22 @@
             </div>
           </AppCard>
 
-          <AppCard v-if="nextVisit" class="cc-care__next-visit">
-            <div class="cc-text-caption" style="color: #9bd2c8">NEXT VISIT</div>
-            <div class="cc-text-h2" style="color: #fff; margin: 4px 0">{{ formatSlot(nextVisit.slot) }}</div>
-            <div style="color: #cde7e1; font-size: 13.5px">{{ nextVisit.type }} visit</div>
+          <AppCard v-if="headline" class="cc-care__next-visit" :class="{ 'cc-care__next-visit--late': headline.timing === 'overdue' }">
+            <div class="cc-text-caption" style="color: #9bd2c8">
+              {{ headline.timing === 'overdue' ? 'MISSED VISIT' : 'NEXT VISIT' }}
+            </div>
+            <div class="cc-text-h2" style="color: #fff; margin: 4px 0">{{ formatSlot(headline.appointment.slot) }}</div>
+            <div style="color: #cde7e1; font-size: 13.5px">
+              {{ headline.appointment.type }} visit<template v-if="overdueFor"> · {{ overdueFor }}</template>
+            </div>
+            <AppButton
+              v-if="canRescheduleHeadline"
+              variant="secondary"
+              class="cc-care__rebook"
+              @click="rescheduleHeadline"
+            >
+              {{ headline.timing === 'overdue' ? 'Rebook this visit' : 'Reschedule' }}
+            </AppButton>
           </AppCard>
 
           <div class="cc-text-body-strong" style="font-size: 16px">Your care</div>
@@ -168,6 +180,12 @@ import {
   AppListRow,
 } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
+import {
+  canJoin,
+  canReschedule,
+  headlineAppointment,
+  howLongAgo,
+} from '@/features/care/appointmentState';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useTherapist, useTherapists } from '@/composables/useTherapists';
@@ -223,9 +241,27 @@ const requestsSubtitle = computed(() =>
 );
 
 const { data: appointmentsPage } = useAppointments();
-const nextVisit = computed(() =>
-  appointmentsPage.value?.data.find((a) => a.status === 'confirmed'),
+
+/**
+ * Same correction as Home: `find(a => a.status === 'confirmed')` had no notion
+ * of time in it, so a visit that had already happened sat under NEXT VISIT.
+ */
+const headline = computed(() => headlineAppointment(appointmentsPage.value?.data));
+const canRescheduleHeadline = computed(
+  () => !!headline.value && canReschedule(headline.value.appointment),
 );
+const overdueFor = computed(() =>
+  headline.value?.timing === 'overdue' ? howLongAgo(headline.value.appointment.slot) : null,
+);
+
+function rescheduleHeadline() {
+  if (!headline.value) return;
+  const { appointment } = headline.value;
+  router.push({
+    name: 'book-appointment',
+    query: { therapistId: appointment.therapistId, rescheduleId: appointment.id },
+  });
+}
 
 const isPending = computed(
   () => caseFilesPending.value || (!!caseFile.value && therapistPending.value) || therapistsPending.value,
@@ -249,7 +285,12 @@ function goChat() {
   else router.push({ name: 'chat-inbox' });
 }
 function goVideo() {
-  if (nextVisit.value) router.push({ name: 'video-visit', params: { id: nextVisit.value.id } });
+  // Only a confirmed visit still to come has a call behind it.
+  if (headline.value && canJoin(headline.value.appointment, headline.value.timing)) {
+    router.push({ name: 'video-visit', params: { id: headline.value.appointment.id } });
+    return;
+  }
+  toast.show('There is no session to join right now.', 'info');
 }
 
 async function requestMatching(reason = 'Please match me with an available therapist.') {
@@ -297,6 +338,12 @@ async function requestTherapist(therapist: TherapistSummary) {
 </script>
 
 <style scoped>
+.cc-care__next-visit--late {
+  background: var(--cc-color-warning-text);
+}
+.cc-care__rebook {
+  margin-top: 12px;
+}
 .cc-care__header {
   padding: calc(env(safe-area-inset-top) + 4px) 16px 14px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(247, 250, 249, 0.38) 55%, rgba(247, 250, 249, 0.62));

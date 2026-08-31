@@ -92,8 +92,27 @@ describe('slotsFor', () => {
     { date: '2026-09-02', slots: [] },
   ]);
 
-  it('returns the times the therapist actually has open', () => {
-    expect(slotsFor('2026-09-01', open)).toEqual(['09:00', '10:00']);
+  it('carries the exact instant the server offered', () => {
+    // The server's slots are UTC wall-clock, because that is how the rota is
+    // stored. Reading "10:00" as local and sending that back asked for an
+    // instant nobody offered: on a UTC+1 device it booked 09:00 UTC.
+    expect(slotsFor('2026-09-01', open).map((s) => s.iso)).toEqual([
+      '2026-09-01T09:00:00.000Z',
+      '2026-09-01T10:00:00.000Z',
+    ]);
+  });
+
+  it('labels each slot from that same instant', () => {
+    // The label and the request come from one value, so the picker cannot show
+    // one time and book another.
+    for (const slot of slotsFor('2026-09-01', open)) {
+      const expected = new Date(slot.iso).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      expect(slot.label).toBe(expected);
+    }
   });
 
   it('returns nothing for a closed day rather than a default list', () => {
@@ -107,6 +126,14 @@ describe('slotsFor', () => {
 
   it('returns nothing while availability is loading', () => {
     expect(slotsFor('2026-09-01', undefined)).toEqual([]);
+  });
+
+  it('drops an unusable time instead of offering an Invalid Date', () => {
+    const broken = openDayIndex([{ date: '2026-09-01', slots: ['not-a-time', '09:00'] }]);
+
+    expect(slotsFor('2026-09-01', broken).map((s) => s.iso)).toEqual([
+      '2026-09-01T09:00:00.000Z',
+    ]);
   });
 });
 

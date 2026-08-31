@@ -77,6 +77,14 @@ export function monthGrid(
   return cells;
 }
 
+/** One bookable time: the exact instant to send, and what to call it on screen. */
+export interface OpenSlot {
+  /** The instant, ISO-8601. Exactly the slot the server offered. */
+  iso: string;
+  /** That instant in the reader's own clock. */
+  label: string;
+}
+
 /**
  * The times open on one date, from the therapist's own hours minus what is
  * already booked.
@@ -84,10 +92,40 @@ export function monthGrid(
  * Empty means nothing is free that day, which the screen says rather than
  * falling back to a default list — a fixed pattern of times was exactly the
  * invented availability this replaced.
+ *
+ * The server's `date` and `slots` are UTC wall-clock, because that is how the
+ * rota is stored. Reading "10:00" as a local time and sending that back asks
+ * for an instant the server never offered: on a UTC+1 device it booked 09:00
+ * UTC, and the same appointment then read as 11:00 everywhere else in the app —
+ * three different times from one tap. So the instant is built in UTC and the
+ * label is rendered from it, which keeps the picker, the request and every
+ * later screen showing the same moment.
  */
-export function slotsFor(iso: string | null, openDays: Map<string, string[]> | undefined): string[] {
+export function slotsFor(
+  iso: string | null,
+  openDays: Map<string, string[]> | undefined,
+): OpenSlot[] {
   if (!iso || !openDays) return [];
-  return openDays.get(iso) ?? [];
+
+  return (openDays.get(iso) ?? []).flatMap((time) => {
+    const at = utcInstant(iso, time);
+    if (!at) return [];
+
+    return [{
+      iso: at.toISOString(),
+      label: at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+    }];
+  });
+}
+
+/** `("2026-09-02", "10:00")` → that instant, read as UTC. */
+function utcInstant(date: string, time: string): Date | null {
+  const [year, month, day] = date.split('-').map(Number);
+  const [hours, minutes] = time.split(':').map(Number);
+
+  if ([year, month, day, hours, minutes].some((n) => !Number.isFinite(n))) return null;
+
+  return new Date(Date.UTC(year, month - 1, day, hours, minutes, 0, 0));
 }
 
 /** Availability rows keyed by date, for the lookups above. */

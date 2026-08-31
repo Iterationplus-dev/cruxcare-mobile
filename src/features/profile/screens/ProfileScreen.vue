@@ -14,6 +14,20 @@
           <div class="cc-profile__identity-body">
             <div class="cc-text-h1" style="color: #fff; margin: 0">{{ fullName }}</div>
             <div class="cc-text-mono" style="color: #cde7e1">{{ auth.user?.membership?.cruxId ?? '' }}</div>
+            <!-- The handle people sign in with. A shared email address is
+                 refused and they are told to use this instead, so it has to be
+                 somewhere they can find it — and copy it rather than retype a
+                 generated string from memory. -->
+            <button
+              v-if="username"
+              type="button"
+              class="cc-profile__username"
+              :aria-label="`Copy your username, ${username}`"
+              @click="copyUsername"
+            >
+              <span class="cc-text-mono">@{{ username }}</span>
+              <AppIcon :name="copied ? 'check' : 'content_copy'" :size="14" color="#cde7e1" />
+            </button>
             <div class="cc-profile__badges">
               <AppBadge label="CLIENT" />
               <AppBadge v-if="auth.roles.includes('member')" :label="`MEMBER${tierLabel}`" />
@@ -115,6 +129,8 @@ import RoleSwitchSheet from '../components/RoleSwitchSheet.vue';
 import { useAppointments } from '@/composables/useAppointments';
 import { useOrders } from '@/composables/useOrders';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
+import { copyToClipboard } from '@/services/clipboard';
 import { fullName as formatFullName } from '@/types/user';
 import profileCover from '@/assets/images/profile-cover.png';
 
@@ -122,8 +138,33 @@ import profileCover from '@/assets/images/profile-cover.png';
  * tab bar (outside this component) keeps Profile selected. */
 const router = useRouter();
 const auth = useAuthStore();
+const toast = useToast();
 
 const fullName = computed(() => (auth.user ? formatFullName(auth.user) : ''));
+
+/** Absent on an older server, which means "we do not know it" — so the chip is
+ *  hidden rather than shown empty, implying the account has no username. */
+const username = computed(() => auth.user?.username ?? '');
+const copied = ref(false);
+
+async function copyUsername() {
+  if (!username.value) return;
+
+  if (await copyToClipboard(username.value)) {
+    copied.value = true;
+    // Long enough to read the tick, short enough that the control is back to
+    // offering the action rather than reporting the last one.
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
+    await toast.show('Username copied', 'success');
+    return;
+  }
+
+  // Never claim a copy that did not happen — the value is shown so it can
+  // still be read off the screen.
+  await toast.show(`Couldn't copy. Your username is ${username.value}`, 'warning');
+}
 const tierLabel = computed(() => {
   const tier = auth.user?.membership?.tier;
   return tier ? ` · ${tier.split('·')[0].trim().toUpperCase()}` : '';
@@ -149,6 +190,23 @@ async function onLogout() {
 </script>
 
 <style scoped>
+.cc-profile__username {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 9px 3px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #cde7e1;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.cc-profile__username:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
 .cc-profile__cover {
   position: relative;
   height: 190px;

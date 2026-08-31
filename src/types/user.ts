@@ -108,6 +108,14 @@ export interface User {
   referredBySource: ReferredBySource | null;
   /** Optional: absent on accounts created before the field existed, and null
    *  once a member has been asked but declined to record one. */
+  /**
+   * The handle people sign in with, generated at registration.
+   *
+   * Optional because an older server does not send it: absent means "we do not
+   * know it", which the profile shows as nothing rather than as a blank field
+   * implying the account has no username.
+   */
+  username?: string | null;
   gender?: Gender | null;
   /** Absent until the server returns it; the client never invents one. */
   address?: Address | null;

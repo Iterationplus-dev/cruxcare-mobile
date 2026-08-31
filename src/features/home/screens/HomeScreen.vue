@@ -17,21 +17,37 @@
       <div class="cc-home__body">
         <LoadingState v-if="appointmentsQuery.isPending.value" label="Loading your home…" />
         <template v-else>
-          <AppCard v-if="nextAppointment">
+          <AppCard v-if="headline">
             <div class="cc-home__session-head">
-              <span class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">NEXT SESSION</span>
-              <AppBadge label="CONFIRMED" tone="success" />
+              <span class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">
+                {{ headline.timing === 'overdue' ? 'MISSED SESSION' : 'NEXT SESSION' }}
+              </span>
+              <AppBadge :label="badge.label" :tone="badge.tone" />
             </div>
             <div class="cc-home__session-body">
-              <AppAvatar :name="nextAppointment.therapistName" :size="46" />
+              <AppAvatar :name="headline.appointment.therapistName" :size="46" />
               <div class="cc-home__session-info">
-                <div class="cc-text-body-strong">{{ nextAppointment.therapistName }}</div>
-                <div class="cc-text-subtitle">{{ formatSlot(nextAppointment.slot) }} · {{ nextAppointment.type }}</div>
+                <div class="cc-text-body-strong">{{ headline.appointment.therapistName }}</div>
+                <div class="cc-text-subtitle">{{ formatSlot(headline.appointment.slot) }} · {{ headline.appointment.type }}</div>
+                <!-- A date alone makes the reader work out that it has gone.
+                     Saying how long ago does the arithmetic for them. -->
+                <div v-if="overdueFor" class="cc-home__session-late">
+                  This time has passed · {{ overdueFor }}
+                </div>
               </div>
             </div>
             <div class="cc-home__session-actions">
-              <AppButton @click="joinSession">Join</AppButton>
-              <AppButton variant="secondary" @click="goCare">Reschedule</AppButton>
+              <!-- Join only where there is something to join: a session nobody
+                   has confirmed, or one that has already been and gone, has
+                   nothing behind the button. -->
+              <AppButton v-if="canJoinHeadline" @click="joinSession">Join</AppButton>
+              <AppButton
+                v-if="canRescheduleHeadline"
+                :variant="canJoinHeadline ? 'secondary' : 'primary'"
+                @click="rescheduleHeadline"
+              >
+                {{ headline.timing === 'overdue' ? 'Rebook this session' : 'Reschedule' }}
+              </AppButton>
             </div>
           </AppCard>
           <EmptyState
@@ -91,6 +107,13 @@ import {
   MoneyAmount,
 } from '@/components/ui';
 import { EmptyState, LoadingState, StateSkeleton } from '@/components/state';
+import {
+  canJoin,
+  canReschedule,
+  headlineAppointment,
+  howLongAgo,
+  statusBadge,
+} from '@/features/care/appointmentState';
 import { useAppointments } from '@/composables/useAppointments';
 import { useWallet } from '@/composables/useWallet';
 import { useOrders } from '@/composables/useOrders';
@@ -124,8 +147,29 @@ const greeting = (() => {
 })();
 
 const appointmentsQuery = useAppointments();
-const nextAppointment = computed(() =>
-  appointmentsQuery.data.value?.data.find((a) => a.status === 'confirmed' || a.status === 'requested'),
+
+/**
+ * The session worth showing: the next one still to come, or a missed one that
+ * has not been dealt with.
+ *
+ * This used to be `find(a => confirmed || requested)`, which has no notion of
+ * time in it — a session from last Sunday sat under NEXT SESSION with a
+ * CONFIRMED badge and a Join button, days after it had passed.
+ */
+const headline = computed(() => headlineAppointment(appointmentsQuery.data.value?.data));
+const badge = computed(() =>
+  headline.value
+    ? statusBadge(headline.value.appointment, headline.value.timing)
+    : { label: '', tone: 'default' as const },
+);
+const canJoinHeadline = computed(
+  () => !!headline.value && canJoin(headline.value.appointment, headline.value.timing),
+);
+const canRescheduleHeadline = computed(
+  () => !!headline.value && canReschedule(headline.value.appointment),
+);
+const overdueFor = computed(() =>
+  headline.value?.timing === 'overdue' ? howLongAgo(headline.value.appointment.slot) : null,
 );
 
 const { data: wallet } = useWallet();
@@ -155,9 +199,20 @@ function formatSlot(iso: string) {
 }
 
 function joinSession() {
-  if (nextAppointment.value) {
-    router.push({ name: 'video-visit', params: { id: nextAppointment.value.id } });
+  if (headline.value) {
+    router.push({ name: 'video-visit', params: { id: headline.value.appointment.id } });
   }
+}
+
+/** Straight to the calendar for the therapist involved, carrying the
+ *  appointment id so this session moves rather than a second one appearing. */
+function rescheduleHeadline() {
+  if (!headline.value) return;
+  const { appointment } = headline.value;
+  router.push({
+    name: 'book-appointment',
+    query: { therapistId: appointment.therapistId, rescheduleId: appointment.id },
+  });
 }
 function goCare() {
   router.push({ name: 'care-hub' });
@@ -171,6 +226,11 @@ function goNotifications() {
 </script>
 
 <style scoped>
+.cc-home__session-late {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--cc-color-warning-text);
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

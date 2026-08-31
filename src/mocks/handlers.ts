@@ -874,6 +874,88 @@ const careHandlers: HttpHandler[] = [
     return HttpResponse.json(appt);
   }),
 
+  /**
+   * Moving an appointment. A past slot is fine as the source — a missed session
+   * is the main reason anyone reschedules — but the destination must be ahead.
+   */
+  http.post(url('/appointments/:id/reschedule'), async ({ params, request }) => {
+    const appt = db.appointments.find((a) => a.id === params.id);
+    if (!appt) return HttpResponse.json({ message: 'Appointment not found.' }, { status: 404 });
+
+    if (appt.status === 'completed' || appt.status === 'cancelled') {
+      return HttpResponse.json(
+        {
+          message: `A ${appt.status} appointment cannot be moved. Book a new one instead.`,
+          code: 'appointment_not_reschedulable',
+        },
+        { status: 422 },
+      );
+    }
+
+    const body = (await request.json()) as { slot: string; type?: typeof appt.type };
+
+    if (new Date(body.slot).getTime() <= Date.now()) {
+      return HttpResponse.json(
+        { message: 'Choose a time in the future.', code: 'slot_in_past' },
+        { status: 422 },
+      );
+    }
+
+    appt.slot = body.slot;
+    if (body.type) appt.type = body.type;
+    // The therapist agreed to a time, not to whichever time it is moved to.
+    appt.status = 'requested';
+
+    return HttpResponse.json(appt);
+  }),
+
+  http.get(url('/support/tickets'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    // Scoped to the caller: a ticket carries the details of someone's account.
+    return HttpResponse.json(paginate(db.supportTickets.filter((t) => t.userId === user.id)));
+  }),
+
+  http.post(url('/support/tickets'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const body = (await request.json()) as { message?: string; subject?: string; category?: string };
+    const message = (body.message ?? '').trim();
+
+    if (message.length < 10) {
+      return HttpResponse.json(
+        {
+          message:
+            message.length === 0
+              ? 'Tell us what you need help with.'
+              : 'Please add a little more detail so support can help.',
+          errors: { message: ['Tell us what you need help with.'] },
+        },
+        { status: 422 },
+      );
+    }
+
+    const category = body.category ?? 'General Enquiries';
+    const now = new Date().toISOString();
+    const ticket = {
+      id: `ticket-${db.supportTickets.length + 1}`,
+      userId: user.id,
+      reference: db.nextTicketReference(),
+      subject: (body.subject ?? '').trim() || category,
+      message,
+      category,
+      status: 'Open' as const,
+      reply: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    db.supportTickets.unshift(ticket);
+
+    return HttpResponse.json(ticket, { status: 201 });
+  }),
+
   http.get(url('/health-profile'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
