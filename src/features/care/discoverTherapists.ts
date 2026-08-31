@@ -108,8 +108,27 @@ export function discoverTherapists(
     });
 }
 
+/**
+ * What to say on a card with no next slot.
+ *
+ * Three different things produce one, and they are not interchangeable
+ * statements about a person. A therapist who has never set working hours has a
+ * completely empty diary, so "Fully booked" is simply false about them — and it
+ * is the state every therapist starts in, which made it the most common thing
+ * the card said and the least true.
+ *
+ * `schedulePublished` is optional on the wire, so an older server that omits it
+ * falls back to the fully-booked/no-slots pair rather than accusing every
+ * therapist of having set no hours.
+ */
+export function slotAbsenceLabel(therapist: TherapistSummary): string {
+  if (therapist.fullyBooked) return 'Fully booked';
+  if (therapist.schedulePublished === false) return 'No booking hours set';
+  return 'No slots listed';
+}
+
 /** "Today 14:00" when it is today, otherwise "Fri 10:00". Null when there is
- *  nothing to offer, which the card renders as fully booked instead. */
+ *  nothing to offer, which the card renders with slotAbsenceLabel instead. */
 export function formatNextSlot(iso: string | null, now: Date = new Date()): string | null {
   if (!iso) return null;
   const at = new Date(iso);

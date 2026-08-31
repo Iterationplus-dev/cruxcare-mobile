@@ -5,6 +5,7 @@ import {
   hasSpecialty,
   isNearby,
   matchesTherapistQuery,
+  slotAbsenceLabel,
   specialtyChips,
 } from '@/features/care/discoverTherapists';
 import type { TherapistSummary } from '@/types/care';
@@ -206,5 +207,38 @@ describe('discoverTherapists with location', () => {
     const rows = discoverTherapists([near, far], '', null, { address: null, nearbyOnly: true });
 
     expect(rows).toEqual([]);
+  });
+});
+
+describe('slotAbsenceLabel', () => {
+  it('says fully booked only when they actually are', () => {
+    expect(slotAbsenceLabel(therapist({ fullyBooked: true }))).toBe('Fully booked');
+  });
+
+  it('does not call an empty diary fully booked', () => {
+    // The state every therapist starts in — which made this the most common
+    // thing the card said, and the least true.
+    expect(slotAbsenceLabel(therapist({ fullyBooked: false, schedulePublished: false }))).toBe(
+      'No booking hours set',
+    );
+  });
+
+  it('prefers fully booked when both are true', () => {
+    // At capacity is the more actionable fact: setting hours would not help.
+    expect(slotAbsenceLabel(therapist({ fullyBooked: true, schedulePublished: false }))).toBe(
+      'Fully booked',
+    );
+  });
+
+  it('falls back rather than accusing a therapist when the server omits the field', () => {
+    // An older server sends no schedulePublished. Reading that as false would
+    // label every therapist on the directory as having set no hours.
+    expect(slotAbsenceLabel(therapist({ fullyBooked: false }))).toBe('No slots listed');
+  });
+
+  it('says no slots listed for a published rota with nothing free', () => {
+    expect(slotAbsenceLabel(therapist({ fullyBooked: false, schedulePublished: true }))).toBe(
+      'No slots listed',
+    );
   });
 });

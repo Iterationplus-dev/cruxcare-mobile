@@ -10,6 +10,40 @@ export interface TherapistSummary {
   languages?: string[];
   nextAvailableSlot: string | null;
   fullyBooked: boolean;
+  /**
+   * Whether they have said which days they work.
+   *
+   * Three different things produce no `nextAvailableSlot`: at capacity, marked
+   * unavailable, or simply never set hours. This separates the last from the
+   * other two, because calling someone with a completely empty diary "fully
+   * booked" is a false statement about them.
+   *
+   * Optional so an older server that does not send it reads as unknown rather
+   * than as false, which would label every therapist as having no hours.
+   */
+  schedulePublished?: boolean;
+}
+
+/** Sunday is 0, matching both the server's storage and `Date.getDay()`. */
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/** One working day on a therapist's rota. `"09:00"`, not `"09:00:00"`. */
+export interface WorkingDay {
+  weekday: Weekday;
+  opensAt: string;
+  closesAt: string;
+}
+
+/**
+ * What a client's booking calendar can offer on one date.
+ *
+ * Every time here comes from the therapist's own rota minus what is already
+ * booked. An empty `slots` means closed, and a range that comes back empty
+ * altogether means nothing in it is bookable at all.
+ */
+export interface TherapistAvailabilityDay {
+  date: string;
+  slots: string[];
 }
 
 /**

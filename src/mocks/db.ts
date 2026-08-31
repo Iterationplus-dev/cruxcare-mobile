@@ -1,4 +1,4 @@
-import type { Appointment, CareRequest, CaseFile, ChatMessage, ChatThread, HealthProfile, TherapistSummary } from '@/types/care';
+import type { Appointment, CareRequest, CaseFile, ChatMessage, ChatThread, HealthProfile, TherapistSummary, WorkingDay } from '@/types/care';
 import type { Cart, Order, Product } from '@/types/marketplace';
 import type { AppNotification } from '@/types/notifications';
 import type { User } from '@/types/user';
@@ -212,6 +212,7 @@ export const therapists: TherapistSummary[] = [
     languages: ['English', 'Igbo'],
     nextAvailableSlot: '2026-08-11T10:00:00Z',
     fullyBooked: false,
+    schedulePublished: true,
   },
   {
     id: 'therapist-2',
@@ -225,6 +226,7 @@ export const therapists: TherapistSummary[] = [
     languages: ['English', 'Hausa'],
     nextAvailableSlot: null,
     fullyBooked: true,
+    schedulePublished: true,
   },
   {
     id: 'therapist-3',
@@ -236,8 +238,11 @@ export const therapists: TherapistSummary[] = [
     bio: 'Provides compassionate support for ageing well, daily independence, and whole-person wellness.',
     experienceYears: 10,
     languages: ['English', 'Igbo'],
-    nextAvailableSlot: '2026-08-09T14:30:00Z',
+    // Never set working hours — the state every therapist starts in, and the
+    // one the card used to describe as "Fully booked".
+    nextAvailableSlot: null,
     fullyBooked: false,
+    schedulePublished: false,
   },
 ];
 
@@ -535,3 +540,19 @@ export function toPublicUser(user: StoredUser): User {
   const { password: _password, username: _username, ...publicUser } = user;
   return publicUser;
 }
+
+/**
+ * Therapist rotas, keyed by therapist id.
+ *
+ * A therapist absent from here has set no working hours, which is the state
+ * every account starts in — deliberately not the same as being closed all week,
+ * and the reason `therapist-3` is bookable by nobody until someone sets one.
+ */
+export const therapistRotas: Record<string, WorkingDay[]> = {
+  'therapist-1': [
+    { weekday: 1, opensAt: '09:00', closesAt: '17:00' },
+    { weekday: 3, opensAt: '09:00', closesAt: '17:00' },
+    { weekday: 5, opensAt: '09:00', closesAt: '13:00' },
+  ],
+  'therapist-2': [{ weekday: 2, opensAt: '10:00', closesAt: '16:00' }],
+};

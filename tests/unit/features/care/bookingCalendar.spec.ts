@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { monthGrid, monthLabel, formatDayHeading, WEEKDAY_LABELS } from '@/features/care/bookingCalendar';
+import {
+  monthGrid,
+  monthLabel,
+  formatDayHeading,
+  openDayIndex,
+  slotsFor,
+  WEEKDAY_LABELS,
+} from '@/features/care/bookingCalendar';
 
 /** Mid-month so "today" is neither the first nor the last day. */
 const today = new Date(2026, 7, 29); // 29 August 2026
@@ -62,5 +69,96 @@ describe('labels', () => {
   it('starts the week on Monday', () => {
     expect(WEEKDAY_LABELS[0]).toBe('M');
     expect(WEEKDAY_LABELS).toHaveLength(7);
+  });
+});
+
+
+describe('openDayIndex', () => {
+  it('keys the availability rows by date', () => {
+    const index = openDayIndex([{ date: '2026-09-01', slots: ['09:00'] }]);
+
+    expect(index?.get('2026-09-01')).toEqual(['09:00']);
+  });
+
+  it('is undefined while availability is still loading', () => {
+    // Distinct from an empty map, which would mean every day is closed.
+    expect(openDayIndex(undefined)).toBeUndefined();
+  });
+});
+
+describe('slotsFor', () => {
+  const open = openDayIndex([
+    { date: '2026-09-01', slots: ['09:00', '10:00'] },
+    { date: '2026-09-02', slots: [] },
+  ]);
+
+  it('returns the times the therapist actually has open', () => {
+    expect(slotsFor('2026-09-01', open)).toEqual(['09:00', '10:00']);
+  });
+
+  it('returns nothing for a closed day rather than a default list', () => {
+    // A fixed pattern of times was the invented availability this replaced.
+    expect(slotsFor('2026-09-02', open)).toEqual([]);
+  });
+
+  it('returns nothing when no day is selected', () => {
+    expect(slotsFor(null, open)).toEqual([]);
+  });
+
+  it('returns nothing while availability is loading', () => {
+    expect(slotsFor('2026-09-01', undefined)).toEqual([]);
+  });
+});
+
+describe('monthGrid with a therapist rota', () => {
+  it('closes a day the therapist does not work', () => {
+    const open = openDayIndex([
+      { date: '2026-09-01', slots: ['09:00'] },
+      { date: '2026-09-02', slots: [] },
+    ]);
+    const grid = monthGrid(2026, 8, new Date(2026, 7, 29), open);
+
+    expect(grid.find((c) => c.iso === '2026-09-01')?.disabled).toBe(false);
+    // Offered-then-rejected is what this replaces: the client used to pick a
+    // day, pick a time, submit, and only then find out.
+    expect(grid.find((c) => c.iso === '2026-09-02')?.disabled).toBe(true);
+  });
+
+  it('leaves future days open while availability is still loading', () => {
+    // A fully-closed month that then fills in reads as "nobody is available".
+    const grid = monthGrid(2026, 8, new Date(2026, 7, 29), undefined);
+
+    expect(grid.find((c) => c.iso === '2026-09-02')?.disabled).toBe(false);
+  });
+
+  it('does not close a day the response never mentioned', () => {
+    // Outside the range asked for is not the same as closed.
+    const open = openDayIndex([{ date: '2026-09-01', slots: ['09:00'] }]);
+    const grid = monthGrid(2026, 8, new Date(2026, 7, 29), open);
+
+    expect(grid.find((c) => c.iso === '2026-09-15')?.disabled).toBe(false);
+  });
+
+  it('keeps a past day closed even when the therapist works it', () => {
+    const open = openDayIndex([{ date: '2026-08-03', slots: ['09:00'] }]);
+    const grid = monthGrid(2026, 7, new Date(2026, 7, 29), open);
+
+    expect(grid.find((c) => c.iso === '2026-08-03')?.disabled).toBe(true);
+  });
+});
+
+describe('monthGrid when nobody can book the therapist', () => {
+  it('closes the whole month at once', () => {
+    // Otherwise every day stays tappable and reports "nothing open" one at a
+    // time, making the client discover it by exhaustion.
+    const grid = monthGrid(2026, 8, new Date(2026, 7, 29), new Map(), true);
+
+    expect(grid.filter((c) => c.iso).every((c) => c.disabled)).toBe(true);
+  });
+
+  it('leaves the month open when they are bookable', () => {
+    const grid = monthGrid(2026, 8, new Date(2026, 7, 29), new Map(), false);
+
+    expect(grid.find((c) => c.iso === '2026-09-15')?.disabled).toBe(false);
   });
 });

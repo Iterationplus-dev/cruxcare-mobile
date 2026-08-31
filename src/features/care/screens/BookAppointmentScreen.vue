@@ -68,12 +68,25 @@
           </div>
         </AppCard>
 
+        <!-- A month of greyed-out days with no explanation is the worst of
+             both worlds, so the reason is named. Which reason matters: an
+             empty range means "cannot be booked", not specifically "has set no
+             hours", and the three causes are different statements about a
+             person. -->
+        <AppCard v-if="unbookableReason" class="cc-book__notice">
+          <AppIcon name="event_busy" :size="20" color="var(--cc-color-warning-text)" />
+          <p>{{ unbookableReason }}</p>
+        </AppCard>
+
         <div v-if="selectedDay" class="cc-text-body-strong" style="font-size: 16px">
           {{ selectedDayFull }}
         </div>
-        <div v-if="selectedDay" class="cc-book__slots">
+        <!-- Every time here is one the therapist set, minus what is already
+             booked. The fixed 09:00-17:00 list this used to render was the same
+             invented availability the server was producing. -->
+        <div v-if="selectedDay && daySlots.length" class="cc-book__slots">
           <button
-            v-for="time in SLOT_TIMES"
+            v-for="time in daySlots"
             :key="time"
             type="button"
             class="cc-book__slot"
@@ -83,9 +96,9 @@
             {{ time }}
           </button>
         </div>
-        <!-- No slot is marked taken: the directory carries no availability, and
-             a struck-through time we invented would be a lie either way. The
-             server refuses a slot it cannot honour and that reason is shown. -->
+        <p v-else-if="selectedDay" class="cc-text-caption">
+          Nothing is open on this day.
+        </p>
         <p class="cc-text-caption">
           Times are requests. Your therapist confirms the one that works, and the
           cost is set once they have assessed you and agreed a treatment plan.
@@ -107,16 +120,19 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import {
-  SLOT_TIMES,
   WEEKDAY_LABELS,
   formatDayHeading,
   monthGrid,
   monthLabel,
+  openDayIndex,
+  slotsFor,
 } from '@/features/care/bookingCalendar';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
 import { appointmentsApi } from '@/api/appointments.api';
+import { therapistsApi } from '@/api/therapists.api';
+import { useQuery } from '@tanstack/vue-query';
 import { ApiError } from '@/types/api';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
@@ -139,13 +155,71 @@ const viewYear = ref(today.getFullYear());
 const viewMonth = ref(today.getMonth());
 
 const monthTitle = computed(() => monthLabel(viewYear.value, viewMonth.value));
-const grid = computed(() => monthGrid(viewYear.value, viewMonth.value, today));
+
+/**
+ * The therapist's open days for the month on screen.
+ *
+ * Refetched per month rather than once for a fixed window, so paging forward
+ * asks about the month being looked at instead of greying it out for lack of
+ * an answer.
+ */
+const monthRange = computed(() => {
+  const first = new Date(viewYear.value, viewMonth.value, 1);
+  const last = new Date(viewYear.value, viewMonth.value + 1, 0);
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { from: iso(first), to: iso(last) };
+});
+
+const { data: availability } = useQuery({
+  queryKey: ['therapists', therapistId, 'availability', monthRange],
+  queryFn: () => therapistsApi.availability(therapistId, monthRange.value.from, monthRange.value.to),
+  enabled: !!therapistId,
+});
+
+const openDays = computed(() => openDayIndex(availability.value));
+
+/**
+ * The server returns an empty range whenever nobody can book: the therapist has
+ * set no hours, is at capacity, or has marked themselves unavailable. Those are
+ * three different things to say about someone, so the wording comes from the
+ * therapist record rather than being guessed from the empty array — telling a
+ * client that a fully-booked therapist "has not set hours" is exactly the
+ * false statement the directory card used to make in reverse.
+ */
+const nothingBookable = computed(
+  () => availability.value !== undefined && availability.value.length === 0,
+);
+
+const unbookableReason = computed(() => {
+  if (!nothingBookable.value) return null;
+  const name = therapist.value?.name ?? 'This therapist';
+
+  if (therapist.value?.fullyBooked) {
+    return `${name} is not taking new bookings right now. Try another therapist, or ask CruxCare to match you.`;
+  }
+
+  if (therapist.value?.schedulePublished === false) {
+    return `${name} has not set booking hours yet, so there is nothing to request. Try another therapist, or ask CruxCare to match you.`;
+  }
+
+  // Reachable when the record is still loading, or from an older server that
+  // sends no schedulePublished — say what is true either way.
+  return `${name} has no times open at the moment. Try another therapist, or ask CruxCare to match you.`;
+});
+
+const grid = computed(() =>
+  // Nothing bookable greys the whole month: leaving days tappable so each one
+  // can report "nothing open" makes the client work it out a day at a time.
+  monthGrid(viewYear.value, viewMonth.value, today, openDays.value, nothingBookable.value),
+);
 
 const selectedDay = ref<string | null>(null);
 const selectedDayFull = computed(() =>
   selectedDay.value ? formatDayHeading(selectedDay.value) : '',
 );
 const selectedSlot = ref<string | null>(null);
+const daySlots = computed(() => slotsFor(selectedDay.value, openDays.value));
 
 function selectDay(iso: string) {
   selectedDay.value = iso;
@@ -198,6 +272,17 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+.cc-book__notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.cc-book__notice p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--cc-ink-700);
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

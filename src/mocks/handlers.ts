@@ -4,7 +4,7 @@ import type { RegisterPayload } from '@/api/auth.api';
 import type { CreateAppointmentPayload } from '@/api/appointments.api';
 import type { ProductQuery } from '@/api/products.api';
 import type { CartItem, CheckoutQuote, Order } from '@/types/marketplace';
-import type { CareRequest, HealthProfile, TherapistCareRequest } from '@/types/care';
+import type { CareRequest, HealthProfile, TherapistCareRequest, WorkingDay } from '@/types/care';
 import type { WalletTopUpQuote } from '@/types/wallet';
 import type { TherapistPlanTier, User } from '@/types/user';
 import { genderOptions } from '@/types/user';
@@ -590,6 +590,80 @@ const careHandlers: HttpHandler[] = [
     const t = db.therapists.find((x) => x.id === params.id);
     if (!t) return HttpResponse.json({ message: 'Therapist not found.' }, { status: 404 });
     return HttpResponse.json(t);
+  }),
+
+  /**
+   * The therapist's open days across a range.
+   *
+   * Built from their rota, so a therapist who has set no hours returns nothing
+   * at all rather than a fortnight of office hours nobody agreed to.
+   */
+  http.get(url('/therapists/:id/availability'), ({ params, request }) => {
+    const therapist = db.therapists.find((x) => x.id === params.id);
+    if (!therapist) return HttpResponse.json({ message: 'Therapist not found.' }, { status: 404 });
+
+    const rota = db.therapistRotas[String(params.id)] ?? [];
+    if (rota.length === 0 || therapist.fullyBooked) return HttpResponse.json(paginate([]));
+
+    const query = new URL(request.url).searchParams;
+    const from = new Date(`${query.get('from') ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
+    const to = new Date(`${query.get('to') ?? query.get('from') ?? from.toISOString().slice(0, 10)}T00:00:00`);
+
+    const days: { date: string; slots: string[] }[] = [];
+    for (const day = new Date(from); day <= to; day.setDate(day.getDate() + 1)) {
+      const working = rota.find((w) => w.weekday === day.getDay());
+      const slots: string[] = [];
+
+      if (working) {
+        const [openHour] = working.opensAt.split(':').map(Number);
+        const [closeHour] = working.closesAt.split(':').map(Number);
+        for (let hour = openHour; hour < closeHour; hour += 1) {
+          slots.push(`${String(hour).padStart(2, '0')}:00`);
+        }
+      }
+
+      days.push({ date: day.toISOString().slice(0, 10), slots });
+    }
+
+    return HttpResponse.json(paginate(days));
+  }),
+
+  /** The signed-in therapist's own rota. Empty means no hours set. */
+  http.get(url('/me/therapist/availability'), ({ request }) => {
+    const profile = currentTherapistProfile(request);
+    if (!profile) return therapistProfileMissing(request);
+    return HttpResponse.json(paginate(db.therapistRotas[profile.id] ?? []));
+  }),
+
+  /** A PUT, so what is sent replaces the week and `[]` genuinely clears it. */
+  http.put(url('/me/therapist/availability'), async ({ request }) => {
+    const profile = currentTherapistProfile(request);
+    if (!profile) return therapistProfileMissing(request);
+
+    const body = (await request.json()) as { days?: unknown };
+    if (!Array.isArray(body.days)) {
+      return HttpResponse.json(
+        { message: 'Send the full week, or an empty list to clear your hours.' },
+        { status: 422 },
+      );
+    }
+
+    const days = body.days as WorkingDay[];
+
+    if (days.some((d) => d.closesAt <= d.opensAt)) {
+      return HttpResponse.json(
+        { message: 'A day has to close after it opens.' },
+        { status: 422 },
+      );
+    }
+
+    const sorted = [...days].sort((a, b) => a.weekday - b.weekday);
+    db.therapistRotas[profile.id] = sorted;
+    // The directory reads this to decide between "no hours set" and a real
+    // absence of slots, so it has to move with the rota.
+    profile.schedulePublished = sorted.length > 0;
+
+    return HttpResponse.json(paginate(sorted));
   }),
 
   http.get(url('/me/therapist/profile'), ({ request }) => {

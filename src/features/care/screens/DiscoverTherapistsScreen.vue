@@ -116,8 +116,11 @@
             <span v-if="formatNextSlot(t.nextAvailableSlot)" class="cc-discover__slot">
               {{ formatNextSlot(t.nextAvailableSlot) }}
             </span>
+            <!-- Three different things produce no slot and they are not the
+                 same statement. Someone who has never set working hours has an
+                 empty diary, so "Fully booked" is false about them. -->
             <span v-else class="cc-discover__slot cc-discover__slot--none">
-              {{ t.fullyBooked ? 'Fully booked' : 'No slots listed' }}
+              {{ slotAbsenceLabel(t) }}
             </span>
           </div>
 
@@ -154,6 +157,7 @@ import {
   discoverTherapists,
   formatNextSlot,
   isNearby,
+  slotAbsenceLabel,
   specialtyChips,
 } from '@/features/care/discoverTherapists';
 import { useAuthStore } from '@/stores/auth';
