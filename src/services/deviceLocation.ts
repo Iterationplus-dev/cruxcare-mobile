@@ -14,6 +14,19 @@ export interface DeviceCoordinates {
   accuracy: number | null;
 }
 
+/** Long enough for a cold GPS start, short enough that a stuck read gives up
+ *  rather than leaving the screen mid-sentence. */
+const FIX_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('location-timeout')), ms);
+    }),
+  ]);
+}
+
 export type LocationOutcome =
   | { ok: true; coordinates: DeviceCoordinates }
   | { ok: false; reason: 'denied' | 'unavailable' };
@@ -37,10 +50,13 @@ export async function readDeviceLocation(): Promise<LocationOutcome> {
       if (asked.location !== 'granted') return { ok: false, reason: 'denied' };
     }
 
-    const position = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: false,
-      timeout: 10_000,
-    });
+    // The plugin's own `timeout` does not reject — on a device that never gets
+    // a fix, getCurrentPosition simply never settles and the caller is left
+    // saying "Finding you…" forever. This is the timeout that actually fires.
+    const position = await withTimeout(
+      Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: FIX_TIMEOUT_MS }),
+      FIX_TIMEOUT_MS,
+    );
 
     return {
       ok: true,

@@ -93,3 +93,19 @@ describe('formatCoordinates', () => {
     ).toBe('6.4551, 3.3841');
   });
 });
+
+describe('a read that never settles', () => {
+  it('gives up rather than leaving the caller waiting forever', async () => {
+    // The plugin's own timeout does not reject, so a device that never gets a
+    // fix would otherwise hang the screen on "Finding you…" indefinitely.
+    vi.useFakeTimers();
+    checkPermissions.mockResolvedValue({ location: 'granted' });
+    getCurrentPosition.mockReturnValue(new Promise(() => {}));
+
+    const pending = readDeviceLocation();
+    await vi.advanceTimersByTimeAsync(15_000);
+
+    expect(await pending).toEqual({ ok: false, reason: 'unavailable' });
+    vi.useRealTimers();
+  });
+});
