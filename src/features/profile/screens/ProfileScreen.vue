@@ -38,6 +38,12 @@
               <AppBadge v-if="auth.roles.includes('admin')" label="ADMIN" />
             </div>
           </div>
+          <!-- The whole block is the target; this is the affordance that says
+               so. Tapping a name and photo opens an editor on most apps, but
+               nothing on screen was saying it. -->
+          <span class="cc-profile__edit" aria-hidden="true">
+            <AppIcon name="edit" :size="18" color="#fff" />
+          </span>
         </button>
       </div>
     </div>
@@ -177,8 +183,12 @@ async function onLogout() {
   white-space: nowrap;
 }
 .cc-profile__crux-id {
-  color: #cde7e1;
+  /* Dark rather than the mint it was: the gradient is lightest exactly where
+     this line sits, and a pale id on a pale ground was the least readable
+     thing in the header. */
+  color: var(--cc-color-primary-dark);
   font-size: 12.5px;
+  font-weight: 600;
   letter-spacing: 0.04em;
 }
 .cc-profile__crux-id--none {
@@ -239,6 +249,17 @@ async function onLogout() {
 }
 .cc-profile__identity-body {
   flex: 1;
+  min-width: 0;
+}
+.cc-profile__edit {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 .cc-profile__badges {
   display: flex;

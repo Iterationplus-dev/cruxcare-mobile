@@ -10,6 +10,7 @@
       </span>
       <input
         :id="inputId"
+        ref="inputElement"
         class="cc-field__input"
         :type="type"
         :value="modelValue"
@@ -17,6 +18,8 @@
         :disabled="disabled"
         :inputmode="inputmode"
         :autocomplete="autocomplete"
+        :min="min"
+        :max="max"
         :aria-invalid="!!error"
         :aria-describedby="describedBy"
         @input="onInput"
@@ -50,6 +53,12 @@ const props = withDefaults(
     disabled?: boolean;
     inputmode?: 'text' | 'numeric' | 'tel' | 'email' | 'decimal' | 'none' | 'search' | 'url';
     autocomplete?: string;
+    /** Bounds for `date` and `number` inputs. On a date field these are what
+     *  actually grey out the unreachable days in the platform picker, so a rule
+     *  expressed here is enforced by the control rather than only checked
+     *  after the fact. */
+    min?: string;
+    max?: string;
     /** Validate on blur per README "Forms: inline validation on blur". */
     onBlurValidate?: () => void;
   }>(),
@@ -57,6 +66,12 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{ 'update:modelValue': [string]; blur: [] }>();
+
+const inputElement = ref<HTMLInputElement | null>(null);
+
+/** Exposed so a caller can raise the platform picker on a date field — there is
+ *  no way to do that from outside without the element itself. */
+defineExpose({ inputElement });
 
 const inputId = `cc-input-${useId()}`;
 const focused = ref(false);

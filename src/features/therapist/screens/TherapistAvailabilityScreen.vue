@@ -81,8 +81,8 @@
           </AppCard>
 
           <p class="cc-text-caption">
-            Times are the same clock your appointments use. Existing bookings are never cancelled
-            by a change here — switching a day off only stops new ones.
+            {{ timezoneLabel }} Existing bookings are never cancelled by a change here — switching
+            a day off only stops new ones.
           </p>
         </template>
       </div>
@@ -144,7 +144,7 @@ const queryClient = useQueryClient();
 const times = timeOptions();
 
 const {
-  data: saved,
+  data: rota,
   isPending,
   error: loadError,
   refetch,
@@ -177,6 +177,20 @@ const rows = reactive<DayRow[]>(
 );
 
 const saving = ref(false);
+
+/** The days as the server returned them, in the therapist's own clock. */
+const saved = computed(() => rota.value?.days ?? null);
+
+/**
+ * Whose clock these hours are in. The server names it so this screen does not
+ * have to guess — before it did, a therapist in Lagos setting "09:00" was
+ * setting 10:00 their own time with nothing on screen saying so.
+ */
+const timezoneLabel = computed(() => {
+  const zone = rota.value?.timezone;
+  if (!zone) return 'Times are in UTC. Set your timezone to use your own clock.';
+  return `Times are in your own timezone (${zone.replace(/_/g, ' ')}).`;
+});
 
 /**
  * Seeded from the server, and re-seeded if the rota is refetched while this

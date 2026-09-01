@@ -55,11 +55,30 @@
         />
 
         <AppInput
+          ref="dobField"
           v-model="dateOfBirth"
           type="date"
           label="Date of birth"
+          class="cc-edit__dob"
+          :min="DOB_MIN"
+          :max="DOB_MAX"
           :error="dobError"
-        />
+          helper="You need to be at least 14 to use CruxCare."
+        >
+          <template #trailing>
+            <!-- The WebView's own date field draws a chevron and only on some
+                 builds, so its indicator is hidden and this is shown instead —
+                 always visible, and always the same control. -->
+            <button
+              type="button"
+              class="cc-edit__dob-button"
+              aria-label="Open the calendar"
+              @click="openDatePicker"
+            >
+              <AppIcon name="calendar_month" :size="20" color="var(--cc-color-primary)" />
+            </button>
+          </template>
+        </AppInput>
 
         <AppSheetSelect
           v-model="language"
@@ -171,13 +190,61 @@ const language = ref(auth.user?.language ?? '');
 /** Read-only. The web app owns `outlet_details`; this only displays it. */
 const outletName = computed(() => auth.user?.outletName ?? '');
 
+/**
+ * The bounds the calendar itself enforces.
+ *
+ * `max` is the most recent birthday that still makes someone 14, so every date
+ * a younger person would pick is greyed out in the picker rather than accepted
+ * and then rejected. `min` keeps the year wheel to a sane span.
+ */
+const MINIMUM_AGE = 14;
+const OLDEST_YEARS = 120;
+
+function isoYearsAgo(years: number): string {
+  const at = new Date();
+  at.setFullYear(at.getFullYear() - years);
+  return `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(at.getDate()).padStart(2, '0')}`;
+}
+
+const DOB_MAX = isoYearsAgo(MINIMUM_AGE);
+const DOB_MIN = isoYearsAgo(OLDEST_YEARS);
+
+const dobField = ref<{ inputElement: HTMLInputElement | null } | null>(null);
+
+/**
+ * Opens the platform picker.
+ *
+ * `showPicker()` is the only reliable way to raise it from a button; where the
+ * WebView is too old for it, focusing the field is what the member would have
+ * done anyway.
+ */
+function openDatePicker() {
+  const input = dobField.value?.inputElement;
+  if (!input) return;
+
+
+  try {
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+      return;
+    }
+  } catch {
+    // Some builds throw rather than no-op when the field is not user-activated.
+  }
+
+  input.focus();
+  input.click();
+}
+
 /** Mirrors the server's rule so a typo is caught before the round trip. */
 const dobError = computed(() => {
   if (!dateOfBirth.value) return '';
   const at = new Date(`${dateOfBirth.value}T00:00:00`);
   if (Number.isNaN(at.getTime())) return 'That date does not look right.';
-  if (at.getTime() > Date.now()) return 'A date of birth has to be in the past.';
-  if (at.getFullYear() < 1900) return 'That date of birth does not look right.';
+  // Compared as ISO strings, which sort correctly and avoid a timezone shifting
+  // a birthday across the boundary.
+  if (dateOfBirth.value > DOB_MAX) return `You need to be at least ${MINIMUM_AGE} to use CruxCare.`;
+  if (dateOfBirth.value < DOB_MIN) return 'That date of birth does not look right.';
   return '';
 });
 
@@ -395,6 +462,31 @@ async function onSave() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+/* The WebView draws its own indicator on a date field — sometimes a chevron,
+   sometimes nothing. Hidden so there is one calendar control, not two. */
+.cc-edit__dob :deep(input[type='date'])::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
+.cc-edit__dob :deep(input[type='date']) {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cc-edit__dob-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -10px -6px -10px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.cc-edit__dob-button:focus-visible {
+  outline: 3px solid rgba(14, 124, 107, 0.35);
+  outline-offset: -3px;
+  border-radius: 8px;
 }
 .cc-edit__about {
   display: flex;

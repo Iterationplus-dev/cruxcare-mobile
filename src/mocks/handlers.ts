@@ -628,11 +628,18 @@ const careHandlers: HttpHandler[] = [
     return HttpResponse.json(paginate(days));
   }),
 
-  /** The signed-in therapist's own rota. Empty means no hours set. */
+  /**
+   * The signed-in therapist's own rota, in their own clock. Empty `days` means
+   * no hours set; a null `timezone` means they have never been asked, and the
+   * hours then read as UTC.
+   */
   http.get(url('/me/therapist/availability'), ({ request }) => {
     const profile = currentTherapistProfile(request);
     if (!profile) return therapistProfileMissing(request);
-    return HttpResponse.json(paginate(db.therapistRotas[profile.id] ?? []));
+    return HttpResponse.json({
+      timezone: 'Africa/Lagos',
+      days: db.therapistRotas[profile.id] ?? [],
+    });
   }),
 
   /** A PUT, so what is sent replaces the week and `[]` genuinely clears it. */
@@ -663,7 +670,7 @@ const careHandlers: HttpHandler[] = [
     // absence of slots, so it has to move with the rota.
     profile.schedulePublished = sorted.length > 0;
 
-    return HttpResponse.json(paginate(sorted));
+    return HttpResponse.json({ timezone: 'Africa/Lagos', days: sorted });
   }),
 
   http.get(url('/me/therapist/profile'), ({ request }) => {

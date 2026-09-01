@@ -35,6 +35,21 @@ export interface WorkingDay {
 }
 
 /**
+ * A therapist's rota, in the therapist's own clock.
+ *
+ * `timezone` is named by the server so no screen has to guess whose hours these
+ * are. Storage is UTC; these times are already converted. Before this, a
+ * therapist in Lagos setting "09:00" was setting 10:00 their own time and
+ * nothing said so.
+ */
+export interface TherapistRota {
+  /** An IANA name, or null when the therapist has never been asked — in which
+   *  case the hours read as UTC, which is what every pre-existing row is. */
+  timezone: string | null;
+  days: WorkingDay[];
+}
+
+/**
  * What a client's booking calendar can offer on one date.
  *
  * Every time here comes from the therapist's own rota minus what is already

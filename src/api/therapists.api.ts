@@ -3,6 +3,7 @@ import type { CursorPage } from '@/types/api';
 import type {
   CareRequest,
   TherapistAvailabilityDay,
+  TherapistRota,
   TherapistSummary,
   WorkingDay,
 } from '@/types/care';
@@ -49,18 +50,16 @@ export const therapistsApi = {
    * which is the point: before this existed the server assumed everybody kept
    * the same office hours and offered clients slots on days nobody worked.
    */
-  async myAvailability(): Promise<WorkingDay[]> {
-    const { data } = await apiClient.get<CursorPage<WorkingDay>>('/me/therapist/availability');
-    return data.data;
+  async myAvailability(): Promise<TherapistRota> {
+    const { data } = await apiClient.get<TherapistRota>('/me/therapist/availability');
+    return data;
   },
 
   /** A PUT because it replaces the week: the days sent are the days stored, and
    *  `[]` genuinely clears the rota rather than being ignored as a no-op. */
-  async updateMyAvailability(days: WorkingDay[]): Promise<WorkingDay[]> {
-    const { data } = await apiClient.put<CursorPage<WorkingDay>>('/me/therapist/availability', {
-      days,
-    });
-    return data.data;
+  async updateMyAvailability(days: WorkingDay[]): Promise<TherapistRota> {
+    const { data } = await apiClient.put<TherapistRota>('/me/therapist/availability', { days });
+    return data;
   },
 
   /**

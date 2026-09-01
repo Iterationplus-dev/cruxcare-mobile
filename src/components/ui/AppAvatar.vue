@@ -43,8 +43,13 @@ const initials = computed(() =>
   justify-content: center;
   border-radius: var(--cc-radius-pill);
   overflow: hidden;
-  background: var(--cc-color-mist);
-  color: var(--cc-color-primary-dark);
+  /* PR2 draws the initials circle as solid dark green with white letters and a
+     light ring, not mint with green letters. The ring is what keeps it read as
+     a disc when it sits on the green profile header, where a fill alone would
+     merge into the background. */
+  background: var(--cc-color-primary-dark);
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
   flex-shrink: 0;
 }
 .cc-avatar__img {
