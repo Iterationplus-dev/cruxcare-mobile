@@ -960,6 +960,27 @@ const careHandlers: HttpHandler[] = [
    * Who has asked to read the caller's health profile. Acceptance of a care
    * request lets a therapist ask; only the answer here gives them access.
    */
+  http.post(url('/auth/two-factor'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const { enabled } = (await request.json()) as { enabled: boolean };
+    user.twoFactorEnabled = enabled;
+    return HttpResponse.json(db.toPublicUser(user));
+  }),
+
+  http.patch(url('/me/payment-preferences'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const patch = (await request.json()) as {
+      payFromWalletFirst?: boolean;
+      saveMethods?: boolean;
+    };
+    // Both default to the behaviour the app already had.
+    const current = user.paymentPreferences ?? { payFromWalletFirst: true, saveMethods: true };
+    user.paymentPreferences = { ...current, ...patch };
+    return HttpResponse.json(db.toPublicUser(user));
+  }),
+
   http.get(url('/health-profile/access'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();

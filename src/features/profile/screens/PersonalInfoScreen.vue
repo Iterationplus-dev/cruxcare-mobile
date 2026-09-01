@@ -45,9 +45,9 @@
               type="button"
               class="cc-detail__action"
               :aria-label="`Copy your username, ${username}`"
-              @click="copyUsername"
+              @click="copyValue('username', username, 'Username')"
             >
-              {{ copied ? 'Copied' : 'Copy' }}
+              {{ copiedField === 'username' ? 'Copied' : 'Copy' }}
             </button>
           </div>
 
@@ -57,12 +57,22 @@
               <span class="cc-detail__value cc-text-mono">{{ cruxId }}</span>
             </div>
             <span class="cc-detail__note">Permanent</span>
+            <!-- Quoted to support and to an upline, so it is copied far more
+                 often than it is read out. -->
+            <button
+              type="button"
+              class="cc-detail__action"
+              :aria-label="`Copy your Crux ID, ${cruxId}`"
+              @click="copyValue('cruxId', cruxId, 'Crux ID')"
+            >
+              {{ copiedField === 'cruxId' ? 'Copied' : 'Copy' }}
+            </button>
           </div>
         </AppCard>
 
         <AppSectionLabel label="Address and identity" />
         <AppCard style="padding: 0">
-          <div class="cc-detail cc-detail--last">
+          <div class="cc-detail">
             <div class="cc-detail__body">
               <span class="cc-detail__label">Delivery address</span>
               <!-- Never invented: an account with no address says so rather
@@ -70,6 +80,17 @@
               <span class="cc-detail__value">{{ addressLine ?? 'Not recorded yet' }}</span>
             </div>
             <AppIcon name="chevron_right" :size="20" color="var(--cc-ink-400)" />
+          </div>
+
+          <!-- Drawn in PR3 with a verified NIN. There is no identity document
+               anywhere in the API, so this states that plainly instead of
+               showing a document nobody has uploaded. -->
+          <div class="cc-detail cc-detail--last cc-detail--muted">
+            <div class="cc-detail__body">
+              <span class="cc-detail__label">Identity document</span>
+              <span class="cc-detail__value">NIN or passport verification</span>
+            </div>
+            <span class="cc-detail__soon">Coming soon</span>
           </div>
         </AppCard>
 
@@ -108,9 +129,11 @@ import { formatAddress } from '@/types/user';
  * design's argument: a field that needs a code to change should not sit in a
  * form beside one that does not.
  *
- * Next of kin and identity document are drawn here too. The API carries
- * neither, so neither is stubbed — an empty row would claim the platform holds
- * something it does not.
+ * Next of kin is drawn here too and has no field behind it, so it is not
+ * shown at all. Identity document has none either, but is named as coming soon
+ * rather than omitted — the difference is that verification is a thing the
+ * member will be asked for, so knowing it is on the way is useful; a blank
+ * next-of-kin row would just claim the platform holds something it does not.
  */
 const auth = useAuthStore();
 const toast = useToast();
@@ -118,23 +141,25 @@ const toast = useToast();
 const username = computed(() => auth.user?.username ?? '');
 const cruxId = computed(() => auth.user?.membership?.cruxId ?? '');
 const addressLine = computed(() => formatAddress(auth.user?.address));
-const copied = ref(false);
+/** Which row last reported a successful copy, so two Copy buttons cannot both
+ *  read "Copied" at once. */
+const copiedField = ref<string | null>(null);
 
-async function copyUsername() {
-  if (!username.value) return;
+async function copyValue(field: string, value: string, label: string) {
+  if (!value) return;
 
-  if (await copyToClipboard(username.value)) {
-    copied.value = true;
+  if (await copyToClipboard(value)) {
+    copiedField.value = field;
     setTimeout(() => {
-      copied.value = false;
+      if (copiedField.value === field) copiedField.value = null;
     }, 2000);
-    await toast.show('Username copied', 'success');
+    await toast.show(`${label} copied`, 'success');
     return;
   }
 
   // Never claim a copy that did not happen — the value is on screen and can
   // still be read off it.
-  await toast.show(`Couldn't copy. Your username is ${username.value}`, 'warning');
+  await toast.show(`Couldn't copy. Your ${label.toLowerCase()} is ${value}`, 'warning');
 }
 
 /**
@@ -197,6 +222,18 @@ async function notYet(what: string) {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+}
+.cc-detail--muted .cc-detail__value {
+  color: var(--cc-ink-400);
+}
+.cc-detail__soon {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--cc-color-mist);
+  color: var(--cc-ink-600);
+  font-size: 11.5px;
+  font-weight: 600;
 }
 .cc-detail__note {
   flex: none;

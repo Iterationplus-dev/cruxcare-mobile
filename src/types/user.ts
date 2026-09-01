@@ -117,15 +117,61 @@ export interface User {
    */
   username?: string | null;
   gender?: Gender | null;
+  /** Free text the member writes about themselves. */
+  about?: string | null;
+  /** `YYYY-MM-DD`. A date, not an age — an age is wrong the day after it is
+   *  stored. */
+  dateOfBirth?: string | null;
+  /** A BCP-47 tag (`en`, `ig`), not a display name: the name is a translation
+   *  of the tag and lives in the client. */
+  language?: string | null;
+  /**
+   * The outlet this member collects from, from `users.outlet_details.display`.
+   * Read-only — the web app writes that blob. Null when there is no outlet, or
+   * when the blob exists with a null display, which is how most rows look.
+   */
+  outletName?: string | null;
   /** Absent until the server returns it; the client never invents one. */
   address?: Address | null;
   membership: Membership | null;
   therapistProfile: TherapistProfile | null;
   payoutAccount?: PayoutAccount | null;
   biometricEnabled: boolean;
+  /** A real switch: while it is on, signing in needs a code as well as the
+   *  password. Optional so an older server reads as "we do not know". */
+  twoFactorEnabled?: boolean;
+  paymentPreferences?: {
+    payFromWalletFirst: boolean;
+    saveMethods: boolean;
+  };
   createdAt: string;
 }
 
 export function fullName(user: Pick<User, 'firstName' | 'lastName'>): string {
   return `${user.firstName} ${user.lastName}`.trim();
+}
+
+/**
+ * The languages the platform stores, as BCP-47 tags with their display names.
+ *
+ * Kept here rather than on the server for the reason the column stores a tag:
+ * "English" is a translation of `en`, and translations belong in the client.
+ * Must stay in step with `UpdateMeRequest::LANGUAGES`.
+ */
+export const languageOptions = [
+  { value: 'en', label: 'English' },
+  { value: 'pcm', label: 'Nigerian Pidgin' },
+  { value: 'ig', label: 'Igbo' },
+  { value: 'ha', label: 'Hausa' },
+  { value: 'yo', label: 'Yoruba' },
+  { value: 'fr', label: 'French' },
+] as const;
+
+export type LanguageTag = (typeof languageOptions)[number]['value'];
+
+/** The display name for a stored tag, or the tag itself when this build does
+ *  not know it — never a blank, which would read as no language set. */
+export function languageLabel(tag: string | null | undefined): string | null {
+  if (!tag) return null;
+  return languageOptions.find((o) => o.value === tag)?.label ?? tag;
 }

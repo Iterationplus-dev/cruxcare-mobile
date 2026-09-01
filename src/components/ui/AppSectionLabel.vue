@@ -19,7 +19,12 @@ defineProps<{ label: string }>();
   font-size: 11.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--cc-ink-400);
+  /* --cc-ink-400 is the muted-helper token, and at 11.5px uppercase over the
+     app's tinted background these headings were the hardest thing on the
+     screen to read. The secondary-text token carries the same hierarchy at a
+     contrast that survives the small size. */
+  color: var(--cc-ink-600);
+  font-weight: 600;
   margin: 6px 0 -4px;
 }
 </style>

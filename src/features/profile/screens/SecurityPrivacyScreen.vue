@@ -16,10 +16,28 @@
           <!-- Kept as "Biometric unlock": the design writes "Face ID and
                fingerprint", but this build runs on Android as well and the
                plugin enrols whatever the device offers. -->
-          <AppListRow title="Biometric unlock" subtitle="This device only" icon="fingerprint" :divider="false">
+          <AppListRow title="Biometric unlock" subtitle="This device only" icon="fingerprint">
             <template #trailing>
               <label class="cc-toggle">
                 <input type="checkbox" :checked="auth.user?.biometricEnabled" @change="onToggleBiometric" />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Two-step verification"
+            :subtitle="twoFactorSubtitle"
+            icon="shield_lock"
+            :divider="false"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="auth.user?.twoFactorEnabled === true"
+                  :disabled="savingTwoFactor"
+                  @change="onToggleTwoFactor"
+                />
                 <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
               </label>
             </template>
@@ -72,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppCard, AppHeader, AppListRow, AppSectionLabel } from '@/components/ui';
 import { useRouter } from 'vue-router';
@@ -82,6 +100,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useLocationStore } from '@/stores/location';
 import { formatCoordinates } from '@/services/deviceLocation';
 import { biometric } from '@/services/biometric';
+import { authApi } from '@/api/auth.api';
+import { ApiError } from '@/types/api';
 import { useToast } from '@/composables/useToast';
 
 /** PR4 · Security and privacy — each toggle states what the off state means. */
@@ -153,6 +173,43 @@ async function onToggleLocation(event: Event) {
       'warning',
       { title: 'Permission needed' },
     );
+  }
+}
+
+const savingTwoFactor = ref(false);
+
+const twoFactorSubtitle = computed(() =>
+  auth.user?.twoFactorEnabled
+    ? 'On · a code is needed to sign in on a new device'
+    : 'Off · your password alone signs you in',
+);
+
+/**
+ * A real switch, so a failure must not leave the toggle showing the state the
+ * member wanted rather than the one the server holds.
+ */
+async function onToggleTwoFactor(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const wanted = input.checked;
+
+  savingTwoFactor.value = true;
+  try {
+    auth.user = await authApi.setTwoFactor(wanted);
+    await toast.show(
+      wanted
+        ? 'Two-step verification is on. You will be asked for a code when you sign in.'
+        : 'Two-step verification is off.',
+      wanted ? 'success' : 'warning',
+    );
+  } catch (error) {
+    input.checked = !wanted;
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not change that. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Not saved' });
+  } finally {
+    savingTwoFactor.value = false;
   }
 }
 

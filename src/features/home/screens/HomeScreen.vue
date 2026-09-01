@@ -19,7 +19,7 @@
         <template v-else>
           <AppCard v-if="headline">
             <div class="cc-home__session-head">
-              <span class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">
+              <span class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-600)">
                 {{ headline.timing === 'overdue' ? 'MISSED SESSION' : 'NEXT SESSION' }}
               </span>
               <AppBadge :label="badge.label" :tone="badge.tone" />

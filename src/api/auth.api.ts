@@ -146,7 +146,41 @@ export const authApi = {
     return requireUser(data);
   },
 
-  async updateMe(patch: Partial<Pick<User, 'firstName' | 'lastName' | 'gender' | 'address' | 'avatarUrl' | 'payoutAccount'>>) {
+  /**
+   * Turn two-step verification on or off. Changing it needs a live session,
+   * which is the proof: whoever is asking already signed in on this device.
+   */
+  async setTwoFactor(enabled: boolean): Promise<User> {
+    const { data } = await apiClient.post<User>('/auth/two-factor', { enabled });
+    return data;
+  },
+
+  /** How payments run (PR6). Sent one key at a time; an omitted key is left
+   *  alone rather than reset. */
+  async updatePaymentPreferences(patch: {
+    payFromWalletFirst?: boolean;
+    saveMethods?: boolean;
+  }): Promise<User> {
+    const { data } = await apiClient.patch<User>('/me/payment-preferences', patch);
+    return data;
+  },
+
+  async updateMe(
+    patch: Partial<
+      Pick<
+        User,
+        | 'firstName'
+        | 'lastName'
+        | 'gender'
+        | 'about'
+        | 'dateOfBirth'
+        | 'language'
+        | 'address'
+        | 'avatarUrl'
+        | 'payoutAccount'
+      >
+    >,
+  ) {
     const { data } = await apiClient.patch<User>('/me', patch);
     return data;
   },

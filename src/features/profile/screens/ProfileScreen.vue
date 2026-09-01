@@ -26,6 +26,11 @@
                  line reads as an id that failed to load. The username moved to
                  Personal information, beside the other verified details. -->
             <div v-if="cruxId" class="cc-text-mono cc-profile__crux-id">{{ cruxId }}</div>
+            <!-- No Crux ID means no membership. Saying so beats a gap where an
+                 id would be, which reads as one that failed to load. -->
+            <div v-else class="cc-profile__crux-id cc-profile__crux-id--none">
+              No Crux ID · client account
+            </div>
             <div class="cc-profile__badges">
               <AppBadge label="CLIENT" />
               <AppBadge v-if="auth.roles.includes('member')" :label="`MEMBER${tierLabel}`" />
@@ -175,6 +180,10 @@ async function onLogout() {
   color: #cde7e1;
   font-size: 12.5px;
   letter-spacing: 0.04em;
+}
+.cc-profile__crux-id--none {
+  letter-spacing: 0;
+  opacity: 0.85;
 }
 .cc-profile__cover {
   position: relative;

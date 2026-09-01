@@ -15,7 +15,7 @@
         </p>
       </div>
       <div class="cc-screen__pad">
-        <div class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-400)">WHAT YOU WILL NEED</div>
+        <div class="cc-text-mono" style="font-size: 11.5px; color: var(--cc-ink-600)">WHAT YOU WILL NEED</div>
         <AppCard style="padding: 0">
           <AppListRow title="Your Crux ID" subtitle="Issued when you joined the cooperative" icon="badge" />
           <AppListRow title="Practice licence or certificate" subtitle="PDF or photo, plus the issuing body" icon="workspace_premium" />

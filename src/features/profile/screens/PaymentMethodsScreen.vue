@@ -48,6 +48,43 @@
           message="Your payment provider collects card details in its own secure sheet each time you pay, so there is nothing to save here."
         />
 
+        <AppSectionLabel label="How payments run" />
+        <AppCard style="padding: 0">
+          <AppListRow
+            title="Pay from wallet first"
+            :subtitle="walletFirstSubtitle"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="payFromWalletFirst"
+                  :disabled="savingPrefs"
+                  @change="setPreference('payFromWalletFirst', $event)"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Save cards for next time"
+            subtitle="Stored by the payment provider, not CruxCare"
+            :divider="false"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="saveMethods"
+                  :disabled="savingPrefs"
+                  @change="setPreference('saveMethods', $event)"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+        </AppCard>
+
         <div class="cc-pm__note">
           <AppIcon name="lock" :size="18" color="var(--cc-ink-600)" />
           <p>Card numbers never reach CruxCare servers. Provider to be confirmed at build.</p>
@@ -58,25 +95,76 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { AppButton, AppCard, AppHeader, AppIcon, AppSectionLabel } from '@/components/ui';
+import {
+  AppButton,
+  AppCard,
+  AppHeader,
+  AppIcon,
+  AppListRow,
+  AppSectionLabel,
+} from '@/components/ui';
 import { EmptyState } from '@/components/state';
 import { paymentProvider } from '@/services/payment';
+import { authApi } from '@/api/auth.api';
+import { useAuthStore } from '@/stores/auth';
+import { useWallet } from '@/composables/useWallet';
+import { useToast } from '@/composables/useToast';
+import { formatMoney } from '@/utils/money';
+import { ApiError } from '@/types/api';
 
 /**
  * PR6 · Payment methods — expired-card state inline, provider left open.
  *
- * The design's "How payments run" section (pay from wallet first, save cards
- * for next time) is not built: neither setting has anywhere to be stored, and
- * a toggle that forgets itself on reload is worse than not offering it.
+ * "How payments run" now has columns behind it, so both toggles persist. They
+ * default to the behaviour the app already had, which means switching one on is
+ * not a change for anyone who never opens this screen.
  */
 interface SavedMethod {
   label: string;
   expired: boolean;
 }
 
+const auth = useAuthStore();
+const toast = useToast();
+const { data: wallet } = useWallet();
+
 const methods = ref<SavedMethod[]>([]);
+const savingPrefs = ref(false);
+
+const payFromWalletFirst = computed(
+  () => auth.user?.paymentPreferences?.payFromWalletFirst ?? true,
+);
+const saveMethods = computed(() => auth.user?.paymentPreferences?.saveMethods ?? true);
+
+/** PR6 shows the balance in this line. Shown only once the wallet has loaded —
+ *  a placeholder figure here would be a claim about someone's money. */
+const walletFirstSubtitle = computed(() => {
+  const balance = wallet.value;
+  if (!balance) return 'Card covers anything your balance does not';
+  return `Balance ${formatMoney(balance.available, balance.currency)} · card covers the rest`;
+});
+
+async function setPreference(key: 'payFromWalletFirst' | 'saveMethods', event: Event) {
+  const input = event.target as HTMLInputElement;
+  const wanted = input.checked;
+
+  savingPrefs.value = true;
+  try {
+    auth.user = await authApi.updatePaymentPreferences({ [key]: wanted });
+  } catch (error) {
+    // Snap back rather than leaving the switch ahead of the server.
+    input.checked = !wanted;
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not save that. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Not saved' });
+  } finally {
+    savingPrefs.value = false;
+  }
+}
 
 /**
  * Monnify's checkout SDK charges one transaction at a time and has no vaulting
@@ -98,6 +186,44 @@ function remove(method: SavedMethod) {
 </script>
 
 <style scoped>
+.cc-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 24px;
+  flex: none;
+}
+.cc-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+.cc-toggle__track {
+  display: block;
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--cc-line);
+  padding: 2px;
+  box-sizing: border-box;
+}
+.cc-toggle__thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform var(--cc-motion-fast) var(--cc-ease-out);
+}
+.cc-toggle input:checked + .cc-toggle__track {
+  background: var(--cc-color-primary);
+}
+.cc-toggle input:checked + .cc-toggle__track .cc-toggle__thumb {
+  transform: translateX(16px);
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

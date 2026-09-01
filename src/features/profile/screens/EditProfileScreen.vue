@@ -9,7 +9,7 @@
       <button
         type="button"
         class="cc-edit__save"
-        :disabled="saving || !dirty"
+        :disabled="saving || !canSave"
         @click="onSave"
       >
         Save
@@ -54,6 +54,47 @@
           clear-label="Remove my gender"
         />
 
+        <AppInput
+          v-model="dateOfBirth"
+          type="date"
+          label="Date of birth"
+          :error="dobError"
+        />
+
+        <AppSheetSelect
+          v-model="language"
+          label="Language"
+          title="Language"
+          placeholder="Select a language"
+          :options="languageSelectOptions"
+          clearable
+          clear-label="Remove my language"
+        />
+
+        <div class="cc-edit__about">
+          <label class="cc-edit__about-label" :for="aboutId">About</label>
+          <textarea
+            :id="aboutId"
+            v-model="about"
+            class="cc-edit__about-input"
+            rows="4"
+            :maxlength="ABOUT_MAX"
+            placeholder="A short line about you. Clients see this on your profile."
+          ></textarea>
+          <div class="cc-edit__about-count">{{ about.length }}/{{ ABOUT_MAX }}</div>
+        </div>
+
+        <!-- Read-only: the web app writes `outlet_details`, the phone shows the
+             name out of it. Hidden entirely when there is no outlet rather than
+             rendered blank. -->
+        <div v-if="outletName" class="cc-edit__outlet">
+          <AppIcon name="storefront" :size="18" color="var(--cc-color-primary)" />
+          <div>
+            <div class="cc-edit__outlet-label">Your outlet</div>
+            <div class="cc-text-body-strong" style="font-size: 14px">{{ outletName }}</div>
+          </div>
+        </div>
+
         <!-- PR2's closing note, verbatim. It is the whole reason the verified
              fields are not on this screen. -->
         <div class="cc-edit__note">
@@ -63,14 +104,14 @@
       </div>
 
       <div class="cc-screen__footer">
-        <AppButton :loading="saving" :disabled="!dirty" @click="onSave">Save changes</AppButton>
+        <AppButton :loading="saving" :disabled="!canSave" @click="onSave">Save changes</AppButton>
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, useId, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import {
@@ -83,7 +124,7 @@ import {
 } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
-import { genderOptions, type Gender } from '@/types/user';
+import { genderOptions, languageOptions, type Gender } from '@/types/user';
 import { useToast } from '@/composables/useToast';
 import { prepareAvatarUpload, type AvatarCrop } from '@/utils/avatarImage';
 import { ApiError } from '@/types/api';
@@ -93,8 +134,12 @@ import { ApiError } from '@/types/api';
  *
  * The split from PR3 is the design's point: anything that needs verifying to
  * change (email, phone, Crux ID) lives on Personal information, and this screen
- * holds what a person can simply set. Display name, date of birth and language
- * are drawn here too but the API carries none of them, so they are not stubbed.
+ * holds what a person can simply set.
+ *
+ * Date of birth and language landed with a migration; `about` had a column all
+ * along and was simply never returned to the phone. Display name is drawn here
+ * too and still has nothing behind it, so it is not stubbed. The outlet name
+ * is shown but not editable — the web app owns that blob.
  */
 const auth = useAuthStore();
 const router = useRouter();
@@ -113,6 +158,28 @@ const gender = ref<Gender | ''>(auth.user?.gender ?? '');
  */
 const genderOnOpen = gender.value;
 const genderSelectOptions = genderOptions.map((o) => ({ value: o.value, label: o.label }));
+const languageSelectOptions = languageOptions.map((o) => ({ value: o.value, label: o.label }));
+
+const ABOUT_MAX = 1000;
+const aboutId = `cc-about-${useId()}`;
+
+const about = ref(auth.user?.about ?? '');
+/** `YYYY-MM-DD`, which is both what the input reads and what the API stores. */
+const dateOfBirth = ref(auth.user?.dateOfBirth ?? '');
+const language = ref(auth.user?.language ?? '');
+
+/** Read-only. The web app owns `outlet_details`; this only displays it. */
+const outletName = computed(() => auth.user?.outletName ?? '');
+
+/** Mirrors the server's rule so a typo is caught before the round trip. */
+const dobError = computed(() => {
+  if (!dateOfBirth.value) return '';
+  const at = new Date(`${dateOfBirth.value}T00:00:00`);
+  if (Number.isNaN(at.getTime())) return 'That date does not look right.';
+  if (at.getTime() > Date.now()) return 'A date of birth has to be in the past.';
+  if (at.getFullYear() < 1900) return 'That date of birth does not look right.';
+  return '';
+});
 
 const saving = ref(false);
 const savingPhoto = ref(false);
@@ -127,8 +194,13 @@ const dirty = computed(
   () =>
     firstName.value !== (auth.user?.firstName ?? '') ||
     lastName.value !== (auth.user?.lastName ?? '') ||
-    gender.value !== genderOnOpen,
+    gender.value !== genderOnOpen ||
+    about.value !== (auth.user?.about ?? '') ||
+    dateOfBirth.value !== (auth.user?.dateOfBirth ?? '') ||
+    language.value !== (auth.user?.language ?? ''),
 );
+
+const canSave = computed(() => dirty.value && !dobError.value);
 
 function close() {
   router.back();
@@ -191,7 +263,7 @@ async function onCropConfirmed(crop: AvatarCrop) {
 }
 
 async function onSave() {
-  if (!dirty.value) return;
+  if (!canSave.value) return;
 
   saving.value = true;
   try {
@@ -201,6 +273,11 @@ async function onSave() {
       ...(gender.value === genderOnOpen
         ? {}
         : { gender: gender.value === '' ? null : gender.value }),
+      // Blank is sent as null, which is how the API clears a field. Sending ''
+      // would store a value that renders as nothing but is not absent.
+      about: about.value.trim() || null,
+      dateOfBirth: dateOfBirth.value || null,
+      language: language.value || null,
     });
     auth.user = updated;
     await toast.show('Saved', 'success');
@@ -318,6 +395,53 @@ async function onSave() {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+.cc-edit__about {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cc-edit__about-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cc-ink-700);
+}
+.cc-edit__about-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--cc-line);
+  border-radius: 10px;
+  background: var(--cc-surface-0);
+  color: var(--cc-ink-900);
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.cc-edit__about-input:focus-visible {
+  outline: 3px solid rgba(14, 124, 107, 0.35);
+  outline-offset: 1px;
+  border-color: var(--cc-color-primary);
+}
+.cc-edit__about-count {
+  align-self: flex-end;
+  font-size: 12px;
+  color: var(--cc-ink-400);
+  font-variant-numeric: tabular-nums;
+}
+.cc-edit__outlet {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-lg);
+  background: var(--cc-surface-0);
+}
+.cc-edit__outlet-label {
+  font-size: 12px;
+  color: var(--cc-ink-400);
 }
 .cc-edit__note {
   display: flex;
