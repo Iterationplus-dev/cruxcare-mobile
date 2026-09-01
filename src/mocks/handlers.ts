@@ -956,6 +956,38 @@ const careHandlers: HttpHandler[] = [
     return HttpResponse.json(ticket, { status: 201 });
   }),
 
+  /**
+   * Who has asked to read the caller's health profile. Acceptance of a care
+   * request lets a therapist ask; only the answer here gives them access.
+   */
+  http.get(url('/health-profile/access'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    return HttpResponse.json(paginate(db.healthProfileAccess.filter((a) => a.clientId === user.id)));
+  }),
+
+  http.post(url('/health-profile/access/:id/grant'), ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const row = db.healthProfileAccess.find((a) => a.id === params.id && a.clientId === user.id);
+    if (!row) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+    row.status = 'granted';
+    row.respondedAt = new Date().toISOString();
+    return HttpResponse.json(row);
+  }),
+
+  /** Answers a pending question with "no" and withdraws a grant already given
+   *  — to the client those are one action, so they are one route. */
+  http.post(url('/health-profile/access/:id/revoke'), ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const row = db.healthProfileAccess.find((a) => a.id === params.id && a.clientId === user.id);
+    if (!row) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+    row.status = 'revoked';
+    row.respondedAt = new Date().toISOString();
+    return HttpResponse.json(row);
+  }),
+
   http.get(url('/health-profile'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();

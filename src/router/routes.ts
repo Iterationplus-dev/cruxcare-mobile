@@ -349,6 +349,22 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    // PR2. Separate from personal-info because the design separates them: this
+    // holds what a member can simply set, that holds what needs verifying.
+    path: '/profile/edit',
+    name: 'edit-profile',
+    component: () => import('@/features/profile/screens/EditProfileScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // Where PR4's "Health profile access" row leads: the client's answer to a
+    // therapist's request, which had nowhere to land before this.
+    path: '/profile/health-profile-access',
+    name: 'health-profile-access',
+    component: () => import('@/features/profile/screens/HealthProfileAccessScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/profile/security',
     name: 'security-privacy',
     component: () => import('@/features/profile/screens/SecurityPrivacyScreen.vue'),

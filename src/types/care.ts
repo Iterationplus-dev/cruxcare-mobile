@@ -294,3 +294,25 @@ export interface ChatThread {
  *  renders as read-only rather than breaking the screen. */
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ChatThreadStatus = 'open' | 'read-only' | (string & {});
+
+/**
+ * One therapist's standing permission to read the signed-in client's health
+ * profile.
+ *
+ * Acceptance of a care request permits the *question*; it does not answer it.
+ * `pending` is a therapist waiting on the client, `granted` is live access, and
+ * `revoked` covers both a refusal and a permission taken back — to the client
+ * those are one action, so the server records them as one status.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type HealthProfileAccessStatus = 'pending' | 'granted' | 'revoked' | (string & {});
+
+export interface HealthProfileAccess {
+  id: string;
+  therapistId: string;
+  therapistName: string | null;
+  clientId: string;
+  status: HealthProfileAccessStatus;
+  requestedAt: string;
+  respondedAt: string | null;
+}

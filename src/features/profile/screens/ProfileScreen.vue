@@ -9,27 +9,23 @@
             <AppIcon name="settings" :size="22" color="#fff" />
           </button>
         </div>
-        <div class="cc-profile__identity">
+        <!-- PR1 draws no edit affordance, but PR2 has to be reachable. Tapping
+             your own name and photo is the ordinary way in, and it changes
+             nothing about how the header looks. -->
+        <button
+          type="button"
+          class="cc-profile__identity"
+          aria-label="Edit your profile"
+          @click="router.push({ name: 'edit-profile' })"
+        >
           <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="64" />
           <div class="cc-profile__identity-body">
-            <div class="cc-profile__nameline">
-              <div class="cc-text-h1 cc-profile__name">{{ fullName }}</div>
-              <!-- The handle people sign in with. A shared email address is
-                   refused and they are told to use this instead, so it has to
-                   be somewhere they can find it — and copy it rather than
-                   retype a generated string from memory. -->
-              <button
-                v-if="username"
-                type="button"
-                class="cc-profile__username"
-                :aria-label="`Copy your username, ${username}`"
-                @click="copyUsername"
-              >
-                <span class="cc-text-mono">@{{ username }}</span>
-                <AppIcon :name="copied ? 'check' : 'content_copy'" :size="14" color="#cde7e1" />
-              </button>
-            </div>
-            <div class="cc-text-mono" style="color: #cde7e1">{{ auth.user?.membership?.cruxId ?? '' }}</div>
+            <div class="cc-text-h1 cc-profile__name">{{ fullName }}</div>
+            <!-- PR1 puts the Crux ID directly under the name. Rendered only
+                 when there is one: it comes with membership, and an empty mono
+                 line reads as an id that failed to load. The username moved to
+                 Personal information, beside the other verified details. -->
+            <div v-if="cruxId" class="cc-text-mono cc-profile__crux-id">{{ cruxId }}</div>
             <div class="cc-profile__badges">
               <AppBadge label="CLIENT" />
               <AppBadge v-if="auth.roles.includes('member')" :label="`MEMBER${tierLabel}`" />
@@ -37,7 +33,7 @@
               <AppBadge v-if="auth.roles.includes('admin')" label="ADMIN" />
             </div>
           </div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -131,8 +127,6 @@ import RoleSwitchSheet from '../components/RoleSwitchSheet.vue';
 import { useAppointments } from '@/composables/useAppointments';
 import { useOrders } from '@/composables/useOrders';
 import { useAuthStore } from '@/stores/auth';
-import { useToast } from '@/composables/useToast';
-import { copyToClipboard } from '@/services/clipboard';
 import { fullName as formatFullName } from '@/types/user';
 import profileCover from '@/assets/images/profile-cover.png';
 
@@ -140,33 +134,11 @@ import profileCover from '@/assets/images/profile-cover.png';
  * tab bar (outside this component) keeps Profile selected. */
 const router = useRouter();
 const auth = useAuthStore();
-const toast = useToast();
 
 const fullName = computed(() => (auth.user ? formatFullName(auth.user) : ''));
 
-/** Absent on an older server, which means "we do not know it" — so the chip is
- *  hidden rather than shown empty, implying the account has no username. */
-const username = computed(() => auth.user?.username ?? '');
-const copied = ref(false);
-
-async function copyUsername() {
-  if (!username.value) return;
-
-  if (await copyToClipboard(username.value)) {
-    copied.value = true;
-    // Long enough to read the tick, short enough that the control is back to
-    // offering the action rather than reporting the last one.
-    setTimeout(() => {
-      copied.value = false;
-    }, 2000);
-    await toast.show('Username copied', 'success');
-    return;
-  }
-
-  // Never claim a copy that did not happen — the value is shown so it can
-  // still be read off the screen.
-  await toast.show(`Couldn't copy. Your username is ${username.value}`, 'warning');
-}
+/** Comes with membership, so an account without one has no id to show. */
+const cruxId = computed(() => auth.user?.membership?.cruxId ?? '');
 const tierLabel = computed(() => {
   const tier = auth.user?.membership?.tier;
   return tier ? ` · ${tier.split('·')[0].trim().toUpperCase()}` : '';
@@ -192,41 +164,17 @@ async function onLogout() {
 </script>
 
 <style scoped>
-/* Name on the left, username hard against the right edge of the header. */
-.cc-profile__nameline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
 .cc-profile__name {
   color: #fff;
   margin: 0;
-  /* Without min-width a flex item refuses to shrink below its content, so a
-     long name would push the username off the edge rather than ellipsing. */
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cc-profile__username {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  /* Never squeezed by a long name — the whole point is that it stays
-     readable and tappable. */
-  flex: none;
-  padding: 3px 9px 3px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+.cc-profile__crux-id {
   color: #cde7e1;
   font-size: 12.5px;
-  cursor: pointer;
-}
-.cc-profile__username:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
+  letter-spacing: 0.04em;
 }
 .cc-profile__cover {
   position: relative;
@@ -268,6 +216,17 @@ async function onLogout() {
   display: flex;
   gap: 14px;
   align-items: center;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.cc-profile__identity:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+  border-radius: 12px;
 }
 .cc-profile__identity-body {
   flex: 1;

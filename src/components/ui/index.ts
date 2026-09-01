@@ -10,6 +10,7 @@ export { default as AppImageCropper } from './AppImageCropper.vue';
 export { default as AppInput } from './AppInput.vue';
 export { default as AppListRow } from './AppListRow.vue';
 export { default as AppPullToRefresh } from './AppPullToRefresh.vue';
+export { default as AppSectionLabel } from './AppSectionLabel.vue';
 export { default as AppSelect } from './AppSelect.vue';
 export { default as AppSheet } from './AppSheet.vue';
 export { default as AppSheetSelect } from './AppSheetSelect.vue';

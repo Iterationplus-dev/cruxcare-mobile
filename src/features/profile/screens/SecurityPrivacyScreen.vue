@@ -3,8 +3,20 @@
     <AppHeader title="Security and privacy" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
+        <AppSectionLabel label="Signing in" />
         <AppCard style="padding: 0">
-          <AppListRow title="Biometric unlock" icon="fingerprint" :divider="false">
+          <AppListRow
+            title="Password"
+            subtitle="Change it if you think someone else knows it"
+            icon="password"
+            chevron
+            clickable
+            @click="changePassword"
+          />
+          <!-- Kept as "Biometric unlock": the design writes "Face ID and
+               fingerprint", but this build runs on Android as well and the
+               plugin enrols whatever the device offers. -->
+          <AppListRow title="Biometric unlock" subtitle="This device only" icon="fingerprint" :divider="false">
             <template #trailing>
               <label class="cc-toggle">
                 <input type="checkbox" :checked="auth.user?.biometricEnabled" @change="onToggleBiometric" />
@@ -15,7 +27,16 @@
         </AppCard>
         <p class="cc-text-caption">Off means password is required every time you open the app.</p>
 
+        <AppSectionLabel label="Who sees what" />
         <AppCard style="padding: 0">
+          <AppListRow
+            title="Health profile access"
+            :subtitle="healthAccessSubtitle"
+            icon="medical_information"
+            chevron
+            clickable
+            @click="router.push({ name: 'health-profile-access' })"
+          />
           <AppListRow
             title="Location"
             :subtitle="locationSubtitle"
@@ -32,26 +53,18 @@
           </AppListRow>
         </AppCard>
         <p class="cc-text-caption">
-          On, the app keeps your current location so it can show therapists near you. Off, it stops
-          and forgets the last one. You can change this at any time.
+          Off, the app stops keeping your location and forgets the last one. Therapists are then
+          not filtered by distance.
         </p>
 
-        <AppCard style="padding: 0">
-          <AppListRow title="Active devices" subtitle="This device is one of them" icon="devices" :divider="false">
-            <template #trailing><span class="cc-text-mono">1</span></template>
-          </AppListRow>
-        </AppCard>
-
-        <div class="cc-text-body-strong" style="font-size: 14.5px">Who can see your health data</div>
+        <AppSectionLabel label="Activity" />
         <AppCard style="padding: 0">
           <AppListRow
-            v-if="assignedTherapist"
-            :title="assignedTherapist.name"
-            subtitle="Your assigned therapist · access follows the booking"
-            icon="medical_information"
+            title="Active devices"
+            subtitle="This device is signed in"
+            icon="devices"
             :divider="false"
           />
-          <AppListRow v-else title="No one yet" subtitle="Access is granted once a therapist is assigned" icon="medical_information" :divider="false" />
         </AppCard>
       </div>
     </ion-content>
@@ -61,9 +74,10 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { AppCard, AppHeader, AppListRow } from '@/components/ui';
-import { useCaseFiles } from '@/composables/useCaseFiles';
-import { useTherapist } from '@/composables/useTherapists';
+import { AppCard, AppHeader, AppListRow, AppSectionLabel } from '@/components/ui';
+import { useRouter } from 'vue-router';
+import { useQuery } from '@tanstack/vue-query';
+import { healthAccessApi } from '@/api/health-access.api';
 import { useAuthStore } from '@/stores/auth';
 import { useLocationStore } from '@/stores/location';
 import { formatCoordinates } from '@/services/deviceLocation';
@@ -73,6 +87,48 @@ import { useToast } from '@/composables/useToast';
 /** PR4 · Security and privacy — each toggle states what the off state means. */
 const auth = useAuthStore();
 const toast = useToast();
+const router = useRouter();
+
+/**
+ * How many therapists can read the health profile right now.
+ *
+ * Counted from the real grants rather than from who is assigned: acceptance of
+ * a care request lets a therapist ask, and only the client's answer gives them
+ * access. Saying "access follows the booking" here was describing the rule the
+ * platform used to have.
+ */
+const { data: accessRows } = useQuery({
+  queryKey: ['health-profile', 'access'],
+  queryFn: () => healthAccessApi.list(),
+});
+
+const healthAccessSubtitle = computed(() => {
+  const rows = accessRows.value;
+  if (!rows) return 'Only therapists you allow';
+
+  const granted = rows.filter((r) => r.status === 'granted').length;
+  const waiting = rows.filter((r) => r.status === 'pending').length;
+
+  if (waiting > 0) {
+    return `${waiting} waiting for your answer`;
+  }
+
+  if (granted === 0) return 'No one has access';
+  return granted === 1 ? '1 therapist has access' : `${granted} therapists have access`;
+});
+
+/**
+ * There is no in-app change-password route yet — only the signed-out reset
+ * flow — so this sends them through that rather than opening a form that
+ * cannot submit.
+ */
+async function changePassword() {
+  await toast.show(
+    'We will email you a link to set a new password. Use Forgot password on the sign-in screen, or contact support.',
+    'info',
+    { title: 'Changing your password' },
+  );
+}
 
 const location = useLocationStore();
 onMounted(() => location.hydrate());
@@ -99,12 +155,6 @@ async function onToggleLocation(event: Event) {
     );
   }
 }
-
-const { data: caseFiles } = useCaseFiles();
-const myCaseFile = computed(() => caseFiles.value?.data.find((cf) => cf.clientId === auth.user?.id));
-const { data: assignedTherapist } = useTherapist(
-  computed(() => myCaseFile.value?.therapistId ?? ''),
-);
 
 async function onToggleBiometric(e: Event) {
   const enabled = (e.target as HTMLInputElement).checked;

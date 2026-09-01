@@ -5,6 +5,7 @@ import type { User } from '@/types/user';
 import type { Transaction, Wallet } from '@/types/wallet';
 import type { CurrencyIndex, LocalBlock, SupportedCurrency } from '@/types/money';
 import type { SupportTicket } from '@/types/support';
+import type { HealthProfileAccess } from '@/types/care';
 import pCayenmis from '@/assets/images/p-cayenmis.jpg';
 import pGreenTea from '@/assets/images/p-green-tea.jpg';
 import pGimPowder from '@/assets/images/p-gim-powder.jpg';
@@ -578,3 +579,21 @@ export const therapistRotas: Record<string, WorkingDay[]> = {
   ],
   'therapist-2': [{ weekday: 2, opensAt: '10:00', closesAt: '16:00' }],
 };
+
+/**
+ * Standing decisions about who may read a client's health profile.
+ *
+ * Seeded with one pending request so the screen has the case that matters —
+ * a therapist waiting on an answer — without anyone having to arrange it.
+ */
+export const healthProfileAccess: HealthProfileAccess[] = [
+  {
+    id: 'hpa-1',
+    therapistId: 'therapist-1',
+    therapistName: 'Amaka Obi',
+    clientId: 'user-1',
+    status: 'pending',
+    requestedAt: new Date(Date.now() - 36e5 * 30).toISOString(),
+    respondedAt: null,
+  },
+];

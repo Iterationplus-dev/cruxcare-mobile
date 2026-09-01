@@ -23,7 +23,19 @@ export interface DeviceRegistration {
   appVersion: string;
 }
 
-export type OptionalNotificationCategory = 'appointments' | 'orders' | 'chat' | 'marketing';
+/**
+ * Matches `NotificationPreferenceService::OPTIONAL` on the server.
+ *
+ * `cases` was missing here, so the settings screen had no row for it and
+ * nothing in the app could ever switch it off — a category the server has
+ * always accepted, unreachable because the type did not name it.
+ */
+export type OptionalNotificationCategory =
+  | 'appointments'
+  | 'orders'
+  | 'cases'
+  | 'chat'
+  | 'marketing';
 
 export interface NotificationPreferences {
   /** Categories the user may switch off. */

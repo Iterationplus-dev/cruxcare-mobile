@@ -16,30 +16,44 @@
         </ErrorState>
 
         <template v-else>
+          <!-- PR5 draws this as a toggle. An app cannot grant itself OS
+               notification permission, so it reports the state instead of
+               offering a switch that could not move it. -->
+          <AppCard style="padding: 0">
+            <AppListRow
+              title="Push notifications"
+              :subtitle="pushBlocked ? 'Blocked in your device settings' : 'Allowed in your device settings'"
+              icon="notifications_active"
+              :icon-color="pushBlocked ? 'var(--cc-color-warning-text)' : 'var(--cc-color-primary)'"
+              :subtitle-tone="pushBlocked ? 'warning' : 'default'"
+              :divider="false"
+            />
+          </AppCard>
           <p v-if="pushBlocked" class="cc-notice">
             Notifications are switched off for CruxCare in your device settings, so nothing below
             will be delivered until you turn them back on there.
           </p>
 
+          <AppSectionLabel label="Always sent" />
           <AppCard style="padding: 0">
             <AppListRow
               v-for="(pref, i) in preferences.required"
               :key="pref.key"
-              :title="pref.label"
-              subtitle="Required · security and money events"
+              :title="requiredLabel(pref)"
+              :subtitle="requiredSubtitle(pref)"
               :divider="i !== preferences.required.length - 1"
             >
-              <template #trailing><AppBadge label="ON" tone="success" /></template>
+              <template #trailing><span class="cc-notify__required">Required</span></template>
             </AppListRow>
           </AppCard>
 
-          <div class="cc-text-body-strong" style="font-size: 14.5px">Optional</div>
+          <AppSectionLabel label="Your choice" />
           <AppCard style="padding: 0">
             <AppListRow
               v-for="(option, i) in optionalRows"
               :key="option.key"
               :title="option.label"
-              :subtitle="preferences.optional[option.key] ? 'On' : 'Off'"
+              :subtitle="option.hint"
               :divider="i !== optionalRows.length - 1"
             >
               <template #trailing>
@@ -56,13 +70,15 @@
             </AppListRow>
           </AppCard>
 
-          <p v-if="preferences.quietHours" class="cc-text-caption">
-            Quiet hours ({{ preferences.quietHours.start }}–{{ preferences.quietHours.end }})
-            <template v-if="preferences.quietHours.allowTimeSensitive">
-              still allow time-sensitive appointment reminders.
-            </template>
-            <template v-else>hold every optional notification until morning.</template>
-          </p>
+          <AppSectionLabel label="Quiet hours" />
+          <AppCard style="padding: 0">
+            <AppListRow
+              title="Quiet hours"
+              :subtitle="quietHoursSubtitle"
+              icon="bedtime"
+              :divider="false"
+            />
+          </AppCard>
         </template>
       </div>
     </ion-content>
@@ -72,7 +88,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { AppBadge, AppButton, AppCard, AppHeader, AppListRow } from '@/components/ui';
+import { AppButton, AppCard, AppHeader, AppListRow, AppSectionLabel } from '@/components/ui';
 import { ErrorState, LoadingState } from '@/components/state';
 import {
   useNotificationPreferences,
@@ -92,12 +108,51 @@ const { data: preferences, isPending, isError, refetch } = useNotificationPrefer
 const update = useUpdateNotificationPreferences();
 const isSaving = computed(() => update.isPending.value);
 
-const optionalRows: { key: OptionalNotificationCategory; label: string }[] = [
-  { key: 'appointments', label: 'Appointment reminders' },
-  { key: 'orders', label: 'Order updates' },
-  { key: 'chat', label: 'Chat messages' },
-  { key: 'marketing', label: 'Offers & announcements' },
+/**
+ * PR5's wording, against the categories the API actually has.
+ *
+ * The design puts "Session reminders" under Always sent. The server does not:
+ * `appointments` is optional there, and labelling an optional category
+ * "Required" would tell someone they cannot switch off something they can. It
+ * sits under Your choice with the design's own label.
+ *
+ * `cases` was missing from this screen entirely — a category the server has
+ * always accepted with no way to reach it.
+ *
+ * "Savings and commitment nudges" and "Network and ranking changes" are drawn
+ * but have no category behind them, so they are not shown.
+ */
+const optionalRows: { key: OptionalNotificationCategory; label: string; hint: string }[] = [
+  { key: 'appointments', label: 'Session reminders', hint: '24 hours and 1 hour before' },
+  { key: 'chat', label: 'Messages from therapists', hint: 'New messages in your conversations' },
+  { key: 'orders', label: 'Order and delivery updates', hint: 'Dispatch, delivery and changes' },
+  { key: 'cases', label: 'Care and treatment updates', hint: 'Notes, diagnoses and case changes' },
+  { key: 'marketing', label: 'Offers and new products', hint: 'Occasional, never about your care' },
 ];
+
+/** PR5's copy for the two the server marks required. */
+const REQUIRED_COPY: Record<string, { label: string; hint: string }> = {
+  money: { label: 'Money movement', hint: 'Payments, payouts, failed charges' },
+  security: { label: 'Security alerts', hint: 'Sign-ins and changes to your account' },
+};
+
+function requiredLabel(pref: { key: string; label: string }): string {
+  return REQUIRED_COPY[pref.key]?.label ?? pref.label;
+}
+
+function requiredSubtitle(pref: { key: string }): string {
+  return REQUIRED_COPY[pref.key]?.hint ?? 'Security and money events';
+}
+
+const quietHoursSubtitle = computed(() => {
+  const quiet = preferences.value?.quietHours;
+  if (!quiet) return 'Not set · notifications arrive at any time';
+
+  const window = `${quiet.start} to ${quiet.end}`;
+  return quiet.allowTimeSensitive
+    ? `${window} · reminders still arrive`
+    : `${window} · everything optional waits until morning`;
+});
 
 /**
  * Per-category preferences are meaningless while the OS is blocking delivery,
