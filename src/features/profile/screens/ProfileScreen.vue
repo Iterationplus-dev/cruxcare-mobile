@@ -12,22 +12,24 @@
         <div class="cc-profile__identity">
           <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="64" />
           <div class="cc-profile__identity-body">
-            <div class="cc-text-h1" style="color: #fff; margin: 0">{{ fullName }}</div>
+            <div class="cc-profile__nameline">
+              <div class="cc-text-h1 cc-profile__name">{{ fullName }}</div>
+              <!-- The handle people sign in with. A shared email address is
+                   refused and they are told to use this instead, so it has to
+                   be somewhere they can find it — and copy it rather than
+                   retype a generated string from memory. -->
+              <button
+                v-if="username"
+                type="button"
+                class="cc-profile__username"
+                :aria-label="`Copy your username, ${username}`"
+                @click="copyUsername"
+              >
+                <span class="cc-text-mono">@{{ username }}</span>
+                <AppIcon :name="copied ? 'check' : 'content_copy'" :size="14" color="#cde7e1" />
+              </button>
+            </div>
             <div class="cc-text-mono" style="color: #cde7e1">{{ auth.user?.membership?.cruxId ?? '' }}</div>
-            <!-- The handle people sign in with. A shared email address is
-                 refused and they are told to use this instead, so it has to be
-                 somewhere they can find it — and copy it rather than retype a
-                 generated string from memory. -->
-            <button
-              v-if="username"
-              type="button"
-              class="cc-profile__username"
-              :aria-label="`Copy your username, ${username}`"
-              @click="copyUsername"
-            >
-              <span class="cc-text-mono">@{{ username }}</span>
-              <AppIcon :name="copied ? 'check' : 'content_copy'" :size="14" color="#cde7e1" />
-            </button>
             <div class="cc-profile__badges">
               <AppBadge label="CLIENT" />
               <AppBadge v-if="auth.roles.includes('member')" :label="`MEMBER${tierLabel}`" />
@@ -190,11 +192,30 @@ async function onLogout() {
 </script>
 
 <style scoped>
+/* Name on the left, username hard against the right edge of the header. */
+.cc-profile__nameline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cc-profile__name {
+  color: #fff;
+  margin: 0;
+  /* Without min-width a flex item refuses to shrink below its content, so a
+     long name would push the username off the edge rather than ellipsing. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .cc-profile__username {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
+  /* Never squeezed by a long name — the whole point is that it stays
+     readable and tappable. */
+  flex: none;
   padding: 3px 9px 3px 8px;
   border: 1px solid rgba(255, 255, 255, 0.32);
   border-radius: 999px;
