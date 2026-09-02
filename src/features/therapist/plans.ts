@@ -1,64 +1,56 @@
 import type { TherapistPlanTier } from '@/types/user';
+import { formatMoney } from '@/utils/money';
 
 /**
- * The therapist plan catalogue.
+ * A plan as `GET /therapist/plans` returns it.
  *
- * `priceMinor` mirrors `subscription_plans.price`. The server re-derives what
- * it actually charges from its own row, so this only drives what the UI offers
- * and what it labels a plan — it is never the source of a charge.
+ * `amountMinor` is the same integer the activation charges, and
+ * `clientLimit`/`caseFileLimit` are the limits the server actually enforces —
+ * so a plan screen and the refusal at accept time cannot disagree.
  *
- * Lifted out of the plan screen because the profile shows the price too, and
- * two hardcoded copies of a price is one more than can be kept honest. There is
- * no plans endpoint yet; when there is, this is the one place to replace.
+ * This replaced a hardcoded array in the app. A client-side price is milder
+ * than a client-side charge and still wrong: it drifts the day somebody edits
+ * `subscription_plans`, and nothing compares the two.
  */
-export interface TherapistPlan {
+export interface TherapistPlanOption {
   key: TherapistPlanTier;
   name: string;
-  /** Display string, e.g. `$15/mo`. */
-  price: string;
-  priceMinor: number;
-  detail: string;
-  tag?: string;
+  amountMinor: number;
+  currency: string;
+  billingCycle: string;
+  durationDays: number;
+  isTrial: boolean;
+  recommended: boolean;
+  /** Null means unlimited. */
+  clientLimit: number | null;
+  caseFileLimit: number | null;
 }
 
-export const therapistPlans: TherapistPlan[] = [
-  {
-    key: 'free-trial',
-    name: 'Free trial',
-    price: '$0',
-    priceMinor: 0,
-    detail: '1 client · 1 case file · unlimited purchases',
-  },
-  {
-    key: 'monthly',
-    name: 'Monthly',
-    price: '$15/mo',
-    priceMinor: 1500,
-    detail: '25 clients · unlimited case files · Point Facility hosting',
-    tag: 'MOST CHOSEN',
-  },
-  {
-    key: 'yearly',
-    name: 'Yearly',
-    price: '$200/yr',
-    priceMinor: 20000,
-    detail: 'Everything monthly · save $40 · priority assignment',
-  },
-];
+/** `$15/mo`. Empty for a free plan — `$0` reads as a price someone is paying. */
+export function planPrice(plan: TherapistPlanOption | null | undefined): string {
+  if (!plan || plan.amountMinor <= 0) return '';
 
-export function findPlan(key: TherapistPlanTier | null | undefined): TherapistPlan | null {
-  if (!key) return null;
-  return therapistPlans.find((p) => p.key === key) ?? null;
+  const amount = formatMoney(plan.amountMinor / 100, plan.currency);
+  const suffix =
+    plan.billingCycle === 'monthly' ? '/mo' : plan.billingCycle === 'yearly' ? '/yr' : '';
+
+  return `${amount}${suffix}`;
 }
 
-/**
- * `Monthly · $15/mo`, or just the name when the plan is free.
- *
- * Null when there is no plan to describe — an account that never subscribed
- * shows no price rather than `$0`, which would read as a plan they are on.
- */
-export function planWithPrice(key: TherapistPlanTier | null | undefined): string | null {
-  const plan = findPlan(key);
-  if (!plan) return null;
-  return plan.priceMinor > 0 ? `${plan.name} · ${plan.price}` : plan.name;
+export function findPlan(
+  plans: TherapistPlanOption[] | undefined,
+  key: TherapistPlanTier | null | undefined,
+): TherapistPlanOption | null {
+  if (!plans || !key) return null;
+  return plans.find((p) => p.key === key) ?? null;
+}
+
+/** What a plan allows, in the server's own numbers. Null limits are unlimited. */
+export function planLimits(plan: TherapistPlanOption): string {
+  const clients = plan.clientLimit === null ? 'Unlimited clients' : `${plan.clientLimit} client${plan.clientLimit === 1 ? '' : 's'}`;
+  const files =
+    plan.caseFileLimit === null
+      ? 'unlimited case files'
+      : `${plan.caseFileLimit} case file${plan.caseFileLimit === 1 ? '' : 's'}`;
+  return `${clients} · ${files}`;
 }

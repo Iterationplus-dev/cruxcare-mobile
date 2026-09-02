@@ -235,3 +235,34 @@ describe('howLongAgo', () => {
     expect(howLongAgo('not-a-date', now)).toBeNull();
   });
 });
+
+
+describe('a session the therapist has started', () => {
+  const started = appointment({ slot: '2026-08-31T10:00:00', status: 'active' });
+
+  it('is joinable however long it has been running', () => {
+    // This is what "until the therapist ends the session" means. No clock is
+    // consulted — the server moves it off `active` when they end it, or the
+    // hourly sweep closes an abandoned one.
+    const hoursLater = new Date('2026-08-31T14:00:00');
+    expect(isJoinable(started, hoursLater)).toBe(true);
+  });
+
+  it('is joinable before its own slot too', () => {
+    const early = new Date('2026-08-31T09:00:00');
+    expect(isJoinable(started, early)).toBe(true);
+  });
+
+  it('counts as happening rather than late', () => {
+    const wellAfter = new Date('2026-08-31T13:00:00');
+    expect(timingOf(started, wellAfter)).toBe('upcoming');
+  });
+
+  it('is the one status worth shouting about', () => {
+    expect(statusBadge(started, 'upcoming')).toEqual({ label: 'IN PROGRESS', tone: 'success' });
+  });
+
+  it('can still be rescheduled — it is not settled', () => {
+    expect(canReschedule(started)).toBe(true);
+  });
+});

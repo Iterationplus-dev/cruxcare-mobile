@@ -141,9 +141,10 @@ import { formatAddress } from '@/types/user';
  * PR3 · Personal information — the verified fields, shown in place with their
  * verified state, and the data export sitting with the data it exports.
  *
- * The data export names the address it is going to rather than a date. The
- * server queues it with a 48-hour SLA, and rendering that as a weekday turned
- * "soon" into a promise about next Sunday.
+ * The data export names the address it is going to, then the date. It is a
+ * real promise again — there is a builder, a mailable and a scheduled command
+ * behind it — but the address leads because that is the half a member can act
+ * on if it is wrong.
  *
  * Everything editable moved to PR2 (Edit profile). That separation is the
  * design's argument: a field that needs a code to change should not sit in a
@@ -197,15 +198,21 @@ const exporting = ref(false);
 async function requestExport() {
   exporting.value = true;
   try {
-    await securityApi.requestDataExport();
+    const { expectedBy } = await securityApi.requestDataExport();
 
-    // The address is the useful half — a member needs to know *where* it is
-    // going, and can act if it is the wrong one. `expectedBy` is deliberately
-    // not read back: rendering it as a weekday turned "soon" into a promise
-    // about next Sunday, which is not what anyone means by "download my data".
+    // The address is the half a member can act on, so it leads. `expectedBy`
+    // is back alongside it now that a builder, a mailable and a scheduled
+    // command actually stand behind it — it was dropped while the row was a
+    // promise nothing kept.
     const to = auth.user?.email;
+    const when = expectedBy ? new Date(expectedBy) : null;
+    const by =
+      when && !Number.isNaN(when.getTime())
+        ? ` It should arrive by ${when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}.`
+        : '';
+
     await toast.show(
-      to ? `We will email your data to ${to}.` : 'We will email your data to you.',
+      `${to ? `We will email your data to ${to}.` : 'We will email your data to you.'}${by}`,
       'success',
       { title: 'Export requested' },
     );

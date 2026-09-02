@@ -19,7 +19,8 @@ export type AppointmentTiming = 'upcoming' | 'overdue' | 'past';
  *  styling for. */
 type BadgeTone = 'success' | 'danger' | 'warning' | 'default';
 
-/** Statuses that are finished with, whatever the clock says. */
+/** Statuses that are finished with, whatever the clock says. `active` is not
+ *  among them — a session in progress is the opposite of settled. */
 const SETTLED = ['completed', 'cancelled', 'no-show'];
 
 export function isSettled(appointment: Appointment): boolean {
@@ -27,6 +28,10 @@ export function isSettled(appointment: Appointment): boolean {
 }
 
 export function timingOf(appointment: Appointment, now: Date = new Date()): AppointmentTiming {
+  // A session in progress is happening, not late — however far past its slot
+  // the clock has run.
+  if (appointment.status === 'active') return 'upcoming';
+
   const at = new Date(appointment.slot);
   // An unreadable date is treated as past rather than upcoming: offering Join
   // on something we cannot place in time is the worse of the two mistakes.
@@ -112,6 +117,9 @@ export function statusBadge(
   switch (appointment.status) {
     case 'confirmed':
       return { label: 'CONFIRMED', tone: 'success' };
+    case 'active':
+      // The one status worth shouting: it is happening right now.
+      return { label: 'IN PROGRESS', tone: 'success' };
     case 'requested':
       return { label: 'AWAITING CONFIRMATION', tone: 'warning' };
     case 'completed':
@@ -131,14 +139,12 @@ export function statusBadge(
 export const JOIN_OPENS_MINUTES = 10;
 
 /**
- * How long a session stays joinable after its start time.
+ * How long a *confirmed* session stays joinable after its start time.
  *
- * A guess, and named as one. The server has no notion of a session starting or
- * ending — there is no `active` transition and nothing marks a missed session —
- * so "until the therapist ends it" cannot be honoured yet. This window is the
- * closest true thing the client can do with the data it has: a session that has
- * just begun is still joinable, rather than the Join button vanishing the
- * instant the clock passes the slot.
+ * Only for the case where the therapist has not pressed start — a client who
+ * turns up on time should not be locked out because their therapist is late.
+ * Once the session is `active` this window stops mattering: it runs until the
+ * therapist ends it.
  */
 export const JOIN_CLOSES_MINUTES = 60;
 
@@ -150,6 +156,12 @@ export const JOIN_CLOSES_MINUTES = 60;
  * to meet for one that is merely requested.
  */
 export function isJoinable(appointment: Appointment, now: Date = new Date()): boolean {
+  // A session the therapist has started is joinable for as long as it runs.
+  // No clock is consulted: the server moves it off `active` when the therapist
+  // ends it, or the hourly sweep closes an abandoned one. That is what "until
+  // the therapist ends the session" means, and it is why this case comes first.
+  if (appointment.status === 'active') return true;
+
   if (appointment.status !== 'confirmed') return false;
 
   const at = new Date(appointment.slot);

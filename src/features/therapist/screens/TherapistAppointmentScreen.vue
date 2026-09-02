@@ -43,18 +43,31 @@
             <p class="cc-text-caption">Declining frees the slot so the client can book another time.</p>
           </template>
 
+          <!-- Running right now. Ending it is the only thing that matters
+               here, so nothing else competes with it. -->
+          <template v-else-if="appointment.status === 'active'">
+            <AppButton icon="videocam" @click="openRoom">Rejoin the session</AppButton>
+            <AppButton variant="secondary" :loading="busy" @click="endSession">
+              End the session
+            </AppButton>
+            <p class="cc-text-caption">
+              Your client can join for as long as this is running. Ending it closes the room for
+              both of you.
+            </p>
+          </template>
+
           <template v-else-if="appointment.status === 'confirmed'">
-            <AppButton v-if="canStart" icon="videocam" @click="startSession">
+            <AppButton v-if="canStart" icon="videocam" :loading="busy" @click="startSession">
               Start the session
             </AppButton>
             <p v-if="canStart" class="cc-text-caption">
-              Your client joins from their own app around the appointed time.
+              Starting tells your client the session has begun, so they can join.
             </p>
             <p v-else class="cc-text-caption">
-              The room opens {{ JOIN_OPENS_MINUTES }} minutes before the appointed time.
+              You can start this {{ JOIN_OPENS_MINUTES }} minutes before the appointed time.
             </p>
 
-            <AppSectionLabel label="When it is over" />
+            <AppSectionLabel label="If it happened elsewhere" />
             <div class="cc-session__pair">
               <AppButton variant="secondary" :loading="busy" @click="setStatus('completed')">
                 Mark completed
@@ -159,9 +172,53 @@ function formatSlot(iso: string): string {
   });
 }
 
-function startSession() {
+function openRoom() {
   if (!appointment.value) return;
   router.push({ name: 'video-visit', params: { id: appointment.value.id } });
+}
+
+/**
+ * Start it on the server first, then open the room.
+ *
+ * Order matters: the start is what tells the client they can join, and walking
+ * into a room nobody has been told about is the thing this screen exists to
+ * stop. A refused start (outside the window, already ended) keeps the therapist
+ * here with the reason rather than in an empty call.
+ */
+async function startSession() {
+  if (!appointment.value) return;
+
+  busy.value = true;
+  try {
+    await appointmentsApi.start(appointment.value.id);
+    await queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    openRoom();
+  } catch (error) {
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not start this session. Please try again.';
+    await toast.show(message, 'danger', { title: 'Not started' });
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function endSession() {
+  if (!appointment.value) return;
+
+  busy.value = true;
+  try {
+    await appointmentsApi.end(appointment.value.id);
+    await queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    await toast.show('Session ended.', 'success');
+  } catch (error) {
+    const message =
+      error instanceof ApiError ? error.message : 'We could not end this session. Please try again.';
+    await toast.show(message, 'danger', { title: 'Not ended' });
+  } finally {
+    busy.value = false;
+  }
 }
 
 const { data: threads } = useChatThreads();

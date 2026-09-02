@@ -38,6 +38,26 @@ export const appointmentsApi = {
     return data;
   },
 
+  /**
+   * The therapist starts the session. Allowed from fifteen minutes before the
+   * slot until the abandonment cutoff; outside that the server answers
+   * `outside_session_window`, because a session started days early is not a
+   * session, it is a client seeing "in progress" on a Tuesday.
+   *
+   * Starting twice has the same outcome as starting once.
+   */
+  async start(id: string): Promise<Appointment> {
+    const { data } = await apiClient.post<Appointment>(`/appointments/${id}/start`);
+    return data;
+  },
+
+  /** Ends it. The client's Join disappears because the status moves, not
+   *  because a timer ran out. */
+  async end(id: string): Promise<Appointment> {
+    const { data } = await apiClient.post<Appointment>(`/appointments/${id}/end`);
+    return data;
+  },
+
   async updateStatus(id: string, status: AppointmentStatus): Promise<Appointment> {
     const { data } = await apiClient.patch<Appointment>(`/appointments/${id}`, { status });
     return data;

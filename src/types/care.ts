@@ -154,9 +154,17 @@ export interface TherapistCareRequest {
   events: CareRequestEvent[];
 }
 
+/**
+ * `active` is a session in progress — the therapist has started it.
+ *
+ * The column behind it is `in_session`; `active` is the wire word, because the
+ * legacy web app already writes `active` to mean confirmed. Nothing here needs
+ * to know that, but it is why the two names differ.
+ */
 export type AppointmentStatus =
   | 'requested'
   | 'confirmed'
+  | 'active'
   | 'completed'
   | 'cancelled'
   | 'no-show';

@@ -63,7 +63,9 @@ import { useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppListRow, AppSheet } from '@/components/ui';
 import RoleSwitchSheet from '@/features/profile/components/RoleSwitchSheet.vue';
 import { useAuthStore } from '@/stores/auth';
-import { findPlan } from '@/features/therapist/plans';
+import { findPlan, planPrice } from '@/features/therapist/plans';
+import { therapistsApi } from '@/api/therapists.api';
+import { useQuery } from '@tanstack/vue-query';
 import { fullName as formatFullName } from '@/types/user';
 
 /** TD8 (lean) · Therapist settings — role switch lives here; account
@@ -102,10 +104,15 @@ const planCaption = computed(() =>
 );
 /** Only when they are actually on a paid plan — an inactive or free account
  *  shows no figure rather than one it is not paying. */
+const { data: plans } = useQuery({
+  queryKey: ['therapist', 'plans'],
+  queryFn: () => therapistsApi.plans(),
+  staleTime: 5 * 60 * 1000,
+});
+
 const planAmount = computed(() => {
   if (!auth.therapistPlanActive) return '';
-  const plan = findPlan(auth.user?.therapistProfile?.plan);
-  return plan && plan.priceMinor > 0 ? plan.price : '';
+  return planPrice(findPlan(plans.value, auth.user?.therapistProfile?.plan));
 });
 
 const planRowSubtitle = computed(() => {

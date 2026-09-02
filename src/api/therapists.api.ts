@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type { CursorPage } from '@/types/api';
+import type { TherapistPlanOption } from '@/features/therapist/plans';
 import type {
   CareRequest,
   TherapistAvailabilityDay,
@@ -40,6 +41,18 @@ export const therapistsApi = {
   async updateMyProfile(patch: { specialties: string[] }): Promise<TherapistSummary> {
     const { data } = await apiClient.patch<TherapistSummary>('/me/therapist/profile', patch);
     return data;
+  },
+
+  /**
+   * The plan catalogue, priced from `subscription_plans`.
+   *
+   * `amountMinor` is the same integer the activation charges, so the screen and
+   * the charge cannot disagree — the prices used to be a hardcoded copy in the
+   * app that would drift the day somebody edited the table.
+   */
+  async plans(): Promise<TherapistPlanOption[]> {
+    const { data } = await apiClient.get<CursorPage<TherapistPlanOption>>('/therapist/plans');
+    return data.data;
   },
 
   /**

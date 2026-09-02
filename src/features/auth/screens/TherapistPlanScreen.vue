@@ -33,11 +33,15 @@
           <div class="cc-plan__head">
             <div>
               <span class="cc-text-body-strong" style="font-size: 16px">{{ p.name }}</span>
-              <AppBadge v-if="p.tag" :label="p.tag" />
+              <AppBadge v-if="p.recommended" label="MOST CHOSEN" />
             </div>
-            <span class="cc-text-mono" style="font-size: 19px; font-weight: 700">{{ p.price }}</span>
+            <span class="cc-text-mono" style="font-size: 19px; font-weight: 700">
+              {{ planPrice(p) || 'Free' }}
+            </span>
           </div>
-          <div class="cc-text-body" style="font-size: 12.5px">{{ p.detail }}</div>
+          <!-- The limits the server enforces, not a marketing line — so this
+               and the refusal at accept time cannot disagree. -->
+          <div class="cc-text-body" style="font-size: 12.5px">{{ planLimits(p) }}</div>
         </button>
 
         <AppCard>
@@ -49,15 +53,17 @@
       </div>
       <div class="cc-screen__footer">
         <AppButton :loading="submitting" style="margin-bottom: 9px" @click="onContinue">
-          {{ selectedPlan.priceMinor > 0 ? `Pay ${selectedPlan.price} · ${selectedPlan.name}` : `Activate ${selectedPlan.name}` }}
+          {{ selectedPlan && planPrice(selectedPlan)
+            ? `Pay ${planPrice(selectedPlan)} · ${selectedPlan.name}`
+            : `Activate ${selectedPlan?.name ?? 'plan'}` }}
         </AppButton>
         <p class="cc-text-caption" style="text-align: center">Downgrades keep your data — limits apply again.</p>
       </div>
     </ion-content>
 
-    <AppSheet v-model="paySheetOpen" :title="`Pay ${selectedPlan.price}`">
+    <AppSheet v-model="paySheetOpen" :title="`Pay ${planPrice(selectedPlan)}`">
       <p class="cc-text-caption" style="margin: 0 0 14px">
-        {{ selectedPlan.name }} · billed once. Your plan starts as soon as the payment clears.
+        {{ selectedPlan?.name }} · billed once. Your plan starts as soon as the payment clears.
       </p>
 
       <div class="cc-pay">
@@ -119,7 +125,7 @@
       </div>
 
       <AppButton :loading="submitting" :disabled="method === 'wallet' && walletShortfall" @click="onPay">
-        Pay {{ selectedPlan.price }}
+        Pay {{ planPrice(selectedPlan) }}
       </AppButton>
     </AppSheet>
   </ion-page>
@@ -141,7 +147,9 @@ import { AppBadge, AppButton, AppCard, AppIcon, AppSheet, MoneyAmount } from '@/
 import { PaymentUnavailableError, resolvePaymentProvider } from '@/services/payment';
 import { paymentsApi } from '@/api/payments.api';
 import { useAuthStore } from '@/stores/auth';
-import { therapistPlans } from '@/features/therapist/plans';
+import { findPlan, planLimits, planPrice } from '@/features/therapist/plans';
+import { therapistsApi } from '@/api/therapists.api';
+import { useQuery } from '@tanstack/vue-query';
 import { useToast } from '@/composables/useToast';
 import { useWallet } from '@/composables/useWallet';
 import { ApiError } from '@/types/api';
@@ -162,16 +170,23 @@ const toast = useToast();
 const onboarding = !auth.roles.includes('therapist') || !auth.user?.therapistProfile;
 const backHref = onboarding ? '/profile' : '/therapist/profile';
 
-/** Shared with the therapist profile, which shows the same price — two copies
- *  of a price is one more than can be kept in step. */
-const plans = therapistPlans;
+/**
+ * Priced by the server. The app used to hold its own copy of these figures,
+ * which would drift the day somebody edited `subscription_plans`.
+ */
+const { data: planData } = useQuery({
+  queryKey: ['therapist', 'plans'],
+  queryFn: () => therapistsApi.plans(),
+  staleTime: 5 * 60 * 1000,
+});
+const plans = computed(() => planData.value ?? []);
 const currentPlan = computed(() => auth.user?.therapistProfile?.plan ?? null);
 const currentPlanLabel = computed(
-  () => (auth.therapistPlanActive ? plans.find((p) => p.key === currentPlan.value)?.name : null) ?? null,
+  () => (auth.therapistPlanActive ? findPlan(plans.value, currentPlan.value)?.name : null) ?? null,
 );
 
 const plan = ref<TherapistPlanTier>(currentPlan.value ?? 'monthly');
-const selectedPlan = computed(() => plans.find((p) => p.key === plan.value)!);
+const selectedPlan = computed(() => findPlan(plans.value, plan.value));
 const submitting = ref(false);
 const paySheetOpen = ref(false);
 /** Wallet settles server-side; the other two open the gateway on that rail. */
@@ -179,7 +194,10 @@ const method = ref<'wallet' | PaymentChannel>('wallet');
 
 const { data: wallet } = useWallet();
 const walletShortfall = computed(
-  () => !!wallet.value && wallet.value.available * 100 < selectedPlan.value.priceMinor,
+  () =>
+    !!wallet.value &&
+    !!selectedPlan.value &&
+    wallet.value.available * 100 < selectedPlan.value.amountMinor,
 );
 
 /** Leaves the sheet open behind the push so returning lands back on payment. */
@@ -190,7 +208,9 @@ function goTopUp() {
 
 /** Free plans skip payment entirely; priced plans must settle first. */
 function onContinue() {
-  if (selectedPlan.value.priceMinor === 0) {
+  if (!selectedPlan.value) return;
+
+  if (selectedPlan.value.amountMinor === 0) {
     void activate('wallet');
     return;
   }
@@ -215,12 +235,16 @@ async function onPay() {
  * decides whether the payment settled.
  */
 async function payByGateway(channel: PaymentChannel) {
+  // The catalogue is fetched, so nothing can be paid before it has arrived —
+  // the amount sent has to be the server's own figure, not a guess.
+  if (!selectedPlan.value) return;
+
   submitting.value = true;
   try {
     const intent = await paymentsApi.createIntent({
       purpose: 'therapist-plan',
       subject: plan.value,
-      expectedAmount: selectedPlan.value.priceMinor / 100,
+      expectedAmount: selectedPlan.value.amountMinor / 100,
       expectedCurrency: 'USD',
       channel,
     });
@@ -290,7 +314,7 @@ async function activate(paymentToken: string) {
     }
 
     router.replace({ name: 'therapist-today' });
-    await toast.show(`Your ${selectedPlan.value.name} plan is active. You can take clients now.`, 'success', {
+    await toast.show(`Your ${selectedPlan.value?.name ?? ''} plan is active. You can take clients now.`.replace('  ', ' '), 'success', {
       title: 'Plan activated',
     });
   } catch (e) {
