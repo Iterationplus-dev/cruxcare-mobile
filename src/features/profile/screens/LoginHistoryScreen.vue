@@ -53,6 +53,7 @@ import { useQuery } from '@tanstack/vue-query';
 import { AppButton, AppCard, AppHeader, AppListRow } from '@/components/ui';
 import { EmptyState, ErrorState, LoadingState } from '@/components/state';
 import { securityApi, type LoginEvent } from '@/api/security.api';
+import { loginSucceeded } from '@/features/profile/loginHistory';
 
 /** Where PR4's Login history row leads. */
 const {
@@ -66,7 +67,7 @@ const {
 });
 
 function succeeded(event: LoginEvent): boolean {
-  return event.outcome === 'success';
+  return loginSucceeded(event.outcome);
 }
 
 function formatAt(iso: string): string {
