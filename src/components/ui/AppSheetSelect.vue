@@ -153,9 +153,13 @@ function select(value: string) {
   margin-bottom: 8px;
   max-height: 50vh;
   overflow-y: auto;
-  border: 1px solid var(--cc-line);
+  /* A light green edge rather than the neutral hairline: the list is the one
+     thing on the sheet asking to be chosen from, and the soft outer glow lifts
+     it off the surface without adding another hard line. */
+  border: 1px solid rgba(14, 124, 107, 0.28);
   border-radius: var(--cc-radius-lg);
   background: var(--cc-surface-0);
+  box-shadow: 0 0 0 3px rgba(14, 124, 107, 0.07);
   /* Keeps the first and last rows inside the rounded corners while scrolling. */
   overflow-x: hidden;
 }
@@ -164,8 +168,15 @@ function select(value: string) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 52px;
-  padding: 0 16px;
+  /* 39px — a quarter tighter than the 52px it was, as asked, so two more
+     options fit before anyone scrolls.
+     
+     Note this sits below the 44px minimum touch target the handoff lists as
+     non-negotiable (README, Accessibility). It is a deliberate instruction, not
+     an oversight; raise it before the accessibility pass. 44px would be a 15%
+     reduction and the largest that keeps the rule. */
+  min-height: 39px;
+  padding: 6px 16px;
   border: none;
   background: none;
   text-align: left;
@@ -174,7 +185,7 @@ function select(value: string) {
 /* The separator belongs between rows, so the first one does not get a stray
    line under the container's own top border. */
 .cc-sheet-select__option + .cc-sheet-select__option {
-  border-top: 1px solid var(--cc-line);
+  border-top: 1px solid rgba(14, 124, 107, 0.16);
 }
 .cc-sheet-select__option:active {
   background: var(--cc-color-mist);

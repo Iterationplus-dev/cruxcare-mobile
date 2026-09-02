@@ -127,21 +127,17 @@
           />
         </template>
 
-        <div class="cc-field">
-          <label class="cc-field__label">How did you hear about CruxCare?</label>
-          <button
-            type="button"
-            class="cc-referral-trigger"
-            :class="{ 'cc-referral-trigger--error': !!errors.referredBySource }"
-            @click="referralSheetOpen = true"
-          >
-            <span :class="referredBySource ? 'cc-text-body' : 'cc-referral-trigger__placeholder'" style="font-size: 14.5px">
-              {{ selectedReferralLabel ?? 'Select one' }}
-            </span>
-            <AppIcon name="expand_more" :size="18" color="var(--cc-ink-400)" />
-          </button>
-          <p v-if="errors.referredBySource" class="cc-field__error" role="alert">{{ errors.referredBySource }}</p>
-        </div>
+        <!-- The same component every other picker uses. This was a hand-rolled
+             copy of it, which is why it missed the list restyle: one screen's
+             dropdown quietly stopped looking like the rest of the app. -->
+        <AppSheetSelect
+          v-model="referredBySource"
+          label="How did you hear about CruxCare?"
+          title="How did you hear about CruxCare?"
+          placeholder="Select one"
+          :options="referredByOptions"
+          :error="errors.referredBySource"
+        />
 
         <AppInput
           v-model="password"
@@ -226,26 +222,6 @@
       </div>
     </ion-footer>
 
-    <AppSheet v-model="referralSheetOpen" title="How did you hear about CruxCare?">
-      <div class="cc-referral-options">
-        <button
-          v-for="opt in referredByOptions"
-          :key="opt.value"
-          type="button"
-          class="cc-referral-option"
-          :class="{ 'cc-referral-option--selected': referredBySource === opt.value }"
-          @click="selectReferral(opt.value)"
-        >
-          <span class="cc-text-body" style="font-size: 14.5px">{{ opt.label }}</span>
-          <AppIcon
-            v-if="referredBySource === opt.value"
-            name="check_circle"
-            :size="20"
-            color="var(--cc-color-primary)"
-          />
-        </button>
-      </div>
-    </AppSheet>
   </ion-page>
 </template>
 
@@ -259,7 +235,6 @@ import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
 import AppSheetSelect from '@/components/ui/AppSheetSelect.vue';
-import AppSheet from '@/components/ui/AppSheet.vue';
 import { authApi, type OtpRequestResult } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
@@ -375,15 +350,6 @@ const referredByOptions: { value: string; label: string }[] = referredBySourceOp
   value: o.value,
   label: o.label,
 }));
-
-const referralSheetOpen = ref(false);
-const selectedReferralLabel = computed(
-  () => referredByOptions.find((o) => o.value === referredBySource.value)?.label,
-);
-function selectReferral(value: string) {
-  referredBySource.value = value as ReferredBySource;
-  referralSheetOpen.value = false;
-}
 
 const strength = ref(passwordStrength(''));
 watch(password, (v) => (strength.value = passwordStrength(v ?? '')));
@@ -567,49 +533,6 @@ const onSubmit = handleSubmit(async (values) => {
   line-height: 20px;
   color: var(--cc-ink-900);
   margin-bottom: 4px;
-}
-.cc-referral-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--cc-input-height);
-  border: 1px solid var(--cc-line);
-  border-radius: var(--cc-radius-sm);
-  padding: 0 12px;
-  background: var(--cc-surface-0);
-  cursor: pointer;
-  text-align: left;
-}
-.cc-referral-trigger--error {
-  border: 1.5px solid var(--cc-input-error-border);
-  background: var(--cc-error-surface);
-}
-.cc-referral-trigger__placeholder {
-  font-family: var(--cc-font-interface);
-  color: var(--cc-ink-300);
-}
-.cc-referral-options {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 8px;
-  max-height: 50vh;
-  overflow-y: auto;
-}
-.cc-referral-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 14px;
-  border-radius: var(--cc-radius-md);
-  border: 1px solid var(--cc-line);
-  background: var(--cc-surface-0);
-  cursor: pointer;
-}
-.cc-referral-option--selected {
-  border: 1.5px solid var(--cc-color-primary);
-  background: var(--cc-color-mist);
 }
 .cc-screen__footer {
   background: var(--cc-surface-app);
