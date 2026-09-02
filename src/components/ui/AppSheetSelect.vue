@@ -39,19 +39,20 @@
             color="var(--cc-color-primary)"
           />
         </button>
-
-        <!-- Only offered once there is something to remove. Without it a value
-             can be changed but never taken back, which would leave the API's
-             cleared state unreachable from the screen. -->
-        <button
-          v-if="clearable && selectedLabel"
-          type="button"
-          class="cc-sheet-select__clear"
-          @click="select('')"
-        >
-          {{ clearLabel }}
-        </button>
       </div>
+
+      <!-- Outside the list, because removing a value is not one of the values.
+           Only offered once there is something to remove: without it a value
+           can be changed but never taken back, which would leave the API's
+           cleared state unreachable from the screen. -->
+      <button
+        v-if="clearable && selectedLabel"
+        type="button"
+        class="cc-sheet-select__clear"
+        @click="select('')"
+      >
+        {{ clearLabel }}
+      </button>
     </AppSheet>
   </div>
 </template>
@@ -137,32 +138,65 @@ function select(value: string) {
   color: var(--cc-error-surface-text);
   margin: 5px 0 0;
 }
+/*
+ * One grouped list, not a stack of boxes.
+ *
+ * Every option used to carry its own border and radius, so a country list read
+ * as thirty separate cards — the rule between two rows was doing the same job
+ * twice, and the eye had to cross a boundary per item. A single container with
+ * hairline separators is the same information with a third of the lines, and it
+ * matches how AppCard + AppListRow already group rows elsewhere in the app.
+ */
 .cc-sheet-select__options {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   margin-bottom: 8px;
   max-height: 50vh;
   overflow-y: auto;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-lg);
+  background: var(--cc-surface-0);
+  /* Keeps the first and last rows inside the rounded corners while scrolling. */
+  overflow-x: hidden;
 }
 .cc-sheet-select__option {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
-  padding: 0 14px;
-  border-radius: var(--cc-radius-md);
-  border: 1px solid var(--cc-line);
-  background: var(--cc-surface-0);
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: none;
+  background: none;
+  text-align: left;
   cursor: pointer;
 }
-.cc-sheet-select__option--selected {
-  border: 1.5px solid var(--cc-color-primary);
+/* The separator belongs between rows, so the first one does not get a stray
+   line under the container's own top border. */
+.cc-sheet-select__option + .cc-sheet-select__option {
+  border-top: 1px solid var(--cc-line);
+}
+.cc-sheet-select__option:active {
   background: var(--cc-color-mist);
 }
+.cc-sheet-select__option:focus-visible {
+  outline: 3px solid rgba(14, 124, 107, 0.35);
+  outline-offset: -3px;
+}
+/* Selection is carried by tint, weight and the tick — not by a heavier border,
+   which would shift every neighbouring row by half a pixel as it moved. */
+.cc-sheet-select__option--selected {
+  background: var(--cc-color-mist);
+}
+.cc-sheet-select__option--selected span {
+  font-weight: 600;
+  color: var(--cc-color-primary-dark);
+}
 .cc-sheet-select__clear {
+  display: block;
+  width: 100%;
   height: 44px;
-  margin-top: 2px;
+  margin-top: 10px;
   border: none;
   border-radius: var(--cc-radius-md);
   background: transparent;

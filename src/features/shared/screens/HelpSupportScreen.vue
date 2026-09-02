@@ -216,7 +216,7 @@ async function onSend() {
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: var(--cc-surface-tint);
+  background: var(--cc-color-mist);
 }
 .cc-contact__body {
   flex: 1;

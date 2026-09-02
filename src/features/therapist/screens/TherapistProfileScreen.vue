@@ -3,9 +3,13 @@
     <AppHeader title="Profile" :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
-        <AppCard class="cc-identity">
+        <!-- Tappable for the same reason the client profile is: this is where
+             a therapist changes the photo clients see. Splitting the editable
+             fields onto their own screen left the therapist shell with no route
+             to it at all. -->
+        <button type="button" class="cc-identity" @click="router.push({ name: 'edit-profile' })">
           <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="56" />
-          <div>
+          <div class="cc-identity__body">
             <div class="cc-text-h2" style="margin: 0">{{ fullName }}</div>
             <div class="cc-text-caption">{{ planCaption }}</div>
             <!-- What the plan costs, from the same catalogue the purchase
@@ -13,7 +17,10 @@
                  a price someone is paying. -->
             <div v-if="planAmount" class="cc-identity__amount cc-text-mono">{{ planAmount }}</div>
           </div>
-        </AppCard>
+          <span class="cc-identity__edit" aria-hidden="true">
+            <AppIcon name="edit" :size="18" color="var(--cc-color-primary)" />
+          </span>
+        </button>
 
         <AppCard style="padding: 0">
           <AppListRow
@@ -29,7 +36,8 @@
           <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
           <!-- The therapist shell has no Wallet tab, so funding is reached here. -->
           <AppListRow title="Fund wallet" subtitle="Top up by card or bank transfer" icon="add_card" chevron clickable @click="router.push({ name: 'wallet-top-up' })" />
-          <AppListRow title="Profile information" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Your details and photo'" icon="badge" chevron clickable @click="router.push({ name: 'personal-info' })" />
+          <AppListRow title="Edit profile" :subtitle="auth.user?.avatarUrl ? 'Photo, name and about' : 'Add a photo so clients recognise you'" icon="edit" chevron clickable @click="router.push({ name: 'edit-profile' })" />
+          <AppListRow title="Profile information" subtitle="Email, phone and Crux ID" icon="badge" chevron clickable @click="router.push({ name: 'personal-info' })" />
           <AppListRow title="Switch to client context" icon="switch_account" chevron clickable :divider="false" @click="roleSheetOpen = true" />
         </AppCard>
 
@@ -60,7 +68,15 @@ import { computed, onMounted, ref } from 'vue';
 import { App as CapacitorApp } from '@capacitor/app';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { AppAvatar, AppButton, AppCard, AppHeader, AppListRow, AppSheet } from '@/components/ui';
+import {
+  AppAvatar,
+  AppButton,
+  AppCard,
+  AppHeader,
+  AppIcon,
+  AppListRow,
+  AppSheet,
+} from '@/components/ui';
 import RoleSwitchSheet from '@/features/profile/components/RoleSwitchSheet.vue';
 import { useAuthStore } from '@/stores/auth';
 import { findPlan, planPrice } from '@/features/therapist/plans';
@@ -131,6 +147,20 @@ async function onLogout() {
 </script>
 
 <style scoped>
+.cc-identity__body {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.cc-identity__edit {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--cc-color-mist);
+}
 .cc-identity__amount {
   margin-top: 2px;
   font-size: 13px;
@@ -150,6 +180,17 @@ async function onLogout() {
   display: flex;
   gap: 14px;
   align-items: center;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-lg);
+  background: var(--cc-surface-0);
+  cursor: pointer;
+  font: inherit;
+}
+.cc-identity:focus-visible {
+  outline: 3px solid rgba(14, 124, 107, 0.35);
+  outline-offset: 2px;
 }
 .cc-version {
   margin: 14px 0 0;

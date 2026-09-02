@@ -111,7 +111,7 @@
           <AppIcon name="download" :size="20" color="var(--cc-color-primary)" />
           <div class="cc-export__body">
             <div class="cc-text-body-strong" style="font-size: 14.5px">Download my data</div>
-            <div class="cc-text-caption">Emailed as a zip within 48 hours</div>
+            <div class="cc-text-caption">Emailed as a zip within an hour</div>
           </div>
           <AppIcon name="chevron_right" :size="20" color="var(--cc-ink-400)" />
         </button>
@@ -201,14 +201,14 @@ async function requestExport() {
     const { expectedBy } = await securityApi.requestDataExport();
 
     // The address is the half a member can act on, so it leads. `expectedBy`
-    // is back alongside it now that a builder, a mailable and a scheduled
-    // command actually stand behind it — it was dropped while the row was a
-    // promise nothing kept.
+    // is within the hour now, so it reads as a time rather than a date — a
+    // calendar day would be a stranger way to say "shortly" than saying
+    // nothing at all.
     const to = auth.user?.email;
     const when = expectedBy ? new Date(expectedBy) : null;
     const by =
       when && !Number.isNaN(when.getTime())
-        ? ` It should arrive by ${when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}.`
+        ? ` It should arrive by ${when.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.`
         : '';
 
     await toast.show(
@@ -243,7 +243,7 @@ async function requestExport() {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 13px 16px;
+  padding: 13px 10px;
   border-bottom: 1px solid var(--cc-line);
 }
 .cc-detail--last {
