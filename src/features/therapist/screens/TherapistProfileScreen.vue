@@ -8,6 +8,10 @@
           <div>
             <div class="cc-text-h2" style="margin: 0">{{ fullName }}</div>
             <div class="cc-text-caption">{{ planCaption }}</div>
+            <!-- What the plan costs, from the same catalogue the purchase
+                 screen quotes. Hidden on a free or absent plan: "$0" reads as
+                 a price someone is paying. -->
+            <div v-if="planAmount" class="cc-identity__amount cc-text-mono">{{ planAmount }}</div>
           </div>
         </AppCard>
 
@@ -25,7 +29,7 @@
           <AppListRow title="Payout account" subtitle="Set where your earnings are paid" icon="payments" chevron clickable @click="router.push({ name: 'therapist-payout-account' })" />
           <!-- The therapist shell has no Wallet tab, so funding is reached here. -->
           <AppListRow title="Fund wallet" subtitle="Top up by card or bank transfer" icon="add_card" chevron clickable @click="router.push({ name: 'wallet-top-up' })" />
-          <AppListRow title="Profile photo" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Help clients recognise you'" icon="photo_camera" chevron clickable @click="router.push({ name: 'personal-info', query: { focus: 'profile-photo' } })" />
+          <AppListRow title="Profile information" :subtitle="auth.user?.avatarUrl ? 'Photo added' : 'Your details and photo'" icon="badge" chevron clickable @click="router.push({ name: 'personal-info' })" />
           <AppListRow title="Switch to client context" icon="switch_account" chevron clickable :divider="false" @click="roleSheetOpen = true" />
         </AppCard>
 
@@ -59,6 +63,7 @@ import { useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppListRow, AppSheet } from '@/components/ui';
 import RoleSwitchSheet from '@/features/profile/components/RoleSwitchSheet.vue';
 import { useAuthStore } from '@/stores/auth';
+import { findPlan } from '@/features/therapist/plans';
 import { fullName as formatFullName } from '@/types/user';
 
 /** TD8 (lean) · Therapist settings — role switch lives here; account
@@ -95,6 +100,14 @@ const planLabel = computed(() => {
 const planCaption = computed(() =>
   auth.therapistPlanActive && planLabel.value ? `${planLabel.value} plan` : 'No active plan',
 );
+/** Only when they are actually on a paid plan — an inactive or free account
+ *  shows no figure rather than one it is not paying. */
+const planAmount = computed(() => {
+  if (!auth.therapistPlanActive) return '';
+  const plan = findPlan(auth.user?.therapistProfile?.plan);
+  return plan && plan.priceMinor > 0 ? plan.price : '';
+});
+
 const planRowSubtitle = computed(() => {
   if (auth.therapistPlanActive && planLabel.value) return `${planLabel.value} · change or upgrade`;
   if (auth.user?.therapistProfile?.status === 'expired') return 'Your plan expired — resubscribe to take clients';
@@ -111,6 +124,12 @@ async function onLogout() {
 </script>
 
 <style scoped>
+.cc-identity__amount {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cc-color-primary);
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

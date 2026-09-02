@@ -141,6 +141,7 @@ import { AppBadge, AppButton, AppCard, AppIcon, AppSheet, MoneyAmount } from '@/
 import { PaymentUnavailableError, resolvePaymentProvider } from '@/services/payment';
 import { paymentsApi } from '@/api/payments.api';
 import { useAuthStore } from '@/stores/auth';
+import { therapistPlans } from '@/features/therapist/plans';
 import { useToast } from '@/composables/useToast';
 import { useWallet } from '@/composables/useWallet';
 import { ApiError } from '@/types/api';
@@ -161,13 +162,9 @@ const toast = useToast();
 const onboarding = !auth.roles.includes('therapist') || !auth.user?.therapistProfile;
 const backHref = onboarding ? '/profile' : '/therapist/profile';
 
-/** `priceMinor` mirrors subscription_plans.price; the server re-derives the
- *  charge from its own row, so this only drives what the UI offers. */
-const plans: { key: TherapistPlanTier; name: string; price: string; priceMinor: number; detail: string; tag?: string }[] = [
-  { key: 'free-trial', name: 'Free trial', price: '$0', priceMinor: 0, detail: '1 client · 1 case file · unlimited purchases' },
-  { key: 'monthly', name: 'Monthly', price: '$15/mo', priceMinor: 1500, detail: '25 clients · unlimited case files · Point Facility hosting', tag: 'MOST CHOSEN' },
-  { key: 'yearly', name: 'Yearly', price: '$200/yr', priceMinor: 20000, detail: 'Everything monthly · save $40 · priority assignment' },
-];
+/** Shared with the therapist profile, which shows the same price — two copies
+ *  of a price is one more than can be kept in step. */
+const plans = therapistPlans;
 const currentPlan = computed(() => auth.user?.therapistProfile?.plan ?? null);
 const currentPlanLabel = computed(
   () => (auth.therapistPlanActive ? plans.find((p) => p.key === currentPlan.value)?.name : null) ?? null,

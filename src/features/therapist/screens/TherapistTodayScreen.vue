@@ -86,7 +86,7 @@
               :subtitle="`${a.type} · ${formatTime(a.slot)}`"
               chevron
               clickable
-              @click="router.push({ name: 'appointment-management' })"
+              @click="router.push({ name: 'therapist-appointment', params: { id: a.id } })"
             />
           </AppCard>
 

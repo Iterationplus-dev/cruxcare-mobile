@@ -323,6 +323,14 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    // Where a tap on Today's schedule lands, and the only place a therapist can
+    // start a session from.
+    path: '/therapist/appointments/:id',
+    name: 'therapist-appointment',
+    component: () => import('@/features/therapist/screens/TherapistAppointmentScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/video/:id',
     name: 'video-visit',
     component: () => import('@/features/shared/screens/VideoVisitScreen.vue'),
@@ -362,6 +370,12 @@ const routes: RouteRecordRaw[] = [
     path: '/profile/health-profile-access',
     name: 'health-profile-access',
     component: () => import('@/features/profile/screens/HealthProfileAccessScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile/address',
+    name: 'delivery-address',
+    component: () => import('@/features/profile/screens/DeliveryAddressScreen.vue'),
     meta: { requiresAuth: true },
   },
   {

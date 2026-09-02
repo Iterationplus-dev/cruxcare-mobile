@@ -81,15 +81,19 @@
 
         <AppSectionLabel label="Address and identity" />
         <AppCard style="padding: 0">
-          <div class="cc-detail">
+          <button
+            type="button"
+            class="cc-detail cc-detail--tappable"
+            @click="router.push({ name: 'delivery-address' })"
+          >
             <div class="cc-detail__body">
               <span class="cc-detail__label">Delivery address</span>
               <!-- Never invented: an account with no address says so rather
                    than showing a blank line that reads as a failed load. -->
-              <span class="cc-detail__value">{{ addressLine ?? 'Not recorded yet' }}</span>
+              <span class="cc-detail__value">{{ addressLine ?? 'Add a delivery address' }}</span>
             </div>
             <AppIcon name="chevron_right" :size="20" color="var(--cc-ink-400)" />
-          </div>
+          </button>
 
           <!-- Drawn in PR3 with a verified NIN. There is no identity document
                anywhere in the API, so this states that plainly instead of
@@ -136,6 +140,10 @@ import { formatAddress } from '@/types/user';
 /**
  * PR3 · Personal information — the verified fields, shown in place with their
  * verified state, and the data export sitting with the data it exports.
+ *
+ * The data export names the address it is going to rather than a date. The
+ * server queues it with a 48-hour SLA, and rendering that as a weekday turned
+ * "soon" into a promise about next Sunday.
  *
  * Everything editable moved to PR2 (Edit profile). That separation is the
  * design's argument: a field that needs a code to change should not sit in a
@@ -189,14 +197,18 @@ const exporting = ref(false);
 async function requestExport() {
   exporting.value = true;
   try {
-    const { expectedBy } = await securityApi.requestDataExport();
-    const when = expectedBy ? new Date(expectedBy) : null;
-    const by =
-      when && !Number.isNaN(when.getTime())
-        ? ` by ${when.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}`
-        : ' within 48 hours';
+    await securityApi.requestDataExport();
 
-    await toast.show(`We will email your data${by}.`, 'success', { title: 'Export requested' });
+    // The address is the useful half — a member needs to know *where* it is
+    // going, and can act if it is the wrong one. `expectedBy` is deliberately
+    // not read back: rendering it as a weekday turned "soon" into a promise
+    // about next Sunday, which is not what anyone means by "download my data".
+    const to = auth.user?.email;
+    await toast.show(
+      to ? `We will email your data to ${to}.` : 'We will email your data to you.',
+      'success',
+      { title: 'Export requested' },
+    );
   } catch (error) {
     const message =
       error instanceof ApiError
@@ -229,6 +241,20 @@ async function requestExport() {
 }
 .cc-detail--last {
   border-bottom: none;
+}
+.cc-detail--tappable {
+  width: 100%;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.cc-detail--tappable:focus-visible {
+  outline: 3px solid rgba(14, 124, 107, 0.35);
+  outline-offset: -3px;
 }
 .cc-detail__body {
   flex: 1;

@@ -127,9 +127,50 @@ export function statusBadge(
   }
 }
 
-/** Joining is only meaningful for a confirmed session that has not passed. */
-export function canJoin(appointment: Appointment, timing: AppointmentTiming): boolean {
-  return timing === 'upcoming' && appointment.status === 'confirmed';
+/** The room opens a little before the hour, so nobody is refused at 13:59. */
+export const JOIN_OPENS_MINUTES = 10;
+
+/**
+ * How long a session stays joinable after its start time.
+ *
+ * A guess, and named as one. The server has no notion of a session starting or
+ * ending — there is no `active` transition and nothing marks a missed session —
+ * so "until the therapist ends it" cannot be honoured yet. This window is the
+ * closest true thing the client can do with the data it has: a session that has
+ * just begun is still joinable, rather than the Join button vanishing the
+ * instant the clock passes the slot.
+ */
+export const JOIN_CLOSES_MINUTES = 60;
+
+/**
+ * Whether the room can be entered right now.
+ *
+ * Used by both sides, so a therapist is never in a room the client is still
+ * locked out of. Only a confirmed session has a room at all: nobody has agreed
+ * to meet for one that is merely requested.
+ */
+export function isJoinable(appointment: Appointment, now: Date = new Date()): boolean {
+  if (appointment.status !== 'confirmed') return false;
+
+  const at = new Date(appointment.slot);
+  if (Number.isNaN(at.getTime())) return false;
+
+  const opens = at.getTime() - JOIN_OPENS_MINUTES * 60_000;
+  const closes = at.getTime() + JOIN_CLOSES_MINUTES * 60_000;
+  const stamp = now.getTime();
+
+  return stamp >= opens && stamp <= closes;
+}
+
+/**
+ * Joining is meaningful for a confirmed session inside its window.
+ *
+ * This used to require `timing === 'upcoming'`, which meant the Join button
+ * disappeared the moment the start time passed — so a client could not join a
+ * session that had only just begun, which is exactly when they would try.
+ */
+export function canJoin(appointment: Appointment, _timing: AppointmentTiming): boolean {
+  return isJoinable(appointment);
 }
 
 /** A settled appointment is history; moving one would rewrite what happened

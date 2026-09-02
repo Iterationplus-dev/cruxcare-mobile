@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   canJoin,
   canReschedule,
+  isJoinable,
   headlineAppointment,
   howLongAgo,
   nextAppointment,
@@ -149,17 +150,55 @@ describe('statusBadge', () => {
   });
 });
 
-describe('canJoin', () => {
-  it('is true for a confirmed session still to come', () => {
-    expect(canJoin(appointment({ status: 'confirmed' }), 'upcoming')).toBe(true);
+describe('isJoinable', () => {
+  const at = '2026-08-31T10:00:00';
+
+  it('opens shortly before the hour, so nobody is refused at 13:59', () => {
+    const justBefore = new Date('2026-08-31T09:55:00');
+    expect(isJoinable(appointment({ slot: at }), justBefore)).toBe(true);
   });
 
-  it('is false for one that has already passed', () => {
-    expect(canJoin(appointment({ status: 'confirmed' }), 'overdue')).toBe(false);
+  it('is still open once the session has started', () => {
+    // The bug this replaces: Join vanished the instant the clock passed the
+    // slot, which is exactly when someone would reach for it.
+    const justAfter = new Date('2026-08-31T10:05:00');
+    expect(isJoinable(appointment({ slot: at }), justAfter)).toBe(true);
+  });
+
+  it('closes once the window has run out', () => {
+    const longAfter = new Date('2026-08-31T11:30:00');
+    expect(isJoinable(appointment({ slot: at }), longAfter)).toBe(false);
+  });
+
+  it('is shut well before the time', () => {
+    const hoursEarly = new Date('2026-08-31T07:00:00');
+    expect(isJoinable(appointment({ slot: at }), hoursEarly)).toBe(false);
   });
 
   it('is false while it is only requested', () => {
-    // Nobody has agreed to meet yet, so there is nothing to join.
+    // Nobody has agreed to meet yet, so there is no room to enter.
+    expect(isJoinable(appointment({ slot: at, status: 'requested' }), new Date(at))).toBe(false);
+  });
+
+  it('is false for a cancelled session inside its window', () => {
+    expect(isJoinable(appointment({ slot: at, status: 'cancelled' }), new Date(at))).toBe(false);
+  });
+
+  it('is false on an unusable date rather than throwing', () => {
+    expect(isJoinable(appointment({ slot: 'not-a-date' }), now)).toBe(false);
+  });
+});
+
+describe('canJoin', () => {
+  it('agrees with isJoinable, so both sides of a call use one rule', () => {
+    // A therapist must never be in a room the client is locked out of.
+    const soon = appointment({ slot: '2026-08-31T10:00:00' });
+    const during = new Date('2026-08-31T10:05:00');
+
+    expect(isJoinable(soon, during)).toBe(true);
+  });
+
+  it('is false while it is only requested', () => {
     expect(canJoin(appointment({ status: 'requested' }), 'upcoming')).toBe(false);
   });
 });
