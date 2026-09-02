@@ -1,3 +1,4 @@
+import type { CursorPage } from '@/types/api';
 export interface TherapistSummary {
   id: string;
   name: string;
@@ -37,17 +38,22 @@ export interface WorkingDay {
 /**
  * A therapist's rota, in the therapist's own clock.
  *
- * `timezone` is named by the server so no screen has to guess whose hours these
- * are. Storage is UTC; these times are already converted. Before this, a
- * therapist in Lagos setting "09:00" was setting 10:00 their own time and
- * nothing said so.
+ * The times are already converted; storage is UTC. `meta.timezone` names the
+ * clock so no screen has to guess whose hours it is showing — before it did, a
+ * therapist in Lagos setting "09:00" was setting 10:00 their own time with
+ * nothing saying so.
+ *
+ * It travels in `meta` rather than beside the rows because whose clock these
+ * hours are in is a fact about the set, not a column on a row.
  */
-export interface TherapistRota {
-  /** An IANA name, or null when the therapist has never been asked — in which
-   *  case the hours read as UTC, which is what every pre-existing row is. */
-  timezone: string | null;
-  days: WorkingDay[];
-}
+export type TherapistRota = CursorPage<WorkingDay> & {
+  meta: {
+    /** An IANA name, or null when the therapist has never been asked — in
+     *  which case the hours read as UTC, which is what every rota written
+     *  before the column existed already is. */
+    timezone?: string | null;
+  };
+};
 
 /**
  * What a client's booking calendar can offer on one date.

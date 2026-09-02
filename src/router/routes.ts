@@ -365,6 +365,28 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    // `field` is `email` or `phone`; the flow is identical either way, so one
+    // screen serves both rather than two differing only in a label.
+    path: '/profile/change/:field',
+    name: 'change-contact',
+    component: () => import('@/features/profile/screens/ChangeContactScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // Where PR4's Activity rows lead. Both were drawn and both were dead ends
+    // until the server grew the endpoints behind them.
+    path: '/profile/devices',
+    name: 'active-devices',
+    component: () => import('@/features/profile/screens/ActiveDevicesScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile/login-history',
+    name: 'login-history',
+    component: () => import('@/features/profile/screens/LoginHistoryScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/profile/security',
     name: 'security-privacy',
     component: () => import('@/features/profile/screens/SecurityPrivacyScreen.vue'),

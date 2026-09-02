@@ -179,7 +179,7 @@ const rows = reactive<DayRow[]>(
 const saving = ref(false);
 
 /** The days as the server returned them, in the therapist's own clock. */
-const saved = computed(() => rota.value?.days ?? null);
+const saved = computed(() => rota.value?.data ?? null);
 
 /**
  * Whose clock these hours are in. The server names it so this screen does not
@@ -187,7 +187,7 @@ const saved = computed(() => rota.value?.days ?? null);
  * setting 10:00 their own time with nothing on screen saying so.
  */
 const timezoneLabel = computed(() => {
-  const zone = rota.value?.timezone;
+  const zone = rota.value?.meta?.timezone;
   if (!zone) return 'Times are in UTC. Set your timezone to use your own clock.';
   return `Times are in your own timezone (${zone.replace(/_/g, ' ')}).`;
 });

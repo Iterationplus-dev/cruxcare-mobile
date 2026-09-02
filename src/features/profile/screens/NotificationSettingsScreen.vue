@@ -70,8 +70,25 @@
             </AppListRow>
           </AppCard>
 
-          <AppSectionLabel label="Quiet hours" />
+          <AppSectionLabel label="Channels and quiet hours" />
           <AppCard style="padding: 0">
+            <AppListRow
+              title="Email digest"
+              :subtitle="digestSubtitle"
+              icon="mail"
+            >
+              <template #trailing>
+                <label class="cc-toggle">
+                  <input
+                    type="checkbox"
+                    :checked="preferences.emailDigest === 'weekly'"
+                    :disabled="isSaving"
+                    @change="onDigest($event)"
+                  />
+                  <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+                </label>
+              </template>
+            </AppListRow>
             <AppListRow
               title="Quiet hours"
               :subtitle="quietHoursSubtitle"
@@ -119,14 +136,17 @@ const isSaving = computed(() => update.isPending.value);
  * `cases` was missing from this screen entirely — a category the server has
  * always accepted with no way to reach it.
  *
- * "Savings and commitment nudges" and "Network and ranking changes" are drawn
- * but have no category behind them, so they are not shown.
+ * Every category the design draws now exists server-side. `savings` and
+ * `network` default to off, because nothing sends them yet and defaulting an
+ * unbuilt notification to on promises mail that never arrives.
  */
 const optionalRows: { key: OptionalNotificationCategory; label: string; hint: string }[] = [
   { key: 'appointments', label: 'Session reminders', hint: '24 hours and 1 hour before' },
   { key: 'chat', label: 'Messages from therapists', hint: 'New messages in your conversations' },
   { key: 'orders', label: 'Order and delivery updates', hint: 'Dispatch, delivery and changes' },
   { key: 'cases', label: 'Care and treatment updates', hint: 'Notes, diagnoses and case changes' },
+  { key: 'savings', label: 'Savings and commitment nudges', hint: 'Reminders about money you have set aside' },
+  { key: 'network', label: 'Network and ranking changes', hint: 'Your team, your rank and referrals' },
   { key: 'marketing', label: 'Offers and new products', hint: 'Occasional, never about your care' },
 ];
 
@@ -142,6 +162,24 @@ function requiredLabel(pref: { key: string; label: string }): string {
 
 function requiredSubtitle(pref: { key: string }): string {
   return REQUIRED_COPY[pref.key]?.hint ?? 'Security and money events';
+}
+
+/** The server models this as a value, not a boolean, so a daily digest later is
+ *  a new value rather than a new column. The screen offers the two that exist. */
+const digestSubtitle = computed(() =>
+  preferences.value?.emailDigest === 'weekly'
+    ? 'Weekly · a summary of what you missed'
+    : 'Off · nothing is emailed',
+);
+
+async function onDigest(event: Event) {
+  const weekly = (event.target as HTMLInputElement).checked;
+  try {
+    await update.mutateAsync({ emailDigest: weekly ? 'weekly' : 'off' });
+  } catch {
+    await refetch();
+    await toast.show('That preference was not saved. Please try again.', 'danger');
+  }
 }
 
 const quietHoursSubtitle = computed(() => {

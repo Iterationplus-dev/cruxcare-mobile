@@ -28,7 +28,9 @@ export function useNotificationPreferences() {
 export function useUpdateNotificationPreferences() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Partial<Pick<NotificationPreferences, 'optional' | 'quietHours'>>) =>
+    mutationFn: (
+      patch: Partial<Pick<NotificationPreferences, 'optional' | 'quietHours' | 'emailDigest'>>,
+    ) =>
       notificationPreferencesApi.update(patch),
     /**
      * The server's answer replaces the cache rather than invalidating it: it

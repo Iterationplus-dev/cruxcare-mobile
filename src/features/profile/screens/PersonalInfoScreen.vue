@@ -16,7 +16,11 @@
               :size="20"
               color="var(--cc-color-primary)"
             />
-            <button type="button" class="cc-detail__action" @click="notYet('email address')">
+            <button
+              type="button"
+              class="cc-detail__action"
+              @click="router.push({ name: 'change-contact', params: { field: 'email' } })"
+            >
               Change
             </button>
           </div>
@@ -27,7 +31,11 @@
               <span class="cc-detail__value">{{ auth.user?.phone || 'Not recorded' }}</span>
             </div>
             <AppIcon name="verified" :size="20" color="var(--cc-color-primary)" />
-            <button type="button" class="cc-detail__action" @click="notYet('phone number')">
+            <button
+              type="button"
+              class="cc-detail__action"
+              @click="router.push({ name: 'change-contact', params: { field: 'phone' } })"
+            >
               Change
             </button>
           </div>
@@ -51,15 +59,16 @@
             </button>
           </div>
 
-          <div v-if="cruxId" class="cc-detail cc-detail--last">
+          <div class="cc-detail cc-detail--last">
             <div class="cc-detail__body">
               <span class="cc-detail__label">Crux ID</span>
-              <span class="cc-detail__value cc-text-mono">{{ cruxId }}</span>
+              <span class="cc-detail__value cc-text-mono">{{ cruxId || 'Not issued' }}</span>
             </div>
             <span class="cc-detail__note">Permanent</span>
             <!-- Quoted to support and to an upline, so it is copied far more
                  often than it is read out. -->
             <button
+              v-if="cruxId"
               type="button"
               class="cc-detail__action"
               :aria-label="`Copy your Crux ID, ${cruxId}`"
@@ -94,14 +103,14 @@
           </div>
         </AppCard>
 
-        <AppCard class="cc-export">
+        <button type="button" class="cc-export" :disabled="exporting" @click="requestExport">
           <AppIcon name="download" :size="20" color="var(--cc-color-primary)" />
           <div class="cc-export__body">
             <div class="cc-text-body-strong" style="font-size: 14.5px">Download my data</div>
             <div class="cc-text-caption">Emailed as a zip within 48 hours</div>
           </div>
           <AppIcon name="chevron_right" :size="20" color="var(--cc-ink-400)" />
-        </AppCard>
+        </button>
 
         <div class="cc-notice">
           <AppIcon name="info" :size="18" color="var(--cc-color-primary)" />
@@ -116,9 +125,12 @@
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { AppCard, AppHeader, AppIcon, AppSectionLabel } from '@/components/ui';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
 import { copyToClipboard } from '@/services/clipboard';
+import { securityApi } from '@/api/security.api';
+import { ApiError } from '@/types/api';
 import { formatAddress } from '@/types/user';
 
 /**
@@ -136,10 +148,18 @@ import { formatAddress } from '@/types/user';
  * next-of-kin row would just claim the platform holds something it does not.
  */
 const auth = useAuthStore();
+const router = useRouter();
 const toast = useToast();
 
 const username = computed(() => auth.user?.username ?? '');
-const cruxId = computed(() => auth.user?.membership?.cruxId ?? '');
+/**
+ * Read from the user object, not from `membership`.
+ *
+ * Every account carries a Crux ID from registration — all 1375 rows have one —
+ * but `membership` is null for a plain client, so reading it there told people
+ * who had had an id all along that they had none.
+ */
+const cruxId = computed(() => auth.user?.cruxId ?? auth.user?.membership?.cruxId ?? '');
 const addressLine = computed(() => formatAddress(auth.user?.address));
 /** Which row last reported a successful copy, so two Copy buttons cannot both
  *  read "Copied" at once. */
@@ -162,17 +182,32 @@ async function copyValue(field: string, value: string, label: string) {
   await toast.show(`Couldn't copy. Your ${label.toLowerCase()} is ${value}`, 'warning');
 }
 
-/**
- * The change flows need an OTP round trip the API does not expose yet. Saying
- * so beats a control that looks live and does nothing.
- */
-async function notYet(what: string) {
-  await toast.show(
-    `Changing your ${what} needs a verification code, which is not built yet. Contact support from Help and support and they will change it for you.`,
-    'info',
-    { title: 'Not available yet' },
-  );
+const exporting = ref(false);
+
+/** Asking twice returns the request already in flight rather than restarting
+ *  the 48-hour promise, so a double tap is harmless. */
+async function requestExport() {
+  exporting.value = true;
+  try {
+    const { expectedBy } = await securityApi.requestDataExport();
+    const when = expectedBy ? new Date(expectedBy) : null;
+    const by =
+      when && !Number.isNaN(when.getTime())
+        ? ` by ${when.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}`
+        : ' within 48 hours';
+
+    await toast.show(`We will email your data${by}.`, 'success', { title: 'Export requested' });
+  } catch (error) {
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not request your data. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Not requested' });
+  } finally {
+    exporting.value = false;
+  }
 }
+
 </script>
 
 <style scoped>
@@ -244,6 +279,17 @@ async function notYet(what: string) {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-lg);
+  background: var(--cc-surface-0);
+  text-align: left;
+  cursor: pointer;
+}
+.cc-export:focus-visible {
+  outline: 3px solid rgba(14, 124, 107, 0.35);
+  outline-offset: 2px;
 }
 .cc-export__body {
   flex: 1;

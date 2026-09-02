@@ -56,6 +56,40 @@
             @click="router.push({ name: 'health-profile-access' })"
           />
           <AppListRow
+            title="Show me in rankings"
+            :subtitle="privacy.showInRankings ? 'On · your position is public' : 'Off · you appear as an anonymous position'"
+            icon="leaderboard"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="privacy.showInRankings"
+                  :disabled="savingPrivacy"
+                  @change="setPrivacy('showInRankings', $event)"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Network visibility"
+            :subtitle="privacy.networkVisible ? 'On · your upline sees your name and tier' : 'Off · your upline sees a position only'"
+            icon="hub"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="privacy.networkVisible"
+                  :disabled="savingPrivacy"
+                  @change="setPrivacy('networkVisible', $event)"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+          <AppListRow
             title="Location"
             :subtitle="locationSubtitle"
             icon="location_on"
@@ -79,9 +113,24 @@
         <AppCard style="padding: 0">
           <AppListRow
             title="Active devices"
-            subtitle="This device is signed in"
+            :subtitle="devicesSubtitle"
             icon="devices"
+            chevron
+            clickable
+            @click="router.push({ name: 'active-devices' })"
+          >
+            <template v-if="devices" #trailing>
+              <span class="cc-text-mono cc-security__count">{{ devices.length }}</span>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Login history"
+            subtitle="Every sign-in, including the ones that failed"
+            icon="history"
+            chevron
+            clickable
             :divider="false"
+            @click="router.push({ name: 'login-history' })"
           />
         </AppCard>
       </div>
@@ -96,6 +145,7 @@ import { AppCard, AppHeader, AppListRow, AppSectionLabel } from '@/components/ui
 import { useRouter } from 'vue-router';
 import { useQuery } from '@tanstack/vue-query';
 import { healthAccessApi } from '@/api/health-access.api';
+import { securityApi } from '@/api/security.api';
 import { useAuthStore } from '@/stores/auth';
 import { useLocationStore } from '@/stores/location';
 import { formatCoordinates } from '@/services/deviceLocation';
@@ -142,6 +192,45 @@ const healthAccessSubtitle = computed(() => {
  * flow — so this sends them through that rather than opening a form that
  * cannot submit.
  */
+const savingPrivacy = ref(false);
+
+const privacy = computed(
+  () => auth.user?.privacy ?? { showInRankings: true, networkVisible: true },
+);
+
+async function setPrivacy(key: 'showInRankings' | 'networkVisible', event: Event) {
+  const input = event.target as HTMLInputElement;
+  const wanted = input.checked;
+
+  savingPrivacy.value = true;
+  try {
+    auth.user = await authApi.updateMe({ privacy: { ...privacy.value, [key]: wanted } });
+  } catch (error) {
+    // Snap back: a privacy switch showing what someone wanted rather than what
+    // the server holds is the worst kind to leave ahead of the truth.
+    input.checked = !wanted;
+    const message =
+      error instanceof ApiError
+        ? error.message
+        : 'We could not change that. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Not saved' });
+  } finally {
+    savingPrivacy.value = false;
+  }
+}
+
+const { data: devices } = useQuery({
+  queryKey: ['me', 'devices'],
+  queryFn: () => securityApi.devices(),
+});
+
+const devicesSubtitle = computed(() => {
+  const rows = devices.value;
+  if (!rows) return 'Where your account is signed in';
+  if (rows.length === 1) return 'This device only';
+  return `${rows.length} devices are signed in`;
+});
+
 async function changePassword() {
   await toast.show(
     'We will email you a link to set a new password. Use Forgot password on the sign-in screen, or contact support.',
@@ -228,6 +317,10 @@ async function onToggleBiometric(e: Event) {
 </script>
 
 <style scoped>
+.cc-security__count {
+  font-size: 13px;
+  color: var(--cc-ink-600);
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

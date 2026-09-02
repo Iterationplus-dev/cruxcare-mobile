@@ -116,6 +116,14 @@ export interface User {
    * implying the account has no username.
    */
   username?: string | null;
+  /**
+   * The permanent account identifier, quoted to support and to an upline.
+   *
+   * Every account has one from registration. It used to be read out of
+   * `membership`, which is null for a plain client — so people who had had a
+   * Crux ID all along were told they had none.
+   */
+  cruxId?: string | null;
   gender?: Gender | null;
   /** Free text the member writes about themselves. */
   about?: string | null;
@@ -133,6 +141,16 @@ export interface User {
   outletName?: string | null;
   /** Absent until the server returns it; the client never invents one. */
   address?: Address | null;
+  /** An IANA name. Null means never asked, and a therapist's rota then reads
+   *  as UTC — which is what every rota written before this existed already is. */
+  timezone?: string | null;
+  /** Replaced wholesale: one screen writes all three, so a partial send is a
+   *  cleared field rather than an untouched one. */
+  nextOfKin?: { name: string | null; relationship: string | null; phone: string | null } | null;
+  privacy?: {
+    showInRankings: boolean;
+    networkVisible: boolean;
+  };
   membership: Membership | null;
   therapistProfile: TherapistProfile | null;
   payoutAccount?: PayoutAccount | null;

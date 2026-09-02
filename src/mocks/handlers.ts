@@ -37,6 +37,20 @@ function unauthorized() {
   return HttpResponse.json({ message: 'Session expired. Please log in again.' }, { status: 401 });
 }
 
+/** The fixture's fixed code, so a walkthrough does not need a mailbox. */
+const MOCK_OTP = '12345';
+
+/** `am***@example.com` — enough to recognise, not enough to read out. */
+function maskEmail(email: string): string {
+  const [name, domain] = email.split('@');
+  if (!domain) return email;
+  return `${name.slice(0, 2)}${'*'.repeat(Math.max(1, name.length - 2))}@${domain}`;
+}
+
+function maskPhone(phone: string): string {
+  return phone.length <= 4 ? phone : `${'*'.repeat(phone.length - 4)}${phone.slice(-4)}`;
+}
+
 function paginate<T>(items: T[]) {
   return { data: items, meta: { nextCursor: null, hasMore: false } };
 }
@@ -637,8 +651,8 @@ const careHandlers: HttpHandler[] = [
     const profile = currentTherapistProfile(request);
     if (!profile) return therapistProfileMissing(request);
     return HttpResponse.json({
-      timezone: 'Africa/Lagos',
-      days: db.therapistRotas[profile.id] ?? [],
+      ...paginate(db.therapistRotas[profile.id] ?? []),
+      meta: { nextCursor: null, hasMore: false, timezone: 'Africa/Lagos' },
     });
   }),
 
@@ -670,7 +684,10 @@ const careHandlers: HttpHandler[] = [
     // absence of slots, so it has to move with the rota.
     profile.schedulePublished = sorted.length > 0;
 
-    return HttpResponse.json({ timezone: 'Africa/Lagos', days: sorted });
+    return HttpResponse.json({
+      ...paginate(sorted),
+      meta: { nextCursor: null, hasMore: false, timezone: 'Africa/Lagos' },
+    });
   }),
 
   http.get(url('/me/therapist/profile'), ({ request }) => {
@@ -967,6 +984,80 @@ const careHandlers: HttpHandler[] = [
    * Who has asked to read the caller's health profile. Acceptance of a care
    * request lets a therapist ask; only the answer here gives them access.
    */
+  /**
+   * Changing a contact. The code goes to the one being replaced, which is the
+   * whole point: a stolen session cannot move the account onto a channel the
+   * thief controls.
+   */
+  http.post(url('/me/email/change'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const { email } = (await request.json()) as { email: string };
+    const wanted = (email ?? '').trim().toLowerCase();
+
+    if (wanted === user.email.toLowerCase()) {
+      return HttpResponse.json(
+        { message: 'That is already your email address.', code: 'email_unchanged' },
+        { status: 422 },
+      );
+    }
+
+    // Same answer whether or not it is taken: whether an address is registered
+    // is not something a caller gets to probe.
+    if (db.users.some((u) => u.email.toLowerCase() === wanted && u.id !== user.id)) {
+      return HttpResponse.json(
+        { message: 'That email address cannot be used.', code: 'email_unavailable' },
+        { status: 422 },
+      );
+    }
+
+    return HttpResponse.json({ channel: 'email', destination: maskEmail(user.email) });
+  }),
+
+  http.post(url('/me/email/verify'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const { email, code } = (await request.json()) as { email: string; code: string };
+    if (code !== MOCK_OTP) {
+      return HttpResponse.json(
+        { message: 'That code is not valid.', code: 'otp_invalid' },
+        { status: 422 },
+      );
+    }
+
+    user.email = email.trim().toLowerCase();
+    return HttpResponse.json(db.toPublicUser(user));
+  }),
+
+  http.post(url('/me/phone/change'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const { channel } = (await request.json()) as { phone: string; channel?: string };
+    return HttpResponse.json({
+      channel: channel ?? 'sms',
+      destination: maskPhone(user.phone),
+    });
+  }),
+
+  http.post(url('/me/phone/verify'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const { phone, code } = (await request.json()) as { phone: string; code: string };
+    if (code !== MOCK_OTP) {
+      return HttpResponse.json(
+        { message: 'That code is not valid.', code: 'otp_invalid' },
+        { status: 422 },
+      );
+    }
+
+    user.phone = phone;
+    return HttpResponse.json(db.toPublicUser(user));
+  }),
+
   http.post(url('/auth/two-factor'), async ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();

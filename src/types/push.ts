@@ -35,7 +35,14 @@ export type OptionalNotificationCategory =
   | 'orders'
   | 'cases'
   | 'chat'
-  | 'marketing';
+  | 'marketing'
+  | 'savings'
+  | 'network';
+
+/** `"off"` or `"weekly"`. A value rather than a boolean so a daily digest later
+ *  is a new value, not a new column. */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type EmailDigest = 'off' | 'weekly' | (string & {});
 
 export interface NotificationPreferences {
   /** Categories the user may switch off. */
@@ -45,6 +52,7 @@ export interface NotificationPreferences {
    * rule is that these cannot be silently disabled.
    */
   required: { key: string; label: string }[];
+  emailDigest: EmailDigest;
   /** Null when the user has no quiet hours set. `HH:mm` in the device's timezone. */
   quietHours: {
     start: string;

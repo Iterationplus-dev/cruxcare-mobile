@@ -82,6 +82,19 @@ function requireUser(data: unknown): User {
   });
 }
 
+/**
+ * Where a verification code was sent, with the destination masked.
+ *
+ * The code goes to the contact being *replaced*, not the new one. That is the
+ * whole security value: someone who has taken a session cannot move the account
+ * onto a channel they control, because only the person still holding the old
+ * one sees the code.
+ */
+export interface ContactChangeChallenge {
+  channel: string;
+  destination: string | null;
+}
+
 export const authApi = {
   async register(payload: RegisterPayload): Promise<AuthSession> {
     const { data } = await apiClient.post<AuthSession>('/auth/register', payload);
@@ -165,6 +178,35 @@ export const authApi = {
     return data;
   },
 
+  /** Step one of changing an email. Sends a code to the *current* address. */
+  async requestEmailChange(email: string): Promise<ContactChangeChallenge> {
+    const { data } = await apiClient.post<ContactChangeChallenge>('/me/email/change', { email });
+    return data;
+  },
+
+  /** Step two. Returns the whole user, so the caller writes it straight back
+   *  into the session rather than refetching. */
+  async confirmEmailChange(email: string, code: string): Promise<User> {
+    const { data } = await apiClient.post<User>('/me/email/verify', { email, code });
+    return data;
+  },
+
+  async requestPhoneChange(
+    phone: string,
+    channel: 'sms' | 'whatsapp' = 'sms',
+  ): Promise<ContactChangeChallenge> {
+    const { data } = await apiClient.post<ContactChangeChallenge>('/me/phone/change', {
+      phone,
+      channel,
+    });
+    return data;
+  },
+
+  async confirmPhoneChange(phone: string, code: string): Promise<User> {
+    const { data } = await apiClient.post<User>('/me/phone/verify', { phone, code });
+    return data;
+  },
+
   async updateMe(
     patch: Partial<
       Pick<
@@ -173,6 +215,9 @@ export const authApi = {
         | 'lastName'
         | 'gender'
         | 'about'
+        | 'timezone'
+        | 'nextOfKin'
+        | 'privacy'
         | 'dateOfBirth'
         | 'language'
         | 'address'
