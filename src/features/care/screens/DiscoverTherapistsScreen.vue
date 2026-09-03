@@ -53,6 +53,20 @@
           >
             Near me {{ nearbyCount }}
           </button>
+          <!-- The way back to everyone. Clearing a specialty was only possible
+               by tapping the chip you had already selected, which is not
+               something anyone guesses. It leads because it is the default the
+               list starts in. -->
+          <button
+            type="button"
+            role="tab"
+            class="cc-discover__chip"
+            :class="{ 'cc-discover__chip--on': specialty === null }"
+            :aria-selected="specialty === null"
+            @click="specialty = null"
+          >
+            All {{ therapists?.length ?? 0 }}
+          </button>
           <button
             v-for="c in chips"
             :key="c.value"

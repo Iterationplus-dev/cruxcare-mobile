@@ -5,6 +5,10 @@ export interface TherapistSummary {
   avatarUrl: string | null;
   specialties: string[];
   rating: number | null;
+  /** How many ratings the score is built on. Nothing collects them yet, so the
+   *  server sends 0 — but a score without a count treats one review and two
+   *  hundred as the same claim. */
+  ratingCount?: number;
   location?: string | null;
   bio?: string | null;
   experienceYears?: number | null;

@@ -11,6 +11,10 @@ export const referredBySourceOptions = [
   { value: 'other', label: 'Other' },
 ] as const;
 
+/** One sentence for every way the box can fail, so none of them is the
+ *  machine talking. */
+const CONSENT_MESSAGE = 'Please tick the box to agree to the Terms of Service and Privacy Policy.';
+
 export const registerSchema = z
   .object({
     firstName: z.string().trim().min(1, 'Enter your first name.'),
@@ -35,9 +39,24 @@ export const registerSchema = z
       .min(8, 'At least 8 characters.')
       .regex(/\d/, 'Include at least one number.'),
     confirmPassword: z.string(),
-    consent: z.literal(true, {
-      message: 'You must agree to the Terms of Service and Privacy Policy.',
-    }),
+    /**
+     * `z.literal(true, { message })` looked right and was not: Zod applies that
+     * message only when the field is missing. An unticked box sends `false`,
+     * which is present-but-wrong, so the real error read
+     * "Invalid literal value, expected true" — the one case that actually
+     * happens was the one with the machine's wording.
+     *
+     * A refine puts the message on the check itself, so both routes to failure
+     * say the same sentence.
+     */
+    consent: z
+      .boolean({
+        // A refine only runs once the type check passes, so a missing field
+        // would otherwise fall through to Zod's "Required".
+        required_error: CONSENT_MESSAGE,
+        invalid_type_error: CONSENT_MESSAGE,
+      })
+      .refine((agreed) => agreed === true, { message: CONSENT_MESSAGE }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match.',

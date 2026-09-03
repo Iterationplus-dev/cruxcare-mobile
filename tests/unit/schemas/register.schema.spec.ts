@@ -54,3 +54,42 @@ describe('passwordStrength', () => {
     expect(passwordStrength('Aa1!Aa1!').label).toBe('Very strong');
   });
 });
+
+describe('the consent box', () => {
+  const base = {
+    firstName: 'Amara',
+    lastName: 'Okafor',
+    email: 'amara@example.com',
+    phone: '8032148890',
+    referredBySource: 'facebook',
+    password: 'password1',
+    confirmPassword: 'password1',
+  };
+
+  function consentError(consent: unknown): string | undefined {
+    const result = registerSchema.safeParse({ ...base, consent });
+    if (result.success) return undefined;
+    return result.error.issues.find((i) => i.path[0] === 'consent')?.message;
+  }
+
+  it('says what to do when the box is left unticked', () => {
+    // The real case. It used to read "Invalid literal value, expected true",
+    // because Zod applies a literal's custom message only when the field is
+    // missing — and an unticked box sends false, not nothing.
+    expect(consentError(false)).toBe(
+      'Please tick the box to agree to the Terms of Service and Privacy Policy.',
+    );
+  });
+
+  it('says the same thing when the field never arrives', () => {
+    // Both routes to failure have to read alike; one of them used to be the
+    // machine talking.
+    expect(consentError(undefined)).toBe(
+      'Please tick the box to agree to the Terms of Service and Privacy Policy.',
+    );
+  });
+
+  it('accepts a ticked box', () => {
+    expect(consentError(true)).toBeUndefined();
+  });
+});

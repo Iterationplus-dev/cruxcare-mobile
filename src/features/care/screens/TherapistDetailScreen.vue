@@ -10,13 +10,18 @@
           <AppAvatar :name="therapist.name" :src="therapist.avatarUrl ?? undefined" :size="64" />
           <div class="cc-therapist-detail__identity">
             <h2 class="cc-text-h2" style="margin: 0">{{ therapist.name }}</h2>
-            <div
-              v-if="therapist.rating !== null"
-              class="cc-therapist-detail__rating"
-              :aria-label="`${therapist.rating.toFixed(1)} out of 5 rating`"
-            >
-              <AppIcon name="star" :size="18" filled color="var(--cc-color-warning)" />
-              <span>{{ therapist.rating.toFixed(1) }} rating</span>
+            <!-- Always shown. It used to render only when a rating existed,
+                 and none ever does — nothing on the platform collects one — so
+                 the row a client came here to read was permanently invisible.
+                 An unrated therapist says so rather than disappearing. -->
+            <div class="cc-therapist-detail__rating" :aria-label="ratingLabel(therapist)">
+              <AppIcon
+                name="star"
+                :size="18"
+                filled
+                :color="therapist.rating === null ? 'var(--cc-ink-300)' : 'var(--cc-color-warning)'"
+              />
+              <span>{{ ratingText(therapist) }}</span>
             </div>
             <div class="cc-therapist-detail__location">
               <AppIcon name="location_on" :size="17" color="var(--cc-ink-600)" />
@@ -51,7 +56,7 @@
           />
           <AppListRow
             title="Languages"
-            :subtitle="therapist.languages?.join(', ') ?? 'Language details available on request'"
+            :subtitle="languagesLine"
             icon="translate"
             :divider="false"
           />
@@ -98,6 +103,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { therapistsApi } from '@/api/therapists.api';
+import { ratingLabel, ratingText } from '@/features/care/therapistRating';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
 import { useQueryClient } from '@tanstack/vue-query';
@@ -116,6 +122,18 @@ const therapistId = computed(() => String(route.params.id ?? ''));
 const { data: therapist, isPending } = useTherapist(therapistId);
 const queryClient = useQueryClient();
 const requesting = ref(false);
+
+/**
+ * An empty `languages` array is not a missing one: `[].join(', ')` is `''`, so
+ * `??` never fired and the row rendered a title with nothing under it. Every
+ * therapist on the directory today has an empty array, so that blank line was
+ * the only thing anyone saw.
+ */
+const languagesLine = computed(() =>
+  therapist.value?.languages?.length
+    ? therapist.value.languages.join(', ')
+    : 'Language details available on request',
+);
 
 /** The client's own requests, so a therapist they have already asked cannot be
  *  asked twice. The server is the enforcer; this stops the trip. */
