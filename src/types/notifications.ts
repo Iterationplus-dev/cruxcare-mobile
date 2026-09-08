@@ -10,6 +10,16 @@ export type NotificationCategory =
   | 'orders'
   | 'wallet'
   | 'chat'
+  /**
+   * Promotional. A wire category in its own right, not a preference key that
+   * arrives as something else — it was missing here for the same reason
+   * `cases` was, and would have fallen through the inbox the same way.
+   *
+   * `security` is deliberately absent: it travels as `system` while being
+   * gated by its own unmutable preference, so it never appears on the wire.
+   * Anything unrecognised degrades to `system` server-side.
+   */
+  | 'marketing'
   | 'system';
 
 export interface AppNotification {

@@ -76,6 +76,7 @@ const iconMap: Record<NotificationCategory, string> = {
   appointments: 'event_upcoming',
   // The course of treatment rather than one session of it.
   cases: 'folder_shared',
+  marketing: 'campaign',
   orders: 'local_shipping',
   wallet: 'savings',
   chat: 'forum',
