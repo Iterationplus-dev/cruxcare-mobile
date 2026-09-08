@@ -212,8 +212,20 @@ apiClient.interceptors.response.use(
     const { status } = error.response;
     const data = recoverJsonResponse(error.response.data, contentTypeFromHeaders(error.response.headers));
     if (status === 401) onUnauthorized();
-    const body = errorBodyFrom(data);
-    return Promise.reject(new ApiError(status, body));
+    // On the header as well as in `meta`, so it survives a body an interceptor
+    // could not parse.
+    const headerErrorId = error.response.headers?.['x-error-id'];
+    const apiError = new ApiError(
+      status,
+      errorBodyFrom(data),
+      typeof headerErrorId === 'string' ? headerErrorId : undefined,
+    );
+    // The server's own words are not shown to the user, so put them where an
+    // engineer can still read them off a connected device.
+    if (import.meta.env.DEV && apiError.detail && apiError.detail !== apiError.message) {
+      console.error(`[api] ${status} ${error.config?.method ?? ''} ${error.config?.url ?? ''} — ${apiError.detail}`);
+    }
+    return Promise.reject(apiError);
   },
 );
 

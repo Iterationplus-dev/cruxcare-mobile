@@ -3,8 +3,20 @@
     <AppHeader title="Security and privacy" show-back :botanical="false" />
     <ion-content class="cc-screen">
       <div class="cc-screen__pad">
+        <AppSectionLabel label="Signing in" />
         <AppCard style="padding: 0">
-          <AppListRow title="Biometric unlock" icon="fingerprint" :divider="false">
+          <AppListRow
+            title="Password"
+            subtitle="Change it if you think someone else knows it"
+            icon="password"
+            chevron
+            clickable
+            @click="changePassword"
+          />
+          <!-- Kept as "Biometric unlock": the design writes "Face ID and
+               fingerprint", but this build runs on Android as well and the
+               plugin enrols whatever the device offers. -->
+          <AppListRow title="Biometric unlock" subtitle="This device only" icon="fingerprint">
             <template #trailing>
               <label class="cc-toggle">
                 <input type="checkbox" :checked="auth.user?.biometricEnabled" @change="onToggleBiometric" />
@@ -12,25 +24,114 @@
               </label>
             </template>
           </AppListRow>
+          <AppListRow
+            title="Two-step verification"
+            :subtitle="twoFactorSubtitle"
+            icon="shield_lock"
+            :divider="false"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="auth.user?.twoFactorEnabled === true"
+                  :disabled="savingTwoFactor"
+                  @change="onToggleTwoFactor"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
         </AppCard>
         <p class="cc-text-caption">Off means password is required every time you open the app.</p>
 
-        <AppCard style="padding: 0">
-          <AppListRow title="Active devices" subtitle="This device is one of them" icon="devices" :divider="false">
-            <template #trailing><span class="cc-text-mono">1</span></template>
-          </AppListRow>
-        </AppCard>
-
-        <div class="cc-text-body-strong" style="font-size: 14.5px">Who can see your health data</div>
+        <AppSectionLabel label="Who sees what" />
         <AppCard style="padding: 0">
           <AppListRow
-            v-if="assignedTherapist"
-            :title="assignedTherapist.name"
-            subtitle="Your assigned therapist · access follows the booking"
+            title="Health profile access"
+            :subtitle="healthAccessSubtitle"
             icon="medical_information"
-            :divider="false"
+            chevron
+            clickable
+            @click="router.push({ name: 'health-profile-access' })"
           />
-          <AppListRow v-else title="No one yet" subtitle="Access is granted once a therapist is assigned" icon="medical_information" :divider="false" />
+          <AppListRow
+            title="Show me in rankings"
+            :subtitle="privacy.showInRankings ? 'On · your position is public' : 'Off · you appear as an anonymous position'"
+            icon="leaderboard"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="privacy.showInRankings"
+                  :disabled="savingPrivacy"
+                  @change="setPrivacy('showInRankings', $event)"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Network visibility"
+            :subtitle="privacy.networkVisible ? 'On · your upline sees your name and tier' : 'Off · your upline sees a position only'"
+            icon="hub"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input
+                  type="checkbox"
+                  :checked="privacy.networkVisible"
+                  :disabled="savingPrivacy"
+                  @change="setPrivacy('networkVisible', $event)"
+                />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Location"
+            :subtitle="locationSubtitle"
+            icon="location_on"
+            :icon-color="location.enabled ? 'var(--cc-color-primary)' : 'var(--cc-ink-400)'"
+            :divider="false"
+          >
+            <template #trailing>
+              <label class="cc-toggle">
+                <input type="checkbox" :checked="location.enabled" @change="onToggleLocation" />
+                <span class="cc-toggle__track"><span class="cc-toggle__thumb" /></span>
+              </label>
+            </template>
+          </AppListRow>
+        </AppCard>
+        <p class="cc-text-caption">
+          Off, the app stops keeping your location and forgets the last one. Therapists are then
+          not filtered by distance.
+        </p>
+
+        <AppSectionLabel label="Activity" />
+        <AppCard style="padding: 0">
+          <AppListRow
+            title="Active devices"
+            :subtitle="devicesSubtitle"
+            icon="devices"
+            chevron
+            clickable
+            @click="router.push({ name: 'active-devices' })"
+          >
+            <template v-if="devices" #trailing>
+              <span class="cc-text-mono cc-security__count">{{ devices.length }}</span>
+            </template>
+          </AppListRow>
+          <AppListRow
+            title="Login history"
+            subtitle="Every sign-in, including the ones that failed"
+            icon="history"
+            chevron
+            clickable
+            :divider="false"
+            @click="router.push({ name: 'login-history' })"
+          />
         </AppCard>
       </div>
     </ion-content>
@@ -38,24 +139,168 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { AppCard, AppHeader, AppListRow } from '@/components/ui';
-import { useCaseFiles } from '@/composables/useCaseFiles';
-import { useTherapist } from '@/composables/useTherapists';
+import { AppCard, AppHeader, AppListRow, AppSectionLabel } from '@/components/ui';
+import { useRouter } from 'vue-router';
+import { useQuery } from '@tanstack/vue-query';
+import { healthAccessApi } from '@/api/health-access.api';
+import { securityApi } from '@/api/security.api';
 import { useAuthStore } from '@/stores/auth';
+import { useLocationStore } from '@/stores/location';
+import { formatCoordinates } from '@/services/deviceLocation';
 import { biometric } from '@/services/biometric';
+import { authApi } from '@/api/auth.api';
+import { ApiError } from '@/types/api';
 import { useToast } from '@/composables/useToast';
 
 /** PR4 · Security and privacy — each toggle states what the off state means. */
 const auth = useAuthStore();
 const toast = useToast();
+const router = useRouter();
 
-const { data: caseFiles } = useCaseFiles();
-const myCaseFile = computed(() => caseFiles.value?.data.find((cf) => cf.clientId === auth.user?.id));
-const { data: assignedTherapist } = useTherapist(
-  computed(() => myCaseFile.value?.therapistId ?? ''),
+/**
+ * How many therapists can read the health profile right now.
+ *
+ * Counted from the real grants rather than from who is assigned: acceptance of
+ * a care request lets a therapist ask, and only the client's answer gives them
+ * access. Saying "access follows the booking" here was describing the rule the
+ * platform used to have.
+ */
+const { data: accessRows } = useQuery({
+  queryKey: ['health-profile', 'access'],
+  queryFn: () => healthAccessApi.list(),
+});
+
+const healthAccessSubtitle = computed(() => {
+  const rows = accessRows.value;
+  if (!rows) return 'Only therapists you allow';
+
+  const granted = rows.filter((r) => r.status === 'granted').length;
+  const waiting = rows.filter((r) => r.status === 'pending').length;
+
+  if (waiting > 0) {
+    return `${waiting} waiting for your answer`;
+  }
+
+  if (granted === 0) return 'No one has access';
+  return granted === 1 ? '1 therapist has access' : `${granted} therapists have access`;
+});
+
+/**
+ * There is no in-app change-password route yet — only the signed-out reset
+ * flow — so this sends them through that rather than opening a form that
+ * cannot submit.
+ */
+const savingPrivacy = ref(false);
+
+const privacy = computed(
+  () => auth.user?.privacy ?? { showInRankings: true, networkVisible: true },
 );
+
+async function setPrivacy(key: 'showInRankings' | 'networkVisible', event: Event) {
+  const input = event.target as HTMLInputElement;
+  const wanted = input.checked;
+
+  savingPrivacy.value = true;
+  try {
+    auth.user = await authApi.updateMe({ privacy: { ...privacy.value, [key]: wanted } });
+  } catch (error) {
+    // Snap back: a privacy switch showing what someone wanted rather than what
+    // the server holds is the worst kind to leave ahead of the truth.
+    input.checked = !wanted;
+    const message =
+      error instanceof ApiError
+        ? error
+        : 'We could not change that. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Not saved' });
+  } finally {
+    savingPrivacy.value = false;
+  }
+}
+
+const { data: devices } = useQuery({
+  queryKey: ['me', 'devices'],
+  queryFn: () => securityApi.devices(),
+});
+
+const devicesSubtitle = computed(() => {
+  const rows = devices.value;
+  if (!rows) return 'Where your account is signed in';
+  if (rows.length === 1) return 'This device only';
+  return `${rows.length} devices are signed in`;
+});
+
+async function changePassword() {
+  await toast.show(
+    'We will email you a link to set a new password. Use Forgot password on the sign-in screen, or contact support.',
+    'info',
+    { title: 'Changing your password' },
+  );
+}
+
+const location = useLocationStore();
+onMounted(() => location.hydrate());
+
+const locationSubtitle = computed(() => {
+  if (!location.enabled) return 'Off · therapists are not filtered by distance';
+  if (location.busy) return 'Finding you…';
+  if (location.error === 'unavailable') return 'On · could not read a position yet';
+  if (location.coordinates) return `On · ${formatCoordinates(location.coordinates)}`;
+  return 'On';
+});
+
+async function onToggleLocation(event: Event) {
+  const wanted = (event.target as HTMLInputElement).checked;
+  await location.setEnabled(wanted);
+
+  // The OS can refuse after the app-level switch is flipped, in which case the
+  // store turns itself back off — say why rather than letting it snap back.
+  if (wanted && !location.enabled) {
+    await toast.show(
+      'Location is turned off for CruxCare in your device settings.',
+      'warning',
+      { title: 'Permission needed' },
+    );
+  }
+}
+
+const savingTwoFactor = ref(false);
+
+const twoFactorSubtitle = computed(() =>
+  auth.user?.twoFactorEnabled
+    ? 'On · a code is needed to sign in on a new device'
+    : 'Off · your password alone signs you in',
+);
+
+/**
+ * A real switch, so a failure must not leave the toggle showing the state the
+ * member wanted rather than the one the server holds.
+ */
+async function onToggleTwoFactor(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const wanted = input.checked;
+
+  savingTwoFactor.value = true;
+  try {
+    auth.user = await authApi.setTwoFactor(wanted);
+    await toast.show(
+      wanted
+        ? 'Two-step verification is on. You will be asked for a code when you sign in.'
+        : 'Two-step verification is off.',
+      wanted ? 'success' : 'warning',
+    );
+  } catch (error) {
+    input.checked = !wanted;
+    const message =
+      error instanceof ApiError
+        ? error
+        : 'We could not change that. Check your connection and try again.';
+    await toast.show(message, 'danger', { title: 'Not saved' });
+  } finally {
+    savingTwoFactor.value = false;
+  }
+}
 
 async function onToggleBiometric(e: Event) {
   const enabled = (e.target as HTMLInputElement).checked;
@@ -72,6 +317,10 @@ async function onToggleBiometric(e: Event) {
 </script>
 
 <style scoped>
+.cc-security__count {
+  font-size: 13px;
+  color: var(--cc-ink-600);
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

@@ -10,7 +10,7 @@
     <span v-else-if="$slots.leading" class="cc-row__icon"><slot name="leading" /></span>
     <span class="cc-row__body">
       <span class="cc-row__title">{{ title }}</span>
-      <span v-if="subtitle" class="cc-row__subtitle">{{ subtitle }}</span>
+      <span v-if="subtitle" class="cc-row__subtitle" :class="{ 'cc-row__subtitle--warning': subtitleTone === 'warning' }">{{ subtitle }}</span>
     </span>
     <span v-if="$slots.trailing" class="cc-row__trailing"><slot name="trailing" /></span>
     <AppIcon
@@ -30,6 +30,8 @@ withDefaults(
   defineProps<{
     title: string;
     subtitle?: string;
+    /** `warning` for a subtitle that is asking the reader to act on the row. */
+    subtitleTone?: 'default' | 'warning';
     icon?: string;
     iconColor?: string;
     chevron?: boolean;
@@ -87,6 +89,12 @@ const emit = defineEmits<{ click: [] }>();
   font-size: 12.5px;
   line-height: 19px;
   color: var(--cc-ink-400);
+}
+/* The text variant, not --cc-color-warning: that one is a fill and does not
+   reach AA against a card at this size. */
+.cc-row__subtitle--warning {
+  color: var(--cc-color-warning-text);
+  font-weight: 600;
 }
 .cc-row__trailing,
 .cc-row__chevron {

@@ -10,11 +10,16 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatMoney } from '@/utils/money';
 
 /**
  * The ONLY place money renders. `value` must come straight from an API
  * response — this component formats (locale/currency/sign), it never
  * computes a fee, balance or interest figure. See README "Money rules".
+ *
+ * `currency` should always be passed from the response that carried the
+ * amount. The USD default only covers the handful of fixed-price literals in
+ * the UI; it is not a claim about what any given user is charged.
  */
 const props = withDefaults(
   defineProps<{
@@ -27,14 +32,9 @@ const props = withDefaults(
   { currency: 'USD', size: 'mono', showSign: false, tone: 'default' },
 );
 
-const formatted = computed(() => {
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: props.currency,
-    signDisplay: props.showSign ? 'exceptZero' : 'auto',
-  });
-  return formatter.format(props.value);
-});
+const formatted = computed(() =>
+  formatMoney(props.value, props.currency, { showSign: props.showSign }),
+);
 
 const ariaLabel = computed(() => `${formatted.value} ${props.currency}`);
 

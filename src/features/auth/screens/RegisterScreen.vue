@@ -62,21 +62,82 @@
           disrupting the drawn layout's density — see CLAUDE.md guidance on
           documenting and resolving spec conflicts.
         -->
-        <div class="cc-field">
-          <label class="cc-field__label">How did you hear about CruxCare?</label>
-          <button
-            type="button"
-            class="cc-referral-trigger"
-            :class="{ 'cc-referral-trigger--error': !!errors.referredBySource }"
-            @click="referralSheetOpen = true"
-          >
-            <span :class="referredBySource ? 'cc-text-body' : 'cc-referral-trigger__placeholder'" style="font-size: 14.5px">
-              {{ selectedReferralLabel ?? 'Select one' }}
-            </span>
-            <AppIcon name="expand_more" :size="18" color="var(--cc-ink-400)" />
-          </button>
-          <p v-if="errors.referredBySource" class="cc-field__error" role="alert">{{ errors.referredBySource }}</p>
-        </div>
+        <!-- Country, then state, then city — each narrowing the one below.
+             Optional throughout: nobody is stopped from registering for
+             withholding where they are. -->
+        <AppSheetSelect
+          v-if="countryOptions.length"
+          v-model="countryId"
+          label="Country (optional)"
+          title="Where are you?"
+          placeholder="Select your country"
+          :options="countryOptions"
+          clearable
+          clear-label="Remove my location"
+        />
+        <!-- The active-country list is only readable once signed in, and this
+             screen is not. Until a public list exists the field asks rather
+             than offering an empty menu. -->
+        <AppInput
+          v-else
+          v-model="country"
+          label="Country (optional)"
+          placeholder="Nigeria"
+          autocomplete="country-name"
+          :error="errors.country"
+        />
+
+        <template v-if="countryId || country">
+          <AppSheetSelect
+            v-if="stateOptions.length"
+            v-model="stateId"
+            label="State (optional)"
+            title="Select your state"
+            placeholder="Select your state"
+            :options="stateOptions"
+          />
+          <!-- No list for this country yet, so the field asks rather than
+               offering an empty menu that cannot be answered. -->
+          <AppInput
+            v-else
+            v-model="state"
+            label="State (optional)"
+            placeholder="Akwa Ibom"
+            autocomplete="address-level1"
+            :error="errors.state"
+          />
+        </template>
+
+        <template v-if="countryId && (stateId || state)">
+          <AppSheetSelect
+            v-if="cityOptions.length"
+            v-model="cityId"
+            label="City (optional)"
+            title="Select your city"
+            placeholder="Select your city"
+            :options="cityOptions"
+          />
+          <AppInput
+            v-else
+            v-model="city"
+            label="City (optional)"
+            placeholder="Uyo"
+            autocomplete="address-level2"
+            :error="errors.city"
+          />
+        </template>
+
+        <!-- The same component every other picker uses. This was a hand-rolled
+             copy of it, which is why it missed the list restyle: one screen's
+             dropdown quietly stopped looking like the rest of the app. -->
+        <AppSheetSelect
+          v-model="referredBySource"
+          label="How did you hear about CruxCare?"
+          title="How did you hear about CruxCare?"
+          placeholder="Select one"
+          :options="referredByOptions"
+          :error="errors.referredBySource"
+        />
 
         <AppInput
           v-model="password"
@@ -161,26 +222,6 @@
       </div>
     </ion-footer>
 
-    <AppSheet v-model="referralSheetOpen" title="How did you hear about CruxCare?">
-      <div class="cc-referral-options">
-        <button
-          v-for="opt in referredByOptions"
-          :key="opt.value"
-          type="button"
-          class="cc-referral-option"
-          :class="{ 'cc-referral-option--selected': referredBySource === opt.value }"
-          @click="selectReferral(opt.value)"
-        >
-          <span class="cc-text-body" style="font-size: 14.5px">{{ opt.label }}</span>
-          <AppIcon
-            v-if="referredBySource === opt.value"
-            name="check_circle"
-            :size="20"
-            color="var(--cc-color-primary)"
-          />
-        </button>
-      </div>
-    </AppSheet>
   </ion-page>
 </template>
 
@@ -193,7 +234,7 @@ import { useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
-import AppSheet from '@/components/ui/AppSheet.vue';
+import AppSheetSelect from '@/components/ui/AppSheetSelect.vue';
 import { authApi, type OtpRequestResult } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
@@ -203,7 +244,8 @@ import {
   referredBySourceOptions,
   registerSchema,
 } from '../schemas/register.schema';
-import type { ReferredBySource } from '@/types/user';
+import type { Address, ReferredBySource } from '@/types/user';
+import { useCities, useCountries, useStates } from '@/composables/useLocations';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -215,6 +257,9 @@ const { defineField, errors, handleSubmit } = useForm({
     lastName: '',
     email: '',
     phone: '',
+    city: '',
+    state: '',
+    country: '',
     referredBySource: '' as ReferredBySource,
     password: '',
     confirmPassword: '',
@@ -226,6 +271,71 @@ const [firstName] = defineField('firstName');
 const [lastName] = defineField('lastName');
 const [email] = defineField('email');
 const [phone] = defineField('phone');
+const [city] = defineField('city');
+const [state] = defineField('state');
+const [country] = defineField('country');
+
+/**
+ * The three selects, by id. Names are what the address stores — the therapist
+ * directory composes its location string from them — so ids are resolved back
+ * to names on submit rather than sent.
+ */
+const countryId = ref('');
+const stateId = ref('');
+const cityId = ref('');
+
+/** Switched-on countries, read without a session — registration has none. */
+const { data: countries } = useCountries();
+const countryOptions = computed(() =>
+  (countries.value ?? []).map((c) => ({ value: c.id, label: c.name })),
+);
+
+const selectedCountryId = computed(() => countryId.value || null);
+const { data: states } = useStates(selectedCountryId);
+const stateOptions = computed(() =>
+  (states.value ?? []).map((s) => ({ value: s.id, label: s.name })),
+);
+
+const selectedStateId = computed(() => stateId.value || null);
+const { data: cities } = useCities(selectedStateId);
+const cityOptions = computed(() =>
+  (cities.value ?? []).map((c) => ({ value: c.id, label: c.name })),
+);
+
+// Choosing a different country invalidates what was chosen below it.
+watch([countryId, country], () => {
+  stateId.value = '';
+  cityId.value = '';
+  state.value = '';
+  city.value = '';
+});
+watch(stateId, () => {
+  cityId.value = '';
+  city.value = '';
+});
+
+function labelFor(options: { value: string; label: string }[], value: string): string | undefined {
+  return options.find((o) => o.value === value)?.label;
+}
+
+/** Only the parts that were given — an address of empty strings would claim a
+ *  location nobody stated. Takes the selected name, or the typed one where the
+ *  platform has no list to choose from. */
+function addressFrom(values: { city?: string; state?: string; country?: string }): Address | null {
+  const address: Address = {};
+
+  const countryName = labelFor(countryOptions.value, countryId.value) ?? values.country?.trim();
+  if (countryName) address.country = countryName;
+
+  const stateName = labelFor(stateOptions.value, stateId.value) ?? values.state?.trim();
+  if (stateName) address.state = stateName;
+
+  const cityName = labelFor(cityOptions.value, cityId.value) ?? values.city?.trim();
+  if (cityName) address.city = cityName;
+
+  return Object.keys(address).length ? address : null;
+}
+
 const [referredBySource] = defineField('referredBySource');
 const [password] = defineField('password');
 const [confirmPassword] = defineField('confirmPassword');
@@ -241,21 +351,13 @@ const referredByOptions: { value: string; label: string }[] = referredBySourceOp
   label: o.label,
 }));
 
-const referralSheetOpen = ref(false);
-const selectedReferralLabel = computed(
-  () => referredByOptions.find((o) => o.value === referredBySource.value)?.label,
-);
-function selectReferral(value: string) {
-  referredBySource.value = value as ReferredBySource;
-  referralSheetOpen.value = false;
-}
-
 const strength = ref(passwordStrength(''));
 watch(password, (v) => (strength.value = passwordStrength(v ?? '')));
 
 const onSubmit = handleSubmit(async (values) => {
   submitting.value = true;
   const phone = `+234${values.phone}`;
+  const address = addressFrom(values);
 
   try {
     await auth.register({
@@ -265,6 +367,9 @@ const onSubmit = handleSubmit(async (values) => {
       phone,
       password: values.password,
       referredBySource: values.referredBySource as ReferredBySource,
+      // Sent only when something was given, so an untouched form does not
+      // register an address of empty strings.
+      ...(address ? { address } : {}),
     });
   } catch (e) {
     const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
@@ -305,6 +410,14 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <style scoped>
+.cc-register__pair {
+  display: flex;
+  gap: 10px;
+}
+.cc-register__pair > * {
+  flex: 1;
+  min-width: 0;
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }
@@ -420,49 +533,6 @@ const onSubmit = handleSubmit(async (values) => {
   line-height: 20px;
   color: var(--cc-ink-900);
   margin-bottom: 4px;
-}
-.cc-referral-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: var(--cc-input-height);
-  border: 1px solid var(--cc-line);
-  border-radius: var(--cc-radius-sm);
-  padding: 0 12px;
-  background: var(--cc-surface-0);
-  cursor: pointer;
-  text-align: left;
-}
-.cc-referral-trigger--error {
-  border: 1.5px solid var(--cc-input-error-border);
-  background: var(--cc-error-surface);
-}
-.cc-referral-trigger__placeholder {
-  font-family: var(--cc-font-interface);
-  color: var(--cc-ink-300);
-}
-.cc-referral-options {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 8px;
-  max-height: 50vh;
-  overflow-y: auto;
-}
-.cc-referral-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 14px;
-  border-radius: var(--cc-radius-md);
-  border: 1px solid var(--cc-line);
-  background: var(--cc-surface-0);
-  cursor: pointer;
-}
-.cc-referral-option--selected {
-  border: 1.5px solid var(--cc-color-primary);
-  background: var(--cc-color-mist);
 }
 .cc-screen__footer {
   background: var(--cc-surface-app);

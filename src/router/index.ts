@@ -32,6 +32,17 @@ router.beforeEach(async (to) => {
   // Keep it out of every application and guest route until the email code is
   // accepted; the API independently enforces the same restriction.
   const isPendingSignupRoute = to.name === 'register-otp' || to.name === 'register-change-email';
+
+  // The session restored but the server will not serve the account until its
+  // email is verified. There is no user object to read an address from, so the
+  // OTP screen is sent without one and asks the server for delivery itself.
+  if (auth.verificationRequired && !isPendingSignupRoute) {
+    return {
+      name: 'register-otp',
+      query: { purpose: 'signup', channel: 'email', redirect: 'health-profile-gate' },
+    };
+  }
+
   if (auth.isAuthenticated && auth.user?.emailVerified === false && !isPendingSignupRoute) {
     return {
       name: 'register-otp',

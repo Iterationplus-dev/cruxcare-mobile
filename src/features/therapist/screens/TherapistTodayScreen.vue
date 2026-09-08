@@ -1,7 +1,9 @@
 <template>
   <ion-page>
     <ion-content class="cc-screen">
-      <AppPullToRefresh :query-keys="[['appointments'], ['case-files'], ['chat', 'threads'], ['wallet']]" />
+      <AppPullToRefresh
+        :query-keys="[['appointments'], ['therapist', 'care-requests'], ['case-files'], ['chat', 'threads'], ['wallet']]"
+      />
       <div class="cc-td__header">
         <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="40" />
         <div class="cc-td__greeting">
@@ -24,6 +26,34 @@
       </div>
 
       <div class="cc-td__body">
+        <!-- Sits above the loading state: subscribing does not depend on the
+             dashboard's data, and it is what unblocks taking clients. -->
+        <AppCard v-if="auth.needsTherapistPlan" class="cc-td__plan-banner" @click="goPlan">
+          <AppIcon name="workspace_premium" :size="20" color="var(--cc-color-primary)" />
+          <div class="cc-td__banner-body">
+            <div class="cc-text-body-strong" style="font-size: 13.5px">
+              {{ planBannerTitle }}
+            </div>
+            <div class="cc-text-caption">Clients cannot be assigned to you until a plan is active</div>
+          </div>
+          <span class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-color-primary)">
+            Choose
+          </span>
+        </AppCard>
+
+        <!-- A client asking for you comes before anything on the schedule, so
+             this sits above the dashboard and does not wait on it to load. -->
+        <AppCard v-if="incomingRequests.length" tint class="cc-td__banner" @click="goCareRequests">
+          <AppIcon name="assignment_ind" :size="20" color="#9A5B15" />
+          <div class="cc-td__banner-body">
+            <div class="cc-text-body-strong" style="font-size: 13.5px">
+              {{ incomingRequests.length }} client request{{ incomingRequests.length === 1 ? '' : 's' }} waiting
+            </div>
+            <div class="cc-text-caption">Someone asked to work with you</div>
+          </div>
+          <span class="cc-text-body-strong" style="font-size: 12.5px; color: var(--cc-color-primary)">Review</span>
+        </AppCard>
+
         <LoadingState v-if="appointmentsQuery.isPending.value" label="Loading your dashboard…" />
         <template v-else>
           <AppCard v-if="pendingRequests.length" tint class="cc-td__banner" @click="goRequests">
@@ -56,7 +86,7 @@
               :subtitle="`${a.type} · ${formatTime(a.slot)}`"
               chevron
               clickable
-              @click="router.push({ name: 'appointment-management' })"
+              @click="router.push({ name: 'therapist-appointment', params: { id: a.id } })"
             />
           </AppCard>
 
@@ -66,11 +96,13 @@
               <div class="cc-td__stat-label" style="margin-top: 4px">Notes to write</div>
               <div class="cc-td__stat-value">{{ draftNoteCount }}</div>
             </div>
-            <div class="cc-td__stat cc-td__stat--card">
+            <!-- Was a plain counter: it reported unread messages and gave the
+                 therapist no way to reach them. -->
+            <button type="button" class="cc-td__stat cc-td__stat--card cc-td__stat--button" @click="goMessages">
               <AppIcon name="forum" :size="20" color="var(--cc-color-primary)" />
               <div class="cc-td__stat-label" style="margin-top: 4px">Unread</div>
               <div class="cc-td__stat-value">{{ unreadCount }}</div>
-            </div>
+            </button>
           </div>
 
           <AppListRow
@@ -104,7 +136,9 @@ import { EmptyState, LoadingState } from '@/components/state';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useChatThreads } from '@/composables/useChat';
+import { useTherapistCareRequests } from '@/composables/useTherapistCareRequests';
 import { useWallet } from '@/composables/useWallet';
+import { canRespondToRequest } from '@/features/therapist/careQueuePresentation';
 import { useAuthStore } from '@/stores/auth';
 
 /** TD1 · Dashboard (Today). Earnings figure substituted with real wallet
@@ -130,6 +164,14 @@ const pendingRequests = computed(
   () => appointmentsQuery.data.value?.data.filter((a) => a.status === 'requested') ?? [],
 );
 
+/** Care requests, not bookings — a client asking to work with this therapist
+ * at all. Counted only while still answerable, so the banner clears once the
+ * therapist has dealt with them rather than counting decided ones forever. */
+const careRequestsQuery = useTherapistCareRequests();
+const incomingRequests = computed(
+  () => careRequestsQuery.data.value?.data.filter((r) => canRespondToRequest(r.status)) ?? [],
+);
+
 const { data: caseFiles } = useCaseFiles();
 const draftNoteCount = computed(
   () => caseFiles?.value?.data.reduce((sum, cf) => sum + cf.notes.filter((n) => n.draft).length, 0) ?? 0,
@@ -140,14 +182,30 @@ const unreadCount = computed(() => threads?.value?.reduce((sum, t) => sum + t.un
 
 const { data: wallet } = useWallet();
 
+/** Expired reads differently from never-subscribed; both need a plan. */
+const planBannerTitle = computed(() =>
+  auth.user?.therapistProfile?.status === 'expired'
+    ? 'Your therapist plan has expired'
+    : 'Choose a plan to start taking clients',
+);
+
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 function goRequests() {
   router.push({ name: 'appointment-management' });
 }
+function goCareRequests() {
+  router.push({ name: 'therapist-care-requests' });
+}
+function goMessages() {
+  router.push({ name: 'chat-inbox' });
+}
 function goCalendar() {
   router.push({ name: 'therapist-calendar' });
+}
+function goPlan() {
+  router.push({ name: 'therapist-plan' });
 }
 </script>
 
@@ -190,6 +248,13 @@ function goCalendar() {
   border-radius: 14px;
   padding: 10px 12px;
 }
+/* Border, background and radius come from .cc-td__stat; these only undo the
+   button element's own defaults so it matches the tile beside it. */
+.cc-td__stat--button {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
 .cc-td__stat--card {
   padding: 12px;
 }
@@ -209,11 +274,17 @@ function goCalendar() {
   flex-direction: column;
   gap: 12px;
 }
-.cc-td__banner {
+.cc-td__banner,
+.cc-td__plan-banner {
   display: flex;
   gap: 11px;
   align-items: center;
   cursor: pointer;
+}
+.cc-td__plan-banner {
+  margin-bottom: 12px;
+  background: var(--cc-color-mist);
+  border-color: transparent;
 }
 .cc-td__banner-body {
   flex: 1;

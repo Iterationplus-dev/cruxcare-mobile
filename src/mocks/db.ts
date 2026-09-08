@@ -1,8 +1,11 @@
-import type { Appointment, CaseFile, ChatMessage, ChatThread, HealthProfile, TherapistSummary } from '@/types/care';
+import type { Appointment, CareRequest, CaseFile, ChatMessage, ChatThread, HealthProfile, TherapistSummary, WorkingDay } from '@/types/care';
 import type { Cart, Order, Product } from '@/types/marketplace';
 import type { AppNotification } from '@/types/notifications';
 import type { User } from '@/types/user';
 import type { Transaction, Wallet } from '@/types/wallet';
+import type { CurrencyIndex, LocalBlock, SupportedCurrency } from '@/types/money';
+import type { SupportTicket } from '@/types/support';
+import type { HealthProfileAccess } from '@/types/care';
 import pCayenmis from '@/assets/images/p-cayenmis.jpg';
 import pGreenTea from '@/assets/images/p-green-tea.jpg';
 import pGimPowder from '@/assets/images/p-gim-powder.jpg';
@@ -48,6 +51,7 @@ export const users: StoredUser[] = [
       'wallet.read',
     ],
     referredBySource: 'friends-family',
+    gender: 'female',
     membership: { cruxId: 'CCI8804XO', tier: 'Bronze · Unit Leader', joinedAt: '2025-11-02T00:00:00Z' },
     therapistProfile: {
       plan: 'monthly',
@@ -210,6 +214,7 @@ export const therapists: TherapistSummary[] = [
     languages: ['English', 'Igbo'],
     nextAvailableSlot: '2026-08-11T10:00:00Z',
     fullyBooked: false,
+    schedulePublished: true,
   },
   {
     id: 'therapist-2',
@@ -223,6 +228,7 @@ export const therapists: TherapistSummary[] = [
     languages: ['English', 'Hausa'],
     nextAvailableSlot: null,
     fullyBooked: true,
+    schedulePublished: true,
   },
   {
     id: 'therapist-3',
@@ -234,8 +240,11 @@ export const therapists: TherapistSummary[] = [
     bio: 'Provides compassionate support for ageing well, daily independence, and whole-person wellness.',
     experienceYears: 10,
     languages: ['English', 'Igbo'],
-    nextAvailableSlot: '2026-08-09T14:30:00Z',
+    // Never set working hours — the state every therapist starts in, and the
+    // one the card used to describe as "Fully booked".
+    nextAvailableSlot: null,
     fullyBooked: false,
+    schedulePublished: false,
   },
 ];
 
@@ -299,13 +308,30 @@ export const caseFiles: CaseFile[] = [
 export const chatThreads: ChatThread[] = [
   {
     id: 'thread-1',
-    participants: [
-      { id: 'user-1', name: 'Amaka Obi', avatarUrl: null, online: true },
-      { id: 'therapist-1', name: 'Amaka Obi (Therapist)', avatarUrl: null, online: false },
-    ],
+    participantId: 'therapist-1',
+    participantName: 'Amaka Obi (Therapist)',
+    participantAvatarUrl: null,
     lastMessage: null,
+    lastMessageAt: null,
     unreadCount: 0,
-    scopeDisclaimer: 'This chat is for care coordination only — not for emergencies.',
+    muted: false,
+    status: 'open',
+    closesAt: null,
+    closedReason: null,
+  },
+  /** A closed thread, so the read-only composer state has something to render. */
+  {
+    id: 'thread-2',
+    participantId: 'therapist-2',
+    participantName: 'Chidi Nwosu',
+    participantAvatarUrl: null,
+    lastMessage: 'Take care, and book again whenever you need to.',
+    lastMessageAt: '2026-07-12T16:20:00Z',
+    unreadCount: 0,
+    muted: false,
+    status: 'read-only',
+    closesAt: null,
+    closedReason: 'Chat closed · sessions ended 12 Jul',
   },
 ];
 
@@ -317,11 +343,90 @@ chatMessages.set('thread-1', [
     senderId: 'therapist-1',
     body: 'Hi Amaka, how has the stretching routine been going?',
     attachments: [],
-    sentAt: '2026-08-07T09:00:00Z',
-    readAt: '2026-08-07T09:05:00Z',
+    createdAt: '2026-08-07T09:00:00Z',
+    read: true,
   },
 ]);
-chatThreads[0].lastMessage = chatMessages.get('thread-1')![0];
+// The list carries preview text, not a message record.
+chatThreads[0].lastMessage = chatMessages.get('thread-1')![0].body;
+chatThreads[0].lastMessageAt = chatMessages.get('thread-1')![0].createdAt;
+
+/**
+ * Which local currency each mock user resolves to, standing in for the country
+ * on their profile address. `user-1` has one so the local-display path is
+ * exercisable; a registered user has none, which is the common real case and
+ * must render as plain USD.
+ */
+export const userCurrency = new Map<string, string>([['user-1', 'NGN']]);
+
+export const currencyIndex: CurrencyIndex = {
+  base: 'USD',
+  source: 'official',
+  supported: [
+    {
+      countryId: 126,
+      country: 'Nigeria',
+      currency: 'NGN',
+      rate: 1351.051935,
+      rateSource: 'official',
+      fundable: true,
+    },
+    {
+      countryId: 83,
+      country: 'Ghana',
+      currency: 'GHS',
+      rate: 11.0632,
+      rateSource: 'official',
+      fundable: true,
+    },
+    // Supported but unpriced: the UI must hide it from funding rather than
+    // showing a zero rate.
+    {
+      countryId: 40,
+      country: 'Cameroon',
+      currency: 'XAF',
+      rate: null,
+      rateSource: 'system',
+      fundable: false,
+    },
+  ],
+  mine: null,
+};
+
+export function currencyFor(userId: string): SupportedCurrency | null {
+  const code = userCurrency.get(userId);
+  if (!code) return null;
+  const found = currencyIndex.supported.find((c) => c.currency === code);
+  return found?.rate === null ? null : (found ?? null);
+}
+
+/**
+ * Builds the display-only twin of a money object. The server converts, so the
+ * mock does too — the client must never do this arithmetic itself.
+ */
+export function localBlockFor<K extends string>(
+  userId: string,
+  amounts: Record<K, number | null | undefined>,
+): (LocalBlock<K> & { rate: number }) | null {
+  const currency = currencyFor(userId);
+  if (!currency || currency.rate === null) return null;
+
+  const rate = currency.rate;
+  const converted = Object.fromEntries(
+    Object.entries(amounts).map(([key, value]) => [
+      key,
+      typeof value === 'number' ? Math.round(value * rate * 100) / 100 : null,
+    ]),
+  ) as Record<K, number | null>;
+
+  return {
+    currency: currency.currency,
+    country: currency.country,
+    rate,
+    rateSource: currency.rateSource,
+    ...converted,
+  };
+}
 
 export const wallets = new Map<string, Wallet>();
 wallets.set('user-1', {
@@ -331,6 +436,8 @@ wallets.set('user-1', {
   cooperativeSaved: 180,
   currency: 'USD',
   lastUpdatedAt: new Date().toISOString(),
+  // Filled in per request by the handler, which is where the live rate lives.
+  local: null,
 });
 
 export const ledgers = new Map<string, Transaction[]>();
@@ -367,6 +474,42 @@ ledgers.set('user-1', [
   },
 ]);
 
+/** Care requests are per-client; the map key is the client's user id. */
+export const careRequests = new Map<string, CareRequest[]>();
+
+export function careRequestsFor(userId: string): CareRequest[] {
+  const existing = careRequests.get(userId);
+  if (existing) return existing;
+  const created: CareRequest[] = [];
+  careRequests.set(userId, created);
+  return created;
+}
+
+/**
+ * Which therapist profile a signed-in user practises as. Mock-only: the real
+ * API resolves this from the account server-side and never accepts a therapist
+ * id from the client. It exists here because the fixtures keep `users` and
+ * `therapists` as separate lists with no link between them.
+ */
+export const therapistIdForUser = new Map<string, string>([['user-1', 'therapist-1']]);
+
+/**
+ * Every request naming this therapist, across all clients, newest first. The
+ * per-client map cannot answer this on its own — which is exactly the shape
+ * the real backend has to provide for `GET /therapist/care-requests`.
+ */
+export function careRequestsForTherapist(
+  therapistId: string,
+): Array<{ clientId: string; request: CareRequest }> {
+  const matches: Array<{ clientId: string; request: CareRequest }> = [];
+  for (const [clientId, requests] of careRequests) {
+    for (const request of requests) {
+      if (request.therapistId === therapistId) matches.push({ clientId, request });
+    }
+  }
+  return matches.sort((a, b) => b.request.createdAt.localeCompare(a.request.createdAt));
+}
+
 export const notifications: AppNotification[] = [
   {
     id: 'notif-1',
@@ -396,6 +539,61 @@ export function findUserByCredentials(identifier: string): StoredUser | undefine
 }
 
 export function toPublicUser(user: StoredUser): User {
-  const { password: _password, username: _username, ...publicUser } = user;
+  // `username` is kept: it is the handle people sign in with, and the profile
+  // shows it precisely because a shared email address is refused and they are
+  // told to use it instead. Only the password is withheld.
+  const { password: _password, ...publicUser } = user;
   return publicUser;
 }
+
+/**
+ * Support tickets raised from the phone, newest first.
+ *
+ * `userId` is local to the fixture. The real API never sends it — it scopes to
+ * the session instead — so it is not on the wire type, and the handler filters
+ * on it here to reproduce that scoping rather than trusting the caller.
+ */
+export type StoredSupportTicket = SupportTicket & { userId: string };
+
+export const supportTickets: StoredSupportTicket[] = [];
+
+let nextTicketSequence = 1;
+
+export function nextTicketReference(): string {
+  const letter = String.fromCharCode(65 + (nextTicketSequence % 26));
+  return `${letter}${Date.now()}${nextTicketSequence++}`;
+}
+
+/**
+ * Therapist rotas, keyed by therapist id.
+ *
+ * A therapist absent from here has set no working hours, which is the state
+ * every account starts in — deliberately not the same as being closed all week,
+ * and the reason `therapist-3` is bookable by nobody until someone sets one.
+ */
+export const therapistRotas: Record<string, WorkingDay[]> = {
+  'therapist-1': [
+    { weekday: 1, opensAt: '09:00', closesAt: '17:00' },
+    { weekday: 3, opensAt: '09:00', closesAt: '17:00' },
+    { weekday: 5, opensAt: '09:00', closesAt: '13:00' },
+  ],
+  'therapist-2': [{ weekday: 2, opensAt: '10:00', closesAt: '16:00' }],
+};
+
+/**
+ * Standing decisions about who may read a client's health profile.
+ *
+ * Seeded with one pending request so the screen has the case that matters —
+ * a therapist waiting on an answer — without anyone having to arrange it.
+ */
+export const healthProfileAccess: HealthProfileAccess[] = [
+  {
+    id: 'hpa-1',
+    therapistId: 'therapist-1',
+    therapistName: 'Amaka Obi',
+    clientId: 'user-1',
+    status: 'pending',
+    requestedAt: new Date(Date.now() - 36e5 * 30).toISOString(),
+    respondedAt: null,
+  },
+];

@@ -10,7 +10,7 @@
         <template v-if="therapist">
           <AppCard>
             <div class="cc-care__therapist">
-              <AppAvatar :name="therapist.name" :size="56" />
+              <AppAvatar :name="therapist.name" :src="therapist.avatarUrl ?? undefined" :size="56" />
               <div class="cc-care__therapist-body">
                 <div class="cc-text-body-strong" style="font-size: 16px">{{ therapist.name }}</div>
                 <div class="cc-text-caption">Your therapist · {{ therapist.specialties.join(', ') }}</div>
@@ -18,17 +18,34 @@
             </div>
             <div class="cc-care__actions">
               <AppButton @click="goChat">Message</AppButton>
-              <AppButton variant="secondary" @click="router.push({ name: 'book-appointment' })">Book</AppButton>
+              <AppButton
+                variant="secondary"
+                @click="router.push({ name: 'book-appointment', query: { therapistId: therapist.id } })"
+              >
+                Book
+              </AppButton>
               <button type="button" class="cc-care__video-btn" aria-label="Start video visit" @click="goVideo">
                 <AppIcon name="videocam" :size="20" color="var(--cc-ink-600)" />
               </button>
             </div>
           </AppCard>
 
-          <AppCard v-if="nextVisit" class="cc-care__next-visit">
-            <div class="cc-text-caption" style="color: #9bd2c8">NEXT VISIT</div>
-            <div class="cc-text-h2" style="color: #fff; margin: 4px 0">{{ formatSlot(nextVisit.slot) }}</div>
-            <div style="color: #cde7e1; font-size: 13.5px">{{ nextVisit.type }} visit</div>
+          <AppCard v-if="headline" class="cc-care__next-visit" :class="{ 'cc-care__next-visit--late': headline.timing === 'overdue' }">
+            <div class="cc-text-caption" style="color: #9bd2c8">
+              {{ headline.timing === 'overdue' ? 'MISSED VISIT' : 'NEXT VISIT' }}
+            </div>
+            <div class="cc-text-h2" style="color: #fff; margin: 4px 0">{{ formatSlot(headline.appointment.slot) }}</div>
+            <div style="color: #cde7e1; font-size: 13.5px">
+              {{ headline.appointment.type }} visit<template v-if="overdueFor"> · {{ overdueFor }}</template>
+            </div>
+            <AppButton
+              v-if="canRescheduleHeadline"
+              variant="secondary"
+              class="cc-care__rebook"
+              @click="rescheduleHeadline"
+            >
+              {{ headline.timing === 'overdue' ? 'Rebook this visit' : 'Reschedule' }}
+            </AppButton>
           </AppCard>
 
           <div class="cc-text-body-strong" style="font-size: 16px">Your care</div>
@@ -40,6 +57,16 @@
               chevron
               clickable
               @click="router.push({ name: 'health-profile' })"
+            />
+            <AppListRow
+              v-if="careRequests.length"
+              title="Your requests"
+              :subtitle="requestsSubtitle"
+              icon="assignment"
+              chevron
+              clickable
+              :divider="false"
+              @click="router.push({ name: 'care-requests' })"
             />
           </AppCard>
 
@@ -58,6 +85,18 @@
         </template>
 
         <template v-else>
+          <AppCard v-if="careRequests.length" style="padding: 0">
+            <AppListRow
+              title="Your requests"
+              :subtitle="requestsSubtitle"
+              icon="assignment"
+              chevron
+              clickable
+              :divider="false"
+              @click="router.push({ name: 'care-requests' })"
+            />
+          </AppCard>
+
           <EmptyState
             icon="health_and_safety"
             title="No therapist assigned yet"
@@ -67,12 +106,44 @@
             :primary-action="therapists.length ? undefined : 'Request a therapist'"
             @primary="requestMatching"
           />
-          <AppCard v-for="t in therapists" :key="t.id" class="cc-care__discover">
+          <div v-if="therapists.length" class="cc-care__search">
+            <AppIcon name="search" :size="20" color="var(--cc-ink-400)" />
+            <input
+              v-model="therapistSearch"
+              type="search"
+              placeholder="Search therapists by name"
+              aria-label="Search therapists by name"
+            />
+            <button
+              v-if="therapistSearch"
+              type="button"
+              class="cc-care__search-clear"
+              aria-label="Clear search"
+              @click="therapistSearch = ''"
+            >
+              <AppIcon name="close" :size="18" color="var(--cc-ink-400)" />
+            </button>
+          </div>
+
+          <p v-if="therapistSearch.trim() && !filteredTherapists.length" class="cc-care__no-match cc-text-caption">
+            No therapist here matches “{{ therapistSearch.trim() }}”.
+          </p>
+
+          <AppCard v-for="t in filteredTherapists" :key="t.id" class="cc-care__discover">
             <div class="cc-care__discover-profile">
-              <AppAvatar :name="t.name" :size="46" />
-              <div v-if="t.rating !== null" class="cc-care__discover-rating" :aria-label="`${t.rating.toFixed(1)} out of 5 rating`">
-                <AppIcon name="star" :size="16" filled color="var(--cc-color-warning)" />
-                <span>{{ t.rating.toFixed(1) }}</span>
+              <AppAvatar :name="t.name" :src="t.avatarUrl ?? undefined" :size="46" />
+              <div
+                class="cc-care__discover-rating"
+                :class="{ 'cc-care__discover-rating--unrated': t.rating === null }"
+                :aria-label="t.rating === null ? 'Not rated yet' : `${t.rating.toFixed(1)} out of 5 rating`"
+              >
+                <AppIcon
+                  name="star"
+                  :size="16"
+                  filled
+                  :color="t.rating === null ? 'var(--cc-ink-300)' : 'var(--cc-color-warning)'"
+                />
+                <span>{{ t.rating === null ? 'New' : t.rating.toFixed(1) }}</span>
               </div>
             </div>
             <div class="cc-care__discover-body">
@@ -86,7 +157,7 @@
                 <AppButton variant="secondary" @click="router.push({ name: 'therapist-detail', params: { id: t.id } })">
                   View profile
                 </AppButton>
-                <AppButton @click="requestTherapist(t.id)">Request</AppButton>
+                <AppButton @click="requestTherapist(t)">Request</AppButton>
               </div>
             </div>
           </AppCard>
@@ -98,7 +169,7 @@
 
 <script setup lang="ts">
 import { AppPullToRefresh } from '@/components/ui';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import {
@@ -109,17 +180,30 @@ import {
   AppListRow,
 } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
+import {
+  canJoin,
+  canReschedule,
+  headlineAppointment,
+  howLongAgo,
+} from '@/features/care/appointmentState';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useTherapist, useTherapists } from '@/composables/useTherapists';
+import { useCareRequests } from '@/composables/useCareRequests';
+import { presentCareRequest } from '@/features/care/careRequestPresentation';
 import { therapistsApi } from '@/api/therapists.api';
-import { useChatThreads } from '@/composables/useChat';
+import { findThreadWith, useChatThreads } from '@/composables/useChat';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
+import { useQueryClient } from '@tanstack/vue-query';
+import { fullName as formatFullName } from '@/types/user';
+import type { TherapistSummary } from '@/types/care';
 
 const router = useRouter();
 const auth = useAuthStore();
 const toast = useToast();
+const queryClient = useQueryClient();
+const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const { data: chatThreads } = useChatThreads();
 
 const { data: caseFilesPage, isPending: caseFilesPending } = useCaseFiles();
@@ -132,10 +216,52 @@ const { data: therapist, isPending: therapistPending } = useTherapist(
 const { data: therapistsPage, isPending: therapistsPending } = useTherapists();
 const therapists = computed(() => therapistsPage.value?.data ?? []);
 
-const { data: appointmentsPage } = useAppointments();
-const nextVisit = computed(() =>
-  appointmentsPage.value?.data.find((a) => a.status === 'confirmed'),
+/**
+ * Filtered on the client: GET /therapists takes only `cursor`, so there is no
+ * server-side name query to delegate to. That scopes the search to the
+ * directory page already loaded — fine at the current page size (20), but it
+ * needs a backend `search` param before the directory outgrows one page.
+ */
+const therapistSearch = ref('');
+const filteredTherapists = computed(() => {
+  const term = therapistSearch.value.trim().toLowerCase();
+  if (!term) return therapists.value;
+  return therapists.value.filter((t) => t.name.toLowerCase().includes(term));
+});
+
+const { data: careRequestsPage } = useCareRequests();
+const careRequests = computed(() => careRequestsPage.value?.data ?? []);
+const openRequestCount = computed(
+  () => careRequests.value.filter((r) => presentCareRequest(r.status).open).length,
 );
+const requestsSubtitle = computed(() =>
+  openRequestCount.value
+    ? `${openRequestCount.value} in progress · track status`
+    : 'Track the status of requests you have sent',
+);
+
+const { data: appointmentsPage } = useAppointments();
+
+/**
+ * Same correction as Home: `find(a => a.status === 'confirmed')` had no notion
+ * of time in it, so a visit that had already happened sat under NEXT VISIT.
+ */
+const headline = computed(() => headlineAppointment(appointmentsPage.value?.data));
+const canRescheduleHeadline = computed(
+  () => !!headline.value && canReschedule(headline.value.appointment),
+);
+const overdueFor = computed(() =>
+  headline.value?.timing === 'overdue' ? howLongAgo(headline.value.appointment.slot) : null,
+);
+
+function rescheduleHeadline() {
+  if (!headline.value) return;
+  const { appointment } = headline.value;
+  router.push({
+    name: 'book-appointment',
+    query: { therapistId: appointment.therapistId, rescheduleId: appointment.id },
+  });
+}
 
 const isPending = computed(
   () => caseFilesPending.value || (!!caseFile.value && therapistPending.value) || therapistsPending.value,
@@ -154,19 +280,23 @@ function formatSlot(iso: string) {
 }
 
 function goChat() {
-  const thread = chatThreads.value?.find((t) =>
-    t.participants.some((p) => p.id === caseFile.value?.therapistId),
-  );
+  const thread = findThreadWith(chatThreads.value, caseFile.value?.therapistId);
   if (thread) router.push({ name: 'chat-thread', params: { id: thread.id } });
   else router.push({ name: 'chat-inbox' });
 }
 function goVideo() {
-  if (nextVisit.value) router.push({ name: 'video-visit', params: { id: nextVisit.value.id } });
+  // Only a confirmed visit still to come has a call behind it.
+  if (headline.value && canJoin(headline.value.appointment, headline.value.timing)) {
+    router.push({ name: 'video-visit', params: { id: headline.value.appointment.id } });
+    return;
+  }
+  toast.show('There is no session to join right now.', 'info');
 }
 
 async function requestMatching(reason = 'Please match me with an available therapist.') {
   try {
     await therapistsApi.requestAssignment(reason);
+    await showRequestTracking();
     await toast.show('Your request is on its way. CruxCare will contact you when a therapist is available.', 'success', {
       title: 'Matching request sent',
     });
@@ -178,12 +308,42 @@ async function requestMatching(reason = 'Please match me with an available thera
   }
 }
 
-async function requestTherapist(id: string) {
-  await requestMatching(`Requested therapist ${id}`);
+/**
+ * A sent request is only useful if the client can follow it, so both request
+ * paths land on the tracking screen with the new row already refetched.
+ */
+async function showRequestTracking() {
+  await queryClient.invalidateQueries({ queryKey: ['care', 'requests'] });
+  await router.push({ name: 'care-requests' });
+}
+
+/** Named request: the therapist is attached to the case and notified. */
+async function requestTherapist(therapist: TherapistSummary) {
+  try {
+    await therapistsApi.requestAssignment(
+      `${clientName.value} would like to work with ${therapist.name}.`,
+      therapist.id,
+    );
+    await showRequestTracking();
+    await toast.show(`${therapist.name} has been notified of your request.`, 'success', {
+      title: 'Request sent',
+    });
+  } catch {
+    await toast.show(`We could not send your request to ${therapist.name}. Please try again.`, 'danger', {
+      title: 'Could not send request',
+      dismissLabel: 'Try again',
+    });
+  }
 }
 </script>
 
 <style scoped>
+.cc-care__next-visit--late {
+  background: var(--cc-color-warning-text);
+}
+.cc-care__rebook {
+  margin-top: 12px;
+}
 .cc-care__header {
   padding: calc(env(safe-area-inset-top) + 4px) 16px 14px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(247, 250, 249, 0.38) 55%, rgba(247, 250, 249, 0.62));
@@ -236,6 +396,35 @@ async function requestTherapist(id: string) {
 .cc-care__reco-body {
   flex: 1;
 }
+.cc-care__search {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-surface-0);
+}
+.cc-care__search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--cc-font-interface);
+  font-size: 13.5px;
+}
+.cc-care__search-clear {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+.cc-care__no-match {
+  margin: 0;
+}
 .cc-care__discover {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -272,6 +461,11 @@ async function requestTherapist(id: string) {
 .cc-care__discover-rating {
   color: var(--cc-ink-900);
   font-weight: 600;
+}
+/* No reviews yet — present but visibly quieter than a real score. */
+.cc-care__discover-rating--unrated {
+  color: var(--cc-ink-400);
+  font-weight: 500;
 }
 .cc-care__discover-specialties {
   min-height: 19px;

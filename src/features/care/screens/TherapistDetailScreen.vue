@@ -7,16 +7,21 @@
 
       <div v-else-if="therapist" class="cc-screen__pad">
         <AppCard class="cc-therapist-detail__summary">
-          <AppAvatar :name="therapist.name" :size="64" />
+          <AppAvatar :name="therapist.name" :src="therapist.avatarUrl ?? undefined" :size="64" />
           <div class="cc-therapist-detail__identity">
             <h2 class="cc-text-h2" style="margin: 0">{{ therapist.name }}</h2>
-            <div
-              v-if="therapist.rating !== null"
-              class="cc-therapist-detail__rating"
-              :aria-label="`${therapist.rating.toFixed(1)} out of 5 rating`"
-            >
-              <AppIcon name="star" :size="18" filled color="var(--cc-color-warning)" />
-              <span>{{ therapist.rating.toFixed(1) }} rating</span>
+            <!-- Always shown. It used to render only when a rating existed,
+                 and none ever does — nothing on the platform collects one — so
+                 the row a client came here to read was permanently invisible.
+                 An unrated therapist says so rather than disappearing. -->
+            <div class="cc-therapist-detail__rating" :aria-label="ratingLabel(therapist)">
+              <AppIcon
+                name="star"
+                :size="18"
+                filled
+                :color="therapist.rating === null ? 'var(--cc-ink-300)' : 'var(--cc-color-warning)'"
+              />
+              <span>{{ ratingText(therapist) }}</span>
             </div>
             <div class="cc-therapist-detail__location">
               <AppIcon name="location_on" :size="17" color="var(--cc-ink-600)" />
@@ -51,7 +56,7 @@
           />
           <AppListRow
             title="Languages"
-            :subtitle="therapist.languages?.join(', ') ?? 'Language details available on request'"
+            :subtitle="languagesLine"
             icon="translate"
             :divider="false"
           />
@@ -67,7 +72,24 @@
       />
 
       <div v-if="therapist" class="cc-screen__footer">
-        <AppButton :loading="requesting" @click="requestTherapist">Request therapist</AppButton>
+        <!-- A second request would land in the therapist's queue as a duplicate
+             of one they are already deciding on, so the state is stated rather
+             than the tap being silently refused. -->
+        <p v-if="standingRequest" class="cc-text-caption cc-therapist-detail__standing">
+          {{ standingRequestMessage }}
+        </p>
+        <!-- Once the therapist has accepted, the useful action is booking, not
+             asking again. Before that, booking would be rejected server-side
+             for want of an accepted request, so it is not offered. -->
+        <AppButton v-if="isAccepted" @click="bookVisit">Book a visit</AppButton>
+        <AppButton
+          v-else
+          :loading="requesting"
+          :disabled="!!standingRequest"
+          @click="requestTherapist"
+        >
+          {{ standingRequest ? 'Request already sent' : 'Request therapist' }}
+        </AppButton>
       </div>
     </ion-content>
   </ion-page>
@@ -81,23 +103,93 @@ import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { therapistsApi } from '@/api/therapists.api';
+import { ratingLabel, ratingText } from '@/features/care/therapistRating';
 import { useTherapist } from '@/composables/useTherapists';
 import { useToast } from '@/composables/useToast';
+import { useQueryClient } from '@tanstack/vue-query';
+import { useAuthStore } from '@/stores/auth';
+import { ApiError } from '@/types/api';
+import { useCareRequests, CARE_REQUESTS_KEY } from '@/composables/useCareRequests';
+import { findStandingRequestTo } from '@/features/care/careRequestPresentation';
+import { fullName as formatFullName } from '@/types/user';
 
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const auth = useAuthStore();
+const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const therapistId = computed(() => String(route.params.id ?? ''));
 const { data: therapist, isPending } = useTherapist(therapistId);
+const queryClient = useQueryClient();
 const requesting = ref(false);
+
+/**
+ * An empty `languages` array is not a missing one: `[].join(', ')` is `''`, so
+ * `??` never fired and the row rendered a title with nothing under it. Every
+ * therapist on the directory today has an empty array, so that blank line was
+ * the only thing anyone saw.
+ */
+const languagesLine = computed(() =>
+  therapist.value?.languages?.length
+    ? therapist.value.languages.join(', ')
+    : 'Language details available on request',
+);
+
+/** The client's own requests, so a therapist they have already asked cannot be
+ *  asked twice. The server is the enforcer; this stops the trip. */
+const { data: myRequests } = useCareRequests();
+const standingRequest = computed(() =>
+  findStandingRequestTo(myRequests.value?.data, therapistId.value),
+);
+const isAccepted = computed(() => standingRequest.value?.status === 'accepted');
+
+function bookVisit() {
+  router.push({ name: 'book-appointment', query: { therapistId: therapistId.value } });
+}
+
+const standingRequestMessage = computed(() =>
+  standingRequest.value?.status === 'accepted'
+    ? 'You are already working with this therapist.'
+    : 'You have already asked this therapist. They will respond to your first request.',
+);
 
 async function requestTherapist() {
   if (!therapist.value) return;
+  const target = therapist.value;
   requesting.value = true;
   try {
-    await therapistsApi.requestAssignment(`Requested therapist ${therapist.value.id}`);
-    await toast.show('Request sent — CruxCare will confirm your assignment.', 'success');
+    await therapistsApi.requestAssignment(
+      `${clientName.value} would like to work with ${target.name}.`,
+      target.id,
+    );
+    await toast.show(`${target.name} has been notified of your request.`, 'success', {
+      title: 'Request sent',
+    });
     router.replace({ name: 'care-hub' });
+  } catch (error) {
+    // The server refuses a second ask at a therapist who has not answered the
+    // first, and sends the standing one back. Say which request already exists
+    // rather than only refusing, and refresh so the button settles into its
+    // disabled state instead of inviting another tap.
+    if (error instanceof ApiError && error.code === 'duplicate_request') {
+      const reference = typeof error.meta?.reference === 'string' ? error.meta.reference : null;
+      await queryClient.invalidateQueries({ queryKey: CARE_REQUESTS_KEY });
+      await toast.show(
+        reference ? `${error.message} Your request is ${reference}.` : error.message,
+        'warning',
+        { title: 'Already requested' },
+      );
+      return;
+    }
+
+    const message =
+      error instanceof ApiError
+        ? error
+        : `We could not send your request to ${target.name}. Please try again.`;
+    await toast.show(message, 'danger', {
+      title: 'Could not send request',
+      dismissLabel: 'Try again',
+    });
   } finally {
     requesting.value = false;
   }
@@ -134,6 +226,10 @@ async function requestTherapist() {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.cc-therapist-detail__standing {
+  margin: 0 0 8px;
+  text-align: center;
 }
 .cc-therapist-detail__rating,
 .cc-therapist-detail__location {

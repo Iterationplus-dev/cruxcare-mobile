@@ -20,7 +20,7 @@ export function validateLoginIdentifier(value: string): string | null {
 export function loginFailureMessage(error: LoginFailure): string {
   if (error.status === 401 && error.code === 'use_username') return error.message;
   if (error.status === 401) return 'Username, email, or password is incorrect.';
-  if (error.status === 0) return 'We could not reach CruxCare. Check your connection and try again.';
+  if (error.status === 0) return 'We could not reach the server. Check your connection and try again.';
   if (error.status >= 500) return 'Temporary unavailable. Cheek back';
   return error.message;
 }

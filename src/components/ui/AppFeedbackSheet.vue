@@ -30,6 +30,13 @@
       <h2 id="cc-feedback-sheet-title" class="cc-feedback-sheet__title">{{ active.title }}</h2>
       <p id="cc-feedback-sheet-message" class="cc-feedback-sheet__message">{{ active.message }}</p>
 
+      <!-- Only a server failure carries one. It is the single thing on this
+           sheet worth reading out, so it is selectable rather than decorative. -->
+      <p v-if="active.reference" class="cc-feedback-sheet__reference">
+        Quote reference
+        <span class="cc-feedback-sheet__code">{{ active.reference }}</span>
+      </p>
+
       <AppButton class="cc-feedback-sheet__action" @click="dismiss">
         {{ active.dismissLabel }}
       </AppButton>
@@ -148,6 +155,24 @@ function onOpenChange(open: boolean) {
   font-family: var(--cc-font-interface);
   font-size: var(--cc-text-body-size);
   line-height: var(--cc-text-body-line);
+}
+.cc-feedback-sheet__reference {
+  margin: var(--cc-space-3) 0 0;
+  color: var(--cc-ink-300);
+  font-family: var(--cc-font-interface);
+  font-size: 12px;
+  line-height: 18px;
+}
+.cc-feedback-sheet__code {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  user-select: text;
+  -webkit-user-select: text;
 }
 .cc-feedback-sheet__action {
   margin-top: var(--cc-space-7);

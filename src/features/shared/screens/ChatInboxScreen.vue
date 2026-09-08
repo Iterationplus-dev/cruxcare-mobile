@@ -7,13 +7,18 @@
         For care coordination only — call emergency services for urgent medical needs.
       </p>
       <LoadingState v-if="isPending" label="Loading conversations…" />
-      <EmptyState v-else-if="!threads?.length" icon="forum" title="No conversations yet" message="Messages with your therapist will appear here." />
+      <EmptyState
+        v-else-if="!threads?.length"
+        icon="forum"
+        title="No conversations yet"
+        :message="emptyMessage"
+      />
       <AppCard v-else style="margin: 0 16px; padding: 0">
         <AppListRow
           v-for="t in threads"
           :key="t.id"
-          :title="otherParticipant(t).name"
-          :subtitle="t.lastMessage?.body ?? 'No messages yet'"
+          :title="t.participantName"
+          :subtitle="t.lastMessage ?? 'No messages yet'"
           chevron
           clickable
           @click="router.push({ name: 'chat-thread', params: { id: t.id } })"
@@ -30,21 +35,25 @@
 <script setup lang="ts">
 import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { AppBadge, AppCard, AppHeader, AppListRow } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useChatThreads } from '@/composables/useChat';
 import { useAuthStore } from '@/stores/auth';
-import type { ChatThread } from '@/types/care';
 
 /** D4 inbox (also backs SH2 and CD5) — one thread list shared across contexts. */
 const router = useRouter();
 const auth = useAuthStore();
 const { data: threads, isPending } = useChatThreads();
 
-function otherParticipant(t: ChatThread) {
-  return t.participants.find((p) => p.id !== auth.user?.id) ?? t.participants[0];
-}
+/** One inbox serves both contexts, so it must not tell a therapist their
+ *  messages are with their therapist. */
+const emptyMessage = computed(() =>
+  auth.activeRole === 'therapist'
+    ? 'Messages with your clients will appear here.'
+    : 'Messages with your therapist will appear here.',
+);
 </script>
 
 <style scoped>

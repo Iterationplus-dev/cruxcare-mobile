@@ -8,6 +8,14 @@
       <template v-else-if="wallet">
         <div class="cc-text-caption" style="color: var(--cc-color-primary)">Available balance</div>
         <MoneyAmount :value="wallet.available" :currency="wallet.currency" size="display" class="cc-wallet__balance" />
+        <!-- Display only. The balance is held in USD; this is the same money
+             read in the user's own currency, and is absent for anyone with no
+             supported country on file. -->
+        <div v-if="localAvailable !== null" class="cc-wallet__local">
+          <span aria-hidden="true">≈</span>
+          <MoneyAmount :value="localAvailable" :currency="wallet.local!.currency" />
+          <span v-if="wallet.local!.rateSource === 'system'" class="cc-wallet__local-note">indicative rate</span>
+        </div>
         <div class="cc-wallet__updated">
           <AppIcon name="cloud_done" :size="15" color="#cde7e1" />
           From CruxCare · updated {{ relativeUpdated }}
@@ -32,7 +40,7 @@
         <div class="cc-wallet__actions">
           <button v-for="a in actions" :key="a.label" type="button" class="cc-wallet__action" @click="a.onClick">
             <span class="cc-wallet__action-icon"><AppIcon :name="a.icon" :size="22" color="var(--cc-color-primary)" /></span>
-            <span class="cc-text-body" style="font-size: 11.5px">{{ a.label }}</span>
+            <span class="cc-wallet__action-label cc-text-body">{{ a.label }}</span>
           </button>
         </div>
 
@@ -91,7 +99,12 @@ const { data: ledger, isPending: ledgerPending } = useLedger();
 
 const relativeUpdated = computed(() => (wallet.value ? formatRelativeTime(wallet.value.lastUpdatedAt) : ''));
 
+/** `local` is null for most users, and an individual amount inside it can be
+ * null too — neither is a zero balance, so both fall back to showing USD alone. */
+const localAvailable = computed(() => wallet.value?.local?.available ?? null);
+
 const actions = [
+  { icon: 'add_card', label: 'Top up', onClick: () => router.push({ name: 'wallet-top-up' }) },
   { icon: 'arrow_outward', label: 'Withdraw', onClick: () => router.push({ name: 'wallet-withdraw' }) },
   { icon: 'swap_horiz', label: 'Transfer', onClick: () => router.push({ name: 'wallet-transfer' }) },
   { icon: 'savings', label: 'Contribute', onClick: () => router.push({ name: 'cooperative-contribute' }) },
@@ -122,6 +135,22 @@ function formatDate(iso: string) {
   display: block;
   font-size: 35.5px !important;
   line-height: 42px !important;
+}
+.cc-wallet__local {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 3px;
+  color: var(--cc-ink-600);
+}
+.cc-wallet__local :deep(.cc-money) {
+  font-size: 15px;
+  color: var(--cc-ink-600);
+}
+.cc-wallet__local-note {
+  font-family: var(--cc-font-interface);
+  font-size: 10.5px;
+  color: var(--cc-ink-400);
 }
 .cc-wallet__updated {
   display: flex;
@@ -169,8 +198,8 @@ function formatDate(iso: string) {
 }
 .cc-wallet__actions {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
 }
 .cc-wallet__action {
   background: none;
@@ -183,12 +212,19 @@ function formatDate(iso: string) {
 }
 .cc-wallet__action-icon {
   width: 100%;
-  height: 52px;
+  height: 48px;
   border-radius: 14px;
   background: var(--cc-surface-0);
   border: 1px solid var(--cc-line);
   display: grid;
   place-items: center;
+}
+/* Five labels across a 360px screen: the scale floor is 11.5px, so the label
+   is allowed to wrap to a second line rather than being clipped. */
+.cc-wallet__action-label {
+  font-size: 11.5px;
+  line-height: 14px;
+  text-align: center;
 }
 .cc-wallet__section-head {
   display: flex;

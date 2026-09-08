@@ -9,11 +9,24 @@
             <AppIcon name="settings" :size="22" color="#fff" />
           </button>
         </div>
-        <div class="cc-profile__identity">
+        <!-- PR1 draws no edit affordance, but PR2 has to be reachable. Tapping
+             your own name and photo is the ordinary way in, and it changes
+             nothing about how the header looks. -->
+        <button
+          type="button"
+          class="cc-profile__identity"
+          aria-label="Edit your profile"
+          @click="router.push({ name: 'edit-profile' })"
+        >
           <AppAvatar :name="fullName" :src="auth.user?.avatarUrl ?? undefined" :size="64" />
           <div class="cc-profile__identity-body">
-            <div class="cc-text-h1" style="color: #fff; margin: 0">{{ fullName }}</div>
-            <div class="cc-text-mono" style="color: #cde7e1">{{ auth.user?.membership?.cruxId ?? '' }}</div>
+            <div class="cc-text-h1 cc-profile__name">{{ fullName }}</div>
+            <!-- PR1 puts the Crux ID directly under the name. Rendered only
+                 when there is one: it comes with membership, and an empty mono
+                 line reads as an id that failed to load. The username moved to
+                 Personal information, beside the other verified details. -->
+            <div v-if="cruxId" class="cc-text-mono cc-profile__crux-id">{{ cruxId }}</div>
+
             <div class="cc-profile__badges">
               <AppBadge label="CLIENT" />
               <AppBadge v-if="auth.roles.includes('member')" :label="`MEMBER${tierLabel}`" />
@@ -21,7 +34,13 @@
               <AppBadge v-if="auth.roles.includes('admin')" label="ADMIN" />
             </div>
           </div>
-        </div>
+          <!-- The whole block is the target; this is the affordance that says
+               so. Tapping a name and photo opens an editor on most apps, but
+               nothing on screen was saying it. -->
+          <span class="cc-profile__edit" aria-hidden="true">
+            <AppIcon name="edit" :size="18" color="#fff" />
+          </span>
+        </button>
       </div>
     </div>
 
@@ -48,7 +67,8 @@
           <AppListRow title="Health profile" icon="medical_information" chevron clickable @click="router.push({ name: 'health-profile' })" />
           <AppListRow title="Security and privacy" icon="shield" chevron clickable @click="router.push({ name: 'security-privacy' })" />
           <AppListRow title="Notifications" icon="notifications" chevron clickable @click="router.push({ name: 'notification-settings' })" />
-          <AppListRow title="Payment methods" icon="credit_card" chevron clickable :divider="false" @click="router.push({ name: 'payment-methods' })" />
+          <AppListRow title="Payment methods" icon="credit_card" chevron clickable @click="router.push({ name: 'payment-methods' })" />
+          <AppListRow title="Fund wallet" subtitle="Top up by card or bank transfer" icon="add_card" chevron clickable :divider="false" @click="router.push({ name: 'wallet-top-up' })" />
         </AppCard>
 
         <AppCard v-if="auth.roles.includes('therapist')" style="padding: 0">
@@ -84,15 +104,7 @@
 
     <RoleSwitchSheet v-model="roleSheetOpen" />
 
-    <AppSheet v-model="logoutSheetOpen" title="Log out?">
-      <p class="cc-text-body" style="margin: 0 0 16px">
-        Any unsynced drafts on this device won't be saved. You can log back in any time.
-      </p>
-      <div class="cc-logout-sheet__actions">
-        <AppButton variant="secondary" class="cc-logout-sheet__confirm" @click="onLogout">Log out</AppButton>
-        <AppButton variant="secondary" @click="logoutSheetOpen = false">Cancel</AppButton>
-      </div>
-    </AppSheet>
+    <LogoutSheet v-model="logoutSheetOpen" />
   </ion-page>
 </template>
 
@@ -104,12 +116,11 @@ import { useRouter } from 'vue-router';
 import {
   AppAvatar,
   AppBadge,
-  AppButton,
   AppCard,
   AppIcon,
   AppListRow,
-  AppSheet,
 } from '@/components/ui';
+import LogoutSheet from '../components/LogoutSheet.vue';
 import RoleSwitchSheet from '../components/RoleSwitchSheet.vue';
 import { useAppointments } from '@/composables/useAppointments';
 import { useOrders } from '@/composables/useOrders';
@@ -123,6 +134,13 @@ const router = useRouter();
 const auth = useAuthStore();
 
 const fullName = computed(() => (auth.user ? formatFullName(auth.user) : ''));
+
+/**
+ * Every account has one from registration. This read it out of `membership`,
+ * which is null for a plain client — so the header told people with a Crux ID
+ * since day one that they had none.
+ */
+const cruxId = computed(() => auth.user?.cruxId ?? auth.user?.membership?.cruxId ?? '');
 const tierLabel = computed(() => {
   const tier = auth.user?.membership?.tier;
   return tier ? ` · ${tier.split('·')[0].trim().toUpperCase()}` : '';
@@ -140,14 +158,25 @@ const sinceYear = computed(() =>
 
 const roleSheetOpen = ref(false);
 const logoutSheetOpen = ref(false);
-
-async function onLogout() {
-  await auth.logout();
-  router.replace({ name: 'login' });
-}
 </script>
 
 <style scoped>
+.cc-profile__name {
+  color: #fff;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cc-profile__crux-id {
+  /* Dark rather than the mint it was: the gradient is lightest exactly where
+     this line sits, and a pale id on a pale ground was the least readable
+     thing in the header. */
+  color: var(--cc-color-primary-dark);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
 .cc-profile__cover {
   position: relative;
   height: 190px;
@@ -188,9 +217,31 @@ async function onLogout() {
   display: flex;
   gap: 14px;
   align-items: center;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.cc-profile__identity:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+  border-radius: 12px;
 }
 .cc-profile__identity-body {
   flex: 1;
+  min-width: 0;
+}
+.cc-profile__edit {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 .cc-profile__badges {
   display: flex;
@@ -227,14 +278,5 @@ async function onLogout() {
   font-size: 13.5px;
   padding: 6px 0;
   cursor: pointer;
-}
-.cc-logout-sheet__actions {
-  display: grid;
-  gap: 10px;
-}
-.cc-logout-sheet__actions :deep(.cc-logout-sheet__confirm) {
-  border-color: rgba(184, 58, 42, 0.28);
-  background: var(--cc-error-surface);
-  color: var(--cc-error-surface-text);
 }
 </style>

@@ -24,6 +24,18 @@
           <p v-else class="cc-pd__description-empty cc-text-body" role="status">
             A description is not available for this product yet.
           </p>
+
+          <!-- C2's collapsible detail. Delivery is the same for every product,
+               so it is written here; the other two describe the product and
+               have to come from the product. -->
+          <div class="cc-pd__sections">
+            <ProductDetailSection title="How to use" :body="product.howToUse" />
+            <ProductDetailSection title="Ingredients" :body="product.ingredients" />
+            <ProductDetailSection
+              title="Delivery &amp; pickup"
+              body="Delivered to the address on your profile, or collected from a CruxCare outlet. You choose at checkout, and the cost is shown before you pay."
+            />
+          </div>
         </div>
 
         <div class="cc-screen__footer">
@@ -52,6 +64,7 @@ import { IonButtons, IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppBadge, AppButton, AppIcon, MoneyAmount } from '@/components/ui';
 import ProductImage from '@/components/marketplace/ProductImage.vue';
+import ProductDetailSection from '@/components/marketplace/ProductDetailSection.vue';
 import { LoadingState } from '@/components/state';
 import { useProduct } from '@/composables/useProducts';
 import { useCartStore } from '@/stores/cart';
@@ -94,6 +107,10 @@ async function onAdd() {
 </script>
 
 <style scoped>
+.cc-pd__sections {
+  margin-top: 18px;
+  border-bottom: 1px solid var(--cc-line);
+}
 .cc-screen {
   --background: var(--cc-surface-0);
 }

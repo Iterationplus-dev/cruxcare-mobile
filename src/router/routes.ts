@@ -114,7 +114,10 @@ const routes: RouteRecordRaw[] = [
       { path: '', redirect: '/tabs/home' },
       { path: 'home', name: 'tabs-home', component: () => import('@/features/home/screens/HomeScreen.vue') },
       { path: 'shop', name: 'catalog', component: () => import('@/features/marketplace/screens/CatalogScreen.vue') },
-      { path: 'care', name: 'care-hub', component: () => import('@/features/care/screens/CareHubScreen.vue') },
+      // CD2 is the Care tab: the directory is what a client opens Care to
+      // browse. Their own care keeps its screen, reached from the top of it.
+      { path: 'care', name: 'care-hub', component: () => import('@/features/care/screens/DiscoverTherapistsScreen.vue') },
+      { path: 'care/mine', name: 'care-mine', component: () => import('@/features/care/screens/CareHubScreen.vue') },
       { path: 'wallet', name: 'wallet-home', component: () => import('@/features/wallet/screens/WalletHomeScreen.vue') },
       { path: 'profile', name: 'profile', component: () => import('@/features/profile/screens/ProfileScreen.vue') },
       { path: 'member-home', name: 'tabs-member-home', component: () => import('@/features/member/screens/MemberHomeScreen.vue'), meta: { requiresRole: 'member' } },
@@ -184,6 +187,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/care/requests',
+    name: 'care-requests',
+    component: () => import('@/features/care/screens/CareRequestsScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/care/therapists/:id',
     name: 'therapist-detail',
     component: () => import('@/features/care/screens/TherapistDetailScreen.vue'),
@@ -195,6 +204,14 @@ const routes: RouteRecordRaw[] = [
     path: '/wallet/ledger',
     name: 'ledger',
     component: () => import('@/features/wallet/screens/LedgerScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  // Funding is deliberately role-free: every role spends from the same wallet,
+  // and only the client shell has a Wallet tab.
+  {
+    path: '/wallet/top-up',
+    name: 'wallet-top-up',
+    component: () => import('@/features/wallet/screens/WalletTopUpScreen.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -306,6 +323,14 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    // Where a tap on Today's schedule lands, and the only place a therapist can
+    // start a session from.
+    path: '/therapist/appointments/:id',
+    name: 'therapist-appointment',
+    component: () => import('@/features/therapist/screens/TherapistAppointmentScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/video/:id',
     name: 'video-visit',
     component: () => import('@/features/shared/screens/VideoVisitScreen.vue'),
@@ -329,6 +354,50 @@ const routes: RouteRecordRaw[] = [
     path: '/profile/personal-info',
     name: 'personal-info',
     component: () => import('@/features/profile/screens/PersonalInfoScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // PR2. Separate from personal-info because the design separates them: this
+    // holds what a member can simply set, that holds what needs verifying.
+    path: '/profile/edit',
+    name: 'edit-profile',
+    component: () => import('@/features/profile/screens/EditProfileScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // Where PR4's "Health profile access" row leads: the client's answer to a
+    // therapist's request, which had nowhere to land before this.
+    path: '/profile/health-profile-access',
+    name: 'health-profile-access',
+    component: () => import('@/features/profile/screens/HealthProfileAccessScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile/address',
+    name: 'delivery-address',
+    component: () => import('@/features/profile/screens/DeliveryAddressScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // `field` is `email` or `phone`; the flow is identical either way, so one
+    // screen serves both rather than two differing only in a label.
+    path: '/profile/change/:field',
+    name: 'change-contact',
+    component: () => import('@/features/profile/screens/ChangeContactScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // Where PR4's Activity rows lead. Both were drawn and both were dead ends
+    // until the server grew the endpoints behind them.
+    path: '/profile/devices',
+    name: 'active-devices',
+    component: () => import('@/features/profile/screens/ActiveDevicesScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile/login-history',
+    name: 'login-history',
+    component: () => import('@/features/profile/screens/LoginHistoryScreen.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -381,7 +450,10 @@ const routes: RouteRecordRaw[] = [
     children: [
       { path: '', redirect: '/therapist/today' },
       { path: 'today', name: 'therapist-today', component: () => import('@/features/therapist/screens/TherapistTodayScreen.vue') },
-      { path: 'calendar', name: 'therapist-calendar', component: () => import('@/features/therapist/screens/TherapistCalendarScreen.vue') },
+      // TD2 is drawn with the Calendar tab active: appointments are what a
+      // therapist opens the calendar for, so it is the tab's own screen rather
+      // than something reached by tapping a row in a thinner list.
+      { path: 'calendar', name: 'therapist-calendar', component: () => import('@/features/therapist/screens/AppointmentManagementScreen.vue') },
       { path: 'clients', name: 'therapist-clients', component: () => import('@/features/therapist/screens/TherapistClientsScreen.vue') },
       { path: 'earnings', name: 'therapist-earnings', component: () => import('@/features/therapist/screens/TherapistEarningsScreen.vue') },
       { path: 'profile', name: 'therapist-profile', component: () => import('@/features/therapist/screens/TherapistProfileScreen.vue') },
@@ -391,6 +463,18 @@ const routes: RouteRecordRaw[] = [
     path: '/therapist/appointments',
     name: 'appointment-management',
     component: () => import('@/features/therapist/screens/AppointmentManagementScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'therapist' },
+  },
+  {
+    path: '/therapist/specialties',
+    name: 'therapist-specialties',
+    component: () => import('@/features/therapist/screens/TherapistSpecialtiesScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'therapist' },
+  },
+  {
+    path: '/therapist/care-requests',
+    name: 'therapist-care-requests',
+    component: () => import('@/features/therapist/screens/TherapistCareRequestsScreen.vue'),
     meta: { requiresAuth: true, requiresRole: 'therapist' },
   },
   {

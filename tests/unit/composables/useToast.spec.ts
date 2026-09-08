@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useToast } from '@/composables/useToast';
+import { ApiError } from '@/types/api';
 
 const feedback = useToast();
 
@@ -32,6 +33,25 @@ describe('useToast feedback sheets', () => {
       title: 'Login failed',
       dismissLabel: 'Try again',
     });
+  });
+
+  it('takes the message and the reference off an ApiError', async () => {
+    const error = new ApiError(
+      500,
+      { message: 'SQLSTATE[42S02]: Base table or view not found' },
+      'D250B5A6D5BA',
+    );
+
+    await feedback.show(error, 'danger', { title: 'Not updated' });
+
+    expect(feedback.active.value?.message).not.toContain('SQLSTATE');
+    expect(feedback.active.value?.reference).toBe('D250B5A6D5BA');
+  });
+
+  it('shows no reference for a plain string, which has nothing to correlate', async () => {
+    await feedback.show('We could not reach the server.', 'danger');
+
+    expect(feedback.active.value?.reference).toBeUndefined();
   });
 
   it('queues feedback instead of losing a second message', async () => {

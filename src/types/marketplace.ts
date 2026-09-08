@@ -13,6 +13,13 @@ export interface Product {
   stock: number;
   category: string;
   media: ProductMedia[];
+  /**
+   * C2's collapsible sections. Optional because the API carries neither yet —
+   * `products.details` exists and is empty on all 21 rows — so the sections
+   * render as "not listed" until something fills them.
+   */
+  howToUse?: string | null;
+  ingredients?: string | null;
 }
 
 export interface CartItem {

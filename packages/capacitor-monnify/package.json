@@ -1,0 +1,22 @@
+{
+  "name": "@cruxcare/capacitor-monnify",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Capacitor bridge to the native Monnify payment SDK (Android) with a Monnify Web SDK fallback.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/definitions.ts",
+  "files": [
+    "android/",
+    "src/"
+  ],
+  "capacitor": {
+    "android": {
+      "src": "android"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=8.0.0"
+  }
+}
