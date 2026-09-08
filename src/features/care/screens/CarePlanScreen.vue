@@ -52,7 +52,13 @@
               </span>
               <span class="cc-plan__meta">{{ planSubtitle(option) }}</span>
               <AppBadge
-                v-if="option.recommended"
+                v-if="option.bespoke"
+                tone="default"
+                label="Made for you"
+                class="cc-plan__pill"
+              />
+              <AppBadge
+                v-else-if="option.recommended"
                 tone="success"
                 label="Most chosen"
                 class="cc-plan__pill"
@@ -61,9 +67,11 @@
           </label>
         </fieldset>
 
-        <!-- Drawn as a dashed row rather than a fifth priced option: it is a
-             conversation to have, not a price to pick. -->
-        <button type="button" class="cc-plan__custom" @click="onCustom">
+        <!-- D2b draws this as a dashed row, and it stays one until there is a
+             bespoke plan to show: a custom plan is a conversation to have right
+             up to the moment the therapist has priced one, at which point it is
+             a card above and asking again would make no sense. -->
+        <button v-if="!hasBespoke" type="button" class="cc-plan__custom" @click="onCustom">
           <AppIcon name="tune" :size="22" color="var(--cc-ink-600)" />
           <span class="cc-plan__custom-body">
             <span class="cc-text-body-strong">Custom plan</span>
@@ -128,18 +136,21 @@ const { data: caseFile } = useQuery({
 });
 
 const options = computed(() => plans.value ?? []);
+const hasBespoke = computed(() => options.value.some((o) => o.bespoke));
 const planSummary = computed(() => caseFile.value?.treatmentPlan?.summary?.trim() || null);
 
 const selectedId = ref<string | null>(null);
 const paying = ref(false);
 
-/** Seeded from the server's recommendation, never from the cheapest or the
- *  first: the default here is a nudge, so it has to be the therapist's. */
+/** Seeded from the therapist's own plan where there is one, then from the
+ *  server's recommendation — never from the cheapest or the first. The default
+ *  here is a nudge, so it has to be theirs rather than ours. */
 watch(
   options,
   (list) => {
     if (selectedId.value || !list.length) return;
-    selectedId.value = (list.find((o) => o.recommended) ?? list[0]).id;
+    const preferred = list.find((o) => o.bespoke) ?? list.find((o) => o.recommended) ?? list[0];
+    selectedId.value = preferred.id;
   },
   { immediate: true },
 );

@@ -19,6 +19,12 @@ export interface CaseStageView {
   detail: string;
 }
 
+/**
+ * A case that is over. All three end it, but they are not the same ending and
+ * the copy must not pretend otherwise: `closed` is a course of treatment that
+ * ran, `rejected` was declined, and `cancelled` is the client withdrawing
+ * before anyone accepted — nothing was ever opened to "stay readable".
+ */
 const SETTLED = ['closed', 'rejected', 'cancelled'];
 
 /**
@@ -45,14 +51,7 @@ export function caseStage(caseFile: CaseFile | undefined): CaseStageView {
 
   const status = (caseFile.status ?? '').toLowerCase();
   if (status && SETTLED.includes(status)) {
-    return {
-      stage: 'closed',
-      label: 'Closed',
-      waitingOn: 'nobody',
-      detail: caseFile.closingSummary?.trim()
-        ? caseFile.closingSummary
-        : 'This case is closed. The record stays readable.',
-    };
+    return { stage: 'closed', ...endingOf(status, caseFile.closingSummary) };
   }
 
   if (!caseFile.diagnosis?.trim()) {
@@ -125,6 +124,37 @@ export function caseStage(caseFile: CaseFile | undefined): CaseStageView {
     label: 'In treatment',
     waitingOn: 'nobody',
     detail: `${subscription.visitsRemaining} of ${subscription.visitsTotal} visits left.`,
+  };
+}
+
+function endingOf(
+  status: string,
+  closingSummary: string | null | undefined,
+): Omit<CaseStageView, 'stage'> {
+  if (status === 'cancelled') {
+    return {
+      label: 'Withdrawn',
+      waitingOn: 'nobody',
+      // No treatment happened, so there is no record to promise them.
+      detail: 'The client withdrew this request before it was taken on.',
+    };
+  }
+
+  if (status === 'rejected') {
+    return {
+      label: 'Declined',
+      waitingOn: 'nobody',
+      detail: 'This request was declined and no case was opened.',
+    };
+  }
+
+  return {
+    label: 'Closed',
+    waitingOn: 'nobody',
+    // The therapist's own account of how it ended, where they wrote one.
+    detail: closingSummary?.trim()
+      ? closingSummary
+      : 'This case is closed. The record stays readable.',
   };
 }
 

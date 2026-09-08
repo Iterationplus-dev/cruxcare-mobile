@@ -43,6 +43,32 @@
             :error="errors.cadence"
           />
 
+          <!-- A custom cadence has no preset behind it, so the therapist prices
+               it here. The server stores it as a plan scoped to this case, and
+               it then reaches the client through the ordinary catalogue. -->
+          <template v-if="cadence === 'custom'">
+            <AppSectionLabel label="What you are charging for it" />
+            <div class="cc-tp__dates">
+              <AppInput
+                v-model="visits"
+                label="Visits"
+                type="number"
+                inputmode="numeric"
+                placeholder="e.g. 10"
+                :error="errors.visits"
+              />
+              <AppInput
+                v-model="amount"
+                label="Total price"
+                type="number"
+                inputmode="decimal"
+                placeholder="e.g. 90.00"
+                :error="errors.amount"
+              />
+            </div>
+            <p class="cc-tp__hint">{{ perVisitHint }}</p>
+          </template>
+
           <AppSectionLabel label="Treatment window" />
           <div class="cc-tp__dates">
             <AppInput
@@ -121,8 +147,38 @@ const cadence = ref('');
 const startDate = ref('');
 const endDate = ref('');
 const summary = ref('');
+const visits = ref('');
+const amount = ref('');
 const saving = ref(false);
-const errors = reactive({ cadence: '', startDate: '', endDate: '', summary: '' });
+const errors = reactive({
+  cadence: '',
+  startDate: '',
+  endDate: '',
+  summary: '',
+  visits: '',
+  amount: '',
+});
+
+/**
+ * What the client will see on the card, worked out here only so the therapist
+ * can sanity-check their own arithmetic before sending it. Nothing computed
+ * here is sent or charged: the server prices the plan and decides whether a
+ * per-visit figure divides evenly enough to show at all.
+ */
+const perVisitHint = computed(() => {
+  const count = Number(visits.value);
+  const total = Number(amount.value);
+  if (!Number.isFinite(count) || !Number.isFinite(total) || count <= 0 || total <= 0) {
+    return 'The client sees the total. A per-visit figure is shown only when it divides evenly.';
+  }
+  // Compared in minor units: 90/7 in floating point is exactly the arithmetic
+  // that reports "even" for a figure that is not.
+  const minor = Math.round(total * 100);
+  if (minor % count !== 0) {
+    return 'This does not divide evenly, so the card will show the total only.';
+  }
+  return `Works out at ${(minor / count / 100).toFixed(2)} a visit.`;
+});
 
 const editable = computed(() => canEditTreatmentPlan(caseFile.value));
 
@@ -142,6 +198,10 @@ watch(
     startDate.value = plan?.startDate?.slice(0, 10) ?? '';
     endDate.value = plan?.endDate?.slice(0, 10) ?? '';
     summary.value = plan?.summary ?? '';
+    // Left blank on a preset: they are the server's figures, not the
+    // therapist's, and prefilling them would invite editing what is fixed.
+    visits.value = '';
+    amount.value = '';
   },
   { immediate: true },
 );
@@ -172,7 +232,28 @@ function validate(): boolean {
     errors.endDate = 'The window cannot end before it starts.';
   }
   errors.summary = summary.value.trim() ? '' : 'Say what this course of treatment is for.';
-  return !errors.cadence && !errors.startDate && !errors.endDate && !errors.summary;
+
+  errors.visits = '';
+  errors.amount = '';
+  if (cadence.value === 'custom') {
+    const count = Number(visits.value);
+    const total = Number(amount.value);
+    if (!Number.isInteger(count) || count <= 0) {
+      errors.visits = 'How many visits does this cover?';
+    }
+    if (!Number.isFinite(total) || total <= 0) {
+      errors.amount = 'Set a price for the course.';
+    }
+  }
+
+  return (
+    !errors.cadence &&
+    !errors.startDate &&
+    !errors.endDate &&
+    !errors.summary &&
+    !errors.visits &&
+    !errors.amount
+  );
 }
 
 async function onPropose() {
@@ -186,6 +267,11 @@ async function onPropose() {
       startDate: startDate.value,
       endDate: endDate.value,
       summary: summary.value.trim(),
+      // Only ever sent for a custom cadence; a preset is priced server-side and
+      // a price from here would be a client-side one.
+      ...(cadence.value === 'custom'
+        ? { visits: Number(visits.value), amount: Number(amount.value) }
+        : {}),
     });
     await queryClient.invalidateQueries({ queryKey: ['case-files'] });
     await queryClient.invalidateQueries({ queryKey: ['care-plans', caseId] });

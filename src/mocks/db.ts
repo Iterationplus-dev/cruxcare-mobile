@@ -293,6 +293,7 @@ export const carePlanOptions: CarePlanOption[] = [
     perVisitMinor: 1000,
     currency: 'USD',
     recommended: false,
+    bespoke: false,
   },
   {
     id: 'plan-twice-3m',
@@ -305,6 +306,7 @@ export const carePlanOptions: CarePlanOption[] = [
     perVisitMinor: 875,
     currency: 'USD',
     recommended: true,
+    bespoke: false,
   },
   {
     id: 'plan-thrice-6m',
@@ -317,6 +319,7 @@ export const carePlanOptions: CarePlanOption[] = [
     perVisitMinor: 542,
     currency: 'USD',
     recommended: false,
+    bespoke: false,
   },
   {
     id: 'plan-thrice-1y',
@@ -329,6 +332,7 @@ export const carePlanOptions: CarePlanOption[] = [
     perVisitMinor: 500,
     currency: 'USD',
     recommended: false,
+    bespoke: false,
   },
 ];
 

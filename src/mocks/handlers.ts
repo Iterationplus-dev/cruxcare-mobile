@@ -1350,7 +1350,13 @@ const careHandlers: HttpHandler[] = [
   http.get(url('/care/plans'), ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
-    return HttpResponse.json(paginate(db.carePlanOptions));
+    const caseId = new URL(request.url).searchParams.get('caseId');
+    // A bespoke plan is scoped to one case and sits in the same catalogue as
+    // the presets, so it reaches the client through the ordinary card and the
+    // ordinary payment rail.
+    const bespoke = db.carePlanOptions.filter((p) => p.bespoke && p.id.endsWith(`-${caseId}`));
+    const presets = db.carePlanOptions.filter((p) => !p.bespoke);
+    return HttpResponse.json(paginate([...bespoke, ...presets]));
   }),
 
   http.get(url('/care/subscriptions/current'), ({ request }) => {
@@ -1358,7 +1364,9 @@ const careHandlers: HttpHandler[] = [
     if (!user) return unauthorized();
     const caseId = new URL(request.url).searchParams.get('caseId');
     const found = db.careSubscriptions.find((s) => s.caseId === caseId);
-    return HttpResponse.json(found ?? null);
+    // Null inside the data wrapper is the answer for "no plan yet" — an
+    // ordinary state, so never a 404.
+    return HttpResponse.json({ data: found ?? null });
   }),
 
   http.post(url('/care/subscriptions'), async ({ request }) => {
@@ -1367,8 +1375,18 @@ const careHandlers: HttpHandler[] = [
     const body = (await request.json()) as {
       caseId: string;
       planId: string;
+      paymentToken?: string;
       expectedAmountMinor: number;
     };
+
+    if (!body.paymentToken) {
+      // The device seeing a successful sheet is a hint; the server verifying
+      // the reference with the gateway is the fact.
+      return HttpResponse.json(
+        { message: 'That payment has not settled yet.', code: 'payment_not_settled' },
+        { status: 409 },
+      );
+    }
 
     const option = db.carePlanOptions.find((p) => p.id === body.planId);
     if (!option) {
@@ -1448,7 +1466,34 @@ const careHandlers: HttpHandler[] = [
       startDate: string;
       endDate: string;
       summary: string;
+      visits?: number;
+      amount?: number;
     };
+
+    if (body.cadence === 'custom' && body.visits && body.amount) {
+      const id = `plan-custom-${caseFile.id}`;
+      const amountMinor = Math.round(body.amount * 100);
+      // Re-pricing replaces the row rather than leaving a trail of offers the
+      // client could pay the wrong one of.
+      const existing = db.carePlanOptions.findIndex((p) => p.id === id);
+      if (existing >= 0) db.carePlanOptions.splice(existing, 1);
+      db.carePlanOptions.unshift({
+        id,
+        cadence: 'custom',
+        title: `${body.visits} visits`,
+        durationLabel: 'agreed with your therapist',
+        visits: body.visits,
+        durationDays: 0,
+        amountMinor,
+        // Null unless it divides evenly — the card omits the line rather than
+        // rounding to a figure nobody agreed to.
+        perVisitMinor: amountMinor % body.visits === 0 ? amountMinor / body.visits : null,
+        currency: 'USD',
+        recommended: false,
+        bespoke: true,
+      });
+      body.planId = id;
+    }
 
     caseFile.treatmentPlan = {
       planId: body.planId,
@@ -1487,8 +1532,9 @@ const careHandlers: HttpHandler[] = [
     if (!user) return unauthorized();
     const caseFile = db.caseFiles.find((c) => c.id === params.id);
     if (!caseFile) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
-    const body = (await request.json()) as { dueAt: string };
+    const body = (await request.json()) as { dueAt: string; note?: string };
     caseFile.followUpDueAt = body.dueAt;
+    caseFile.followUpNote = body.note?.trim() || null;
     return HttpResponse.json(caseFile);
   }),
 

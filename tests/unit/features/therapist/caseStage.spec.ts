@@ -152,6 +152,39 @@ describe('caseStage', () => {
     expect(canScheduleSessions(closed)).toBe(false);
   });
 
+  it('tells the three endings apart, because they are not the same ending', () => {
+    // A client who withdrew before anyone accepted has no record to "stay
+    // readable" — the case was never opened. Saying otherwise describes a
+    // course of treatment that did not happen.
+    const withdrawn = caseStage(file({ status: 'cancelled' }));
+    const declined = caseStage(file({ status: 'rejected' }));
+    const finished = caseStage(file({ status: 'closed', closingSummary: 'Movement restored.' }));
+
+    expect(withdrawn.stage).toBe('closed');
+    expect(withdrawn.label).toBe('Withdrawn');
+    expect(withdrawn.detail).not.toMatch(/stays readable/i);
+
+    expect(declined.label).toBe('Declined');
+    expect(declined.detail).toMatch(/declined/i);
+
+    expect(finished.label).toBe('Closed');
+    expect(finished.detail).toBe('Movement restored.');
+  });
+
+  it('settles on any of the three whatever else is recorded', () => {
+    for (const status of ['cancelled', 'rejected', 'closed']) {
+      const busy = file({
+        status,
+        diagnosis: 'Lumbar strain',
+        treatmentPlan: plan(),
+        subscription: subscription(),
+        treatmentStartedAt: iso(-10),
+      });
+      expect(caseStage(busy).stage).toBe('closed');
+      expect(canScheduleSessions(busy)).toBe(false);
+    }
+  });
+
   it('will not let a paid plan be edited underneath the client', () => {
     const paid = file({
       diagnosis: 'Lumbar strain',

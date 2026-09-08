@@ -7,6 +7,14 @@ export interface ProposeTreatmentPlanPayload {
   startDate: string;
   endDate: string;
   summary: string;
+  /**
+   * Only for `cadence: 'custom'`, where the therapist prices the course
+   * themselves. The server stores it as a care plan scoped to this case, so it
+   * reaches the client through the ordinary catalogue rather than a quote of
+   * its own (backend note §17.3). Bounded server-side against a slipped decimal.
+   */
+  visits?: number;
+  amount?: number;
 }
 
 /**

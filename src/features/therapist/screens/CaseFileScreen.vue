@@ -180,6 +180,13 @@
             :icon-color="hasUnwrittenNotes ? 'var(--cc-color-warning)' : 'var(--cc-color-primary)'"
           />
           <AppListRow
+            v-if="medicationTotal"
+            title="Recommended products"
+            :subtitle="medicationTotal"
+            icon="shopping_basket"
+            :divider="true"
+          />
+          <AppListRow
             title="Messages"
             :subtitle="messagesSubtitle"
             icon="forum"
@@ -253,10 +260,7 @@
     </ion-content>
 
     <AppSheet v-model="closing" title="Close this case?">
-      <p class="cc-text-body" style="margin: 0 0 12px">
-        Closing ends the course of treatment. The record stays readable to you both, and any paid
-        visits they have left are unaffected.
-      </p>
+      <p class="cc-text-body" style="margin: 0 0 12px">{{ closingConsequence }}</p>
       <textarea
         v-model="closingSummary"
         class="cc-textarea"
@@ -298,6 +302,7 @@ import { findThreadWith, useChatThreads } from '@/composables/useChat';
 import { canEditDiagnosis } from '@/features/therapist/caseFilePermissions';
 import { canScheduleSessions, caseStage } from '@/features/therapist/caseStage';
 import { subscriptionSummary } from '@/features/care/carePlans';
+import { formatMoney } from '@/utils/money';
 import { casesApi } from '@/api/cases.api';
 import {
   healthAccessRequestRefusal,
@@ -334,6 +339,27 @@ const closing = ref(false);
 const closingSummary = ref('');
 const closingError = ref('');
 
+/**
+ * What closing actually costs the client, in their own figures.
+ *
+ * The vaguer version of this sentence ("paid visits are unaffected") was true
+ * of the record and false everywhere the client could reach: a closed case
+ * refused every booking. The server now allows bookings until the rollover
+ * date, so the sheet names it rather than reassuring in the abstract.
+ */
+const closingConsequence = computed(() => {
+  const sub = subscription.value;
+  const base = 'Closing ends the course of treatment. The record stays readable to you both.';
+
+  if (!sub || sub.visitsRemaining <= 0) return base;
+
+  const visits = `${sub.visitsRemaining} paid visit${sub.visitsRemaining === 1 ? '' : 's'}`;
+  if (!sub.rolloverEndsAt) {
+    return `${base} They keep ${visits} and can still book them.`;
+  }
+  return `${base} They keep ${visits}, bookable until ${formatDate(sub.rolloverEndsAt)}.`;
+});
+
 const planSubtitleLine = computed(() => {
   const current = plan.value;
   if (!current?.cadence) return 'Not set yet';
@@ -342,6 +368,18 @@ const planSubtitleLine = computed(() => {
       ? formatDate(current.startDate) + ' – ' + formatDate(current.endDate)
       : 'window not set';
   return cadenceLabel(current.cadence) + ' · ' + window;
+});
+
+/**
+ * The recommendations, summed. Safe to show: the server recomputes it on every
+ * recommendation change and each line holds the price at the time it was
+ * recommended, so it does not drift when a product is repriced later (§17.1).
+ */
+const medicationTotal = computed(() => {
+  const total = caseFile.value?.medicationTotal;
+  if (typeof total !== 'number' || total <= 0) return null;
+  const count = caseFile.value?.recommendations.length ?? 0;
+  return `${count} product${count === 1 ? '' : 's'} · ${formatMoney(total, 'USD')}`;
 });
 
 const summary = computed(() => subscriptionSummary(subscription.value));

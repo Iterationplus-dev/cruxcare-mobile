@@ -233,10 +233,19 @@ export interface CarePlanOption {
   visits: number;
   durationDays: number;
   amountMinor: number;
+  /** Null where the total does not divide evenly. The card then omits the
+   *  per-visit line rather than rounding to a figure nobody agreed to. */
   perVisitMinor: number | null;
   currency: string;
   /** Drawn as the "Most chosen" pill. At most one option carries it. */
   recommended: boolean;
+  /**
+   * A plan the therapist priced for this client alone, rather than a preset
+   * (backend note §17.3). It arrives in the same catalogue and pays through the
+   * same rail; only the wording on the card differs, because "most chosen"
+   * cannot be true of a plan that exists for one person.
+   */
+  bespoke: boolean;
 }
 
 /**
@@ -352,6 +361,13 @@ export interface CaseFile {
   closingSummary?: string | null;
   /** Set when the therapist asks for a review after the window ends. */
   followUpDueAt?: string | null;
+  followUpNote?: string | null;
+  /**
+   * The recommended products, summed. Recomputed server-side on every
+   * recommendation change and holding each line's price at the time it was
+   * recommended, which is the behaviour a clinical record wants (§17.1).
+   */
+  medicationTotal?: number;
 }
 
 /** Matches the server's vocabulary exactly. */

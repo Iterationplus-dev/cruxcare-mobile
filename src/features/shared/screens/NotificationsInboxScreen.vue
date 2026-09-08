@@ -10,7 +10,7 @@
       </div>
       <div class="cc-inbox__chips">
         <AppChip :label="`All ${notifications?.length ?? 0}`" :selected="category === 'all'" @click="category = 'all'" />
-        <AppChip label="Care" :selected="category === 'appointments'" @click="category = 'appointments'" />
+        <AppChip label="Care" :selected="category === 'care'" @click="category = 'care'" />
         <AppChip label="Money" :selected="category === 'wallet'" @click="category = 'wallet'" />
         <AppChip label="Orders" :selected="category === 'orders'" @click="category = 'orders'" />
       </div>
@@ -50,14 +50,32 @@ const router = useRouter();
 const auth = useAuthStore();
 const { data: notifications, isPending } = useNotifications();
 const markRead = useMarkNotificationRead();
-const category = ref<'all' | NotificationCategory>('all');
+type Filter = 'all' | 'care' | 'wallet' | 'orders';
+const category = ref<Filter>('all');
 
-const filtered = computed(() =>
-  category.value === 'all' ? notifications.value ?? [] : (notifications.value ?? []).filter((n) => n.category === category.value),
-);
+/**
+ * A chip covers the categories a person would look under it, not one server
+ * value. "Care" is the case and the appointments on it: a client looking for
+ * "your therapist has sent you a plan" reaches for Care, and `cases` rows
+ * would otherwise sit outside every chip but All.
+ */
+const filterCategories: Record<Exclude<Filter, 'all'>, NotificationCategory[]> = {
+  care: ['appointments', 'cases'],
+  wallet: ['wallet'],
+  orders: ['orders'],
+};
+
+const filtered = computed(() => {
+  const all = notifications.value ?? [];
+  if (category.value === 'all') return all;
+  const wanted = filterCategories[category.value];
+  return all.filter((n) => wanted.includes(n.category));
+});
 
 const iconMap: Record<NotificationCategory, string> = {
   appointments: 'event_upcoming',
+  // The course of treatment rather than one session of it.
+  cases: 'folder_shared',
   orders: 'local_shipping',
   wallet: 'savings',
   chat: 'forum',

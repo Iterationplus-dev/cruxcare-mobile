@@ -22,11 +22,15 @@ export const carePlansApi = {
     return data.data;
   },
 
+  /** Wrapped in `data` like every other read, and `null` inside it is the
+   *  answer for "no plan yet" — never a 404, which would be an error for a
+   *  state that is perfectly ordinary. */
   async subscription(caseId: string): Promise<CareSubscription | null> {
-    const { data } = await apiClient.get<CareSubscription | null>('/care/subscriptions/current', {
-      params: { caseId },
-    });
-    return data;
+    const { data } = await apiClient.get<{ data: CareSubscription | null }>(
+      '/care/subscriptions/current',
+      { params: { caseId } },
+    );
+    return data.data;
   },
 
   /**

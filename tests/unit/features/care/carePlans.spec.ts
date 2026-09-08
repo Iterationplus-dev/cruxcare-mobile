@@ -13,6 +13,7 @@ const option = (over: Partial<CarePlanOption> = {}): CarePlanOption => ({
   perVisitMinor: 875,
   currency: 'USD',
   recommended: true,
+  bespoke: false,
   ...over,
 });
 
