@@ -33,8 +33,15 @@ function routeNamesInCatalogue(): Map<string, number> {
 
   const found = new Map<string, number>();
   let routeColumn = -1;
+  let inCatalogue = false;
 
   for (const line of doc.split('\n')) {
+    // Scoped to section 4. The same events are tabulated a second time inside
+    // §3.3, as a narrative of the notes they came from, so reading every table
+    // in the file counts each of those events twice.
+    if (/^## /.test(line)) inCatalogue = /^## 4\./.test(line);
+    if (!inCatalogue) continue;
+
     if (!line.trim().startsWith('|')) {
       // Any non-table line ends the current table, so a `route` column never
       // leaks into the next one.

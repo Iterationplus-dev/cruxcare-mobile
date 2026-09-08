@@ -1,8 +1,10 @@
 <!--
   VENDORED COPY — do not edit here.
 
-  Taken from cci/docs/ at 9c4fca4bad7aeb1efb51c88993374a6fd97a9f13
-  (9c4fca4, "Backend for the mobile team's contract notes", 8 September 2026).
+  Taken from cci/docs/ at 88ae0dd00362712f912838bd34f6f74d3a2e8d5b
+  (88ae0dd, "Reconcile the notification catalogue with the sends it describes",
+  8 September 2026).
+  body-sha256: 77a8dc217f49d91a1f0d6fba2e4aff05927c06e41c26e1776b40ae5cead483b3
 
   cci/docs/ is canonical, agreed 8 September 2026 (N1.1). Changes belong there;
   re-vendor this file and update the SHA above rather than editing it, so a stale
@@ -277,7 +279,8 @@ cannot be switched off. Everything else respects both.
 | --- | --- | --- | --- | --- |
 | Order placed | buyer | `orders` | — | |
 | Order placed on your behalf | beneficiary | `orders` | — | Admin and staff only; therapists cannot place these |
-| Wallet credited | user | `wallet` | `wallet-home` | **sensitive** |
+| Wallet credited (in-app action) | user | `wallet` | `wallet-home` | **sensitive** |
+| Wallet credited (gateway settlement) | user | `wallet` | `wallet-home` | **sensitive** — a separate send from the one above; a top-up that settles through Monnify and one credited by a wallet action are different events on the same screen |
 | Contribution received | user | `wallet` | `wallet-home` | **sensitive** |
 | Withdrawal submitted | user | `wallet` | `ledger` | **sensitive** |
 | Transfer submitted | user | `wallet` | `ledger` | **sensitive** |
@@ -288,6 +291,7 @@ cannot be switched off. Everything else respects both.
 | Payout account changed | user | `security` | `wallet-home` | Cannot be switched off |
 | Account deletion requested | user | `security` | — | Cannot be switched off |
 | New chat message | recipient | `chat` | — | |
+| Facility session opened or changed | facility subscribers | `system` | `point-facility-session` + id | One send per subscriber |
 
 ### 4.5 The route names, and the three that had no screen
 
@@ -320,9 +324,18 @@ only the nudge waits, behind `cruxcare.resources.notify_on_share`. Inventing a
 name now would guarantee a silent mismatch the day the screen ships under a
 different one.
 
-`PushRouteContractTest` now scans every source file for a `route:` argument
-beginning with `/` and fails if one appears, so this class of bug cannot return
-quietly.
+**One send is deliberately not in this table.** `php artisan push:doctor` sends a
+test push routed at `notifications`. It is a diagnostic aimed at one operator's
+own handset, writes no inbox row, and is not a product event — listing it would
+imply users receive it.
+
+`PushRouteContractTest` holds two rules mechanically, because both failures are
+silent ones. It scans every source file for a `route:` argument beginning with
+`/` and fails if one appears. It also reconciles this table against the code:
+every route name sent from `app/` must have a row here, and every row here must
+name a route something actually sends. A catalogue that quietly understates what
+the server does is the same defect as a path where a name belongs — it reads as
+authoritative and is not.
 
 ## 5. Sequences worth agreeing on
 

@@ -3,6 +3,7 @@
 
   Taken from cci/docs/ at 9c4fca4bad7aeb1efb51c88993374a6fd97a9f13
   (9c4fca4, "Backend for the mobile team's contract notes", 8 September 2026).
+  body-sha256: b87895cc7cdcb06214377b195eee3f381db852befd9e39ef1c82c6c380910d5d
 
   cci/docs/ is canonical, agreed 8 September 2026 (N1.1). Changes belong there;
   re-vendor this file and update the SHA above rather than editing it, so a stale
