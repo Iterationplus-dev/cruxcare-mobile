@@ -256,7 +256,7 @@ async function onSave() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not save your hours. Please try again.';
     await toast.show(message, 'danger', { title: 'Could not save' });
   } finally {

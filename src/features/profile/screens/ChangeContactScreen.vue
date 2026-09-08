@@ -166,13 +166,13 @@ async function onSubmit() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'Something went wrong. Check your connection and try again.';
 
     // A rejected code belongs against the code field; anything else is about
     // the change as a whole and is said once, loudly.
     if (challenge.value && error instanceof ApiError && error.status === 422) {
-      codeError.value = message;
+      codeError.value = error.message;
     } else {
       await toast.show(message, 'danger', { title: 'Not changed' });
     }

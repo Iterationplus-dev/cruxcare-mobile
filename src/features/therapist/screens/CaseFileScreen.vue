@@ -239,10 +239,10 @@ async function onSaveDiagnosis() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not save the diagnosis. Please try again.';
     if (error instanceof ApiError && error.code === 'diagnosis_not_clearable') {
-      diagnosisError.value = message;
+      diagnosisError.value = error.message;
     } else {
       await toast.show(message, 'danger', { title: 'Could not save diagnosis' });
     }

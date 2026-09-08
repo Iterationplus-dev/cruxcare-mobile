@@ -286,7 +286,7 @@ async function requestQuote() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not price that top-up. Please try again.';
     await toast.show(message, 'warning', { title: 'Could not quote' });
   } finally {
@@ -362,7 +362,7 @@ async function pay() {
 
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not start that payment. Please try again.';
     await toast.show(message, 'danger', { title: 'Payment failed', dismissLabel: 'Try again' });
   } finally {

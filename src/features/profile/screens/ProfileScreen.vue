@@ -104,15 +104,7 @@
 
     <RoleSwitchSheet v-model="roleSheetOpen" />
 
-    <AppSheet v-model="logoutSheetOpen" title="Log out?">
-      <p class="cc-text-body" style="margin: 0 0 16px">
-        Any unsynced drafts on this device won't be saved. You can log back in any time.
-      </p>
-      <div class="cc-logout-sheet__actions">
-        <AppButton variant="secondary" class="cc-logout-sheet__confirm" @click="onLogout">Log out</AppButton>
-        <AppButton variant="secondary" @click="logoutSheetOpen = false">Cancel</AppButton>
-      </div>
-    </AppSheet>
+    <LogoutSheet v-model="logoutSheetOpen" />
   </ion-page>
 </template>
 
@@ -124,12 +116,11 @@ import { useRouter } from 'vue-router';
 import {
   AppAvatar,
   AppBadge,
-  AppButton,
   AppCard,
   AppIcon,
   AppListRow,
-  AppSheet,
 } from '@/components/ui';
+import LogoutSheet from '../components/LogoutSheet.vue';
 import RoleSwitchSheet from '../components/RoleSwitchSheet.vue';
 import { useAppointments } from '@/composables/useAppointments';
 import { useOrders } from '@/composables/useOrders';
@@ -167,11 +158,6 @@ const sinceYear = computed(() =>
 
 const roleSheetOpen = ref(false);
 const logoutSheetOpen = ref(false);
-
-async function onLogout() {
-  await auth.logout();
-  router.replace({ name: 'login' });
-}
 </script>
 
 <style scoped>
@@ -292,14 +278,5 @@ async function onLogout() {
   font-size: 13.5px;
   padding: 6px 0;
   cursor: pointer;
-}
-.cc-logout-sheet__actions {
-  display: grid;
-  gap: 10px;
-}
-.cc-logout-sheet__actions :deep(.cc-logout-sheet__confirm) {
-  border-color: rgba(184, 58, 42, 0.28);
-  background: var(--cc-error-surface);
-  color: var(--cc-error-surface-text);
 }
 </style>

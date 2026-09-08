@@ -211,7 +211,7 @@ async function setPrivacy(key: 'showInRankings' | 'networkVisible', event: Event
     input.checked = !wanted;
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not change that. Check your connection and try again.';
     await toast.show(message, 'danger', { title: 'Not saved' });
   } finally {
@@ -294,7 +294,7 @@ async function onToggleTwoFactor(event: Event) {
     input.checked = !wanted;
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not change that. Check your connection and try again.';
     await toast.show(message, 'danger', { title: 'Not saved' });
   } finally {

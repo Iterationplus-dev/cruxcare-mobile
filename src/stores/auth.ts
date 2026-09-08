@@ -135,13 +135,14 @@ export const useAuthStore = defineStore('auth', () => {
     return delivery;
   }
 
-  async function logout() {
+  /** `allDevices` also ends every other session on the account. */
+  async function logout(allDevices = false) {
     try {
       // Revoke the push registration while the token is still valid — after
       // the session is cleared the API call would 401 and this handset would
       // keep receiving the departing user's notifications.
       await disablePushNotifications();
-      await authApi.logout();
+      await authApi.logout(allDevices);
     } finally {
       await clearSession();
     }

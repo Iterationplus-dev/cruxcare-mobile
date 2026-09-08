@@ -130,7 +130,7 @@ async function onCancel(request: CareRequest) {
 
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not withdraw that request. Please try again.';
     await toast.show(message, 'danger', { title: 'Could not withdraw', dismissLabel: 'Try again' });
   } finally {

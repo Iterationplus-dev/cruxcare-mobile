@@ -179,7 +179,7 @@ async function onSend() {
   } catch (error) {
     const message_ =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not send your message. Check your connection and try again.';
     await toast.show(message_, 'danger', { title: 'Not sent' });
   } finally {

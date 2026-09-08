@@ -91,6 +91,8 @@ import { walletApi } from '@/api/wallet.api';
 import { useWallet } from '@/composables/useWallet';
 import { useToast } from '@/composables/useToast';
 import { formatMoney } from '@/utils/money';
+import { moneyRefusal } from '@/features/wallet/moneyActionErrors';
+import { ApiError } from '@/types/api';
 import type { MoneyActionKind, MoneyQuote, MoneySubmission } from '@/types/wallet';
 
 const props = defineProps<{ action: MoneyActionKind }>();
@@ -131,6 +133,19 @@ const canQuote = computed(() => {
   return meetsMinimum && (props.action !== 'transfer' || recipient.value.trim().length > 0);
 });
 
+/**
+ * Says which rule refused the money and with what figures, rather than the one
+ * generic line this screen used to show for every failure alike.
+ */
+async function reportMoneyFailure(error: unknown, fallback: string) {
+  const refusal = moneyRefusal(error);
+  if (refusal) {
+    await toast.show(refusal.message, 'warning', { title: refusal.title });
+    return;
+  }
+  await toast.show(error instanceof ApiError ? error : fallback, 'warning');
+}
+
 async function requestQuote() {
   if (!canQuote.value) return;
   quoting.value = true;
@@ -141,8 +156,8 @@ async function requestQuote() {
       recipient: props.action === 'transfer' ? recipient.value.trim() : undefined,
     });
     stage.value = 'review';
-  } catch {
-    await toast.show('We could not create a server quote. Check the amount and try again.', 'warning');
+  } catch (error) {
+    await reportMoneyFailure(error, 'We could not create a server quote. Check the amount and try again.');
   } finally {
     quoting.value = false;
   }
@@ -176,8 +191,11 @@ async function verifyAndSubmit() {
     ]);
     stepUpOpen.value = false;
     stage.value = 'submitted';
-  } catch {
-    await toast.show('The code could not be verified or the quote is no longer available.', 'warning');
+  } catch (error) {
+    // A quote is a price, not a permission: both limits are checked again here,
+    // so a withdrawal quoted while the balance was above the floor can still be
+    // refused at settlement.
+    await reportMoneyFailure(error, 'The code could not be verified or the quote is no longer available.');
   } finally {
     submitting.value = false;
   }

@@ -219,7 +219,7 @@ async function requestExport() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not request your data. Check your connection and try again.';
     await toast.show(message, 'danger', { title: 'Not requested' });
   } finally {

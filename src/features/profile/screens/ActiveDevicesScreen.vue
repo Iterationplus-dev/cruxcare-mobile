@@ -101,7 +101,7 @@ async function signOut(device: ActiveDevice) {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not sign that device out. Please try again.';
     await toast.show(message, 'danger', { title: 'Not signed out' });
   } finally {

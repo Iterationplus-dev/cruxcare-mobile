@@ -221,28 +221,28 @@ describe('token handling', () => {
 });
 
 describe('disablePushNotifications', () => {
-  it('revokes the device server-side so the next user gets nothing', async () => {
+  it('unregisters this handset locally and drops the token', async () => {
     await push.initPushNotifications({ router });
     emit('registration', { value: 'fcm-token' });
     await push.enablePushNotifications();
-    const installationId = (registerDevice.mock.calls[0][0] as { installationId: string }).installationId;
 
     await push.disablePushNotifications();
 
-    expect(unregisterDevice).toHaveBeenCalledWith(installationId);
     expect(unregister).toHaveBeenCalled();
     expect(push.currentPushToken()).toBeNull();
   });
 
-  it('still unregisters locally when the server call fails', async () => {
-    unregisterDevice.mockRejectedValueOnce(new Error('offline'));
+  it('leaves the server-side registration to POST /auth/logout', async () => {
+    // The API drops this installation's registration in the same transaction
+    // as the token, so a separate call here was one more thing that could fail
+    // on a flaky network and strand the sign-out.
     await push.initPushNotifications({ router });
     emit('registration', { value: 'fcm-token' });
     await push.enablePushNotifications();
-    unregister.mockClear();
 
-    await expect(push.disablePushNotifications()).resolves.toBeUndefined();
-    expect(unregister).toHaveBeenCalled();
+    await push.disablePushNotifications();
+
+    expect(unregisterDevice).not.toHaveBeenCalled();
   });
 
   it('stops uploading tokens after sign-out', async () => {

@@ -276,7 +276,7 @@ async function onSubmit() {
     // therapist yet — so its message is preferred to a generic one.
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not request that appointment. Check your connection and try again.';
     await toast.show(message, 'danger', { title: 'Appointment not requested' });
   } finally {

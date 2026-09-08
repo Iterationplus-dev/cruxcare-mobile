@@ -9,7 +9,7 @@ import {
 } from '@capacitor/push-notifications';
 import type { Router } from 'vue-router';
 import { devicesApi } from '@/api/devices.api';
-import { secureStorage, SECURE_STORAGE_KEYS } from '@/services/secureStorage';
+import { getInstallationId } from '@/services/installationId';
 import type { DevicePlatform, PushPayloadData, PushPermissionState } from '@/types/push';
 
 /**
@@ -50,7 +50,6 @@ export type PushEnableResult =
 let deps: PushDeps | null = null;
 let listeners: PluginListenerHandle[] = [];
 let currentToken: string | null = null;
-let installationId: string | null = null;
 /** Set once a session is active, so a token arriving before login is not dropped. */
 let uploadEnabled = false;
 /** Resolved by the `registration` event, which fires well after `register()` returns. */
@@ -77,26 +76,6 @@ function toPermissionState(receive: string): PushPermissionState {
   if (receive === 'granted') return 'granted';
   if (receive === 'denied') return 'denied';
   return 'prompt';
-}
-
-/**
- * A stable id for this installation, kept in secure storage. Deliberately not
- * a hardware identifier: it must not survive a reinstall or be correlatable
- * across apps, it only has to outlive a token rotation.
- */
-async function getInstallationId(): Promise<string> {
-  if (installationId) return installationId;
-
-  const stored = await secureStorage.get(SECURE_STORAGE_KEYS.pushInstallationId);
-  if (stored) {
-    installationId = stored;
-    return stored;
-  }
-
-  const created = crypto.randomUUID();
-  await secureStorage.set(SECURE_STORAGE_KEYS.pushInstallationId, created);
-  installationId = created;
-  return created;
 }
 
 async function appVersion(): Promise<string> {
@@ -289,14 +268,11 @@ export async function disablePushNotifications(): Promise<void> {
   uploadEnabled = false;
   if (!isSupported()) return;
 
-  try {
-    await devicesApi.unregister(await getInstallationId());
-  } catch (error) {
-    // A failed revoke must not block sign-out; the server also drops tokens
-    // that FCM reports as unregistered.
-    console.error('Could not revoke this device server-side.', error);
-  }
-
+  // No server-side revoke here any more: `POST /auth/logout` drops this
+  // installation's registration in the same transaction as the token (backend
+  // note §11.2), and a separate call beforehand was one more thing that could
+  // fail on a flaky network and strand the sign-out. Turning push off without
+  // signing out would still need `devicesApi.unregister` explicitly.
   try {
     await PushNotifications.unregister();
     await PushNotifications.removeAllDeliveredNotifications();

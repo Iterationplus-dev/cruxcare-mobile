@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { getInstallationId } from '@/services/installationId';
 import { ApiError } from '@/types/api';
 import type { Address, ReferredBySource, TherapistPlanTier, User } from '@/types/user';
 
@@ -95,14 +96,39 @@ export interface ContactChangeChallenge {
   destination: string | null;
 }
 
+/**
+ * Sent on the calls that mint a token, and only those: the API records the
+ * installation against the token at issue time so signing that device out later
+ * can revoke its push registration too (backend note §11.2). Not a credential —
+ * nothing authenticates on it — so it stays off every other request.
+ *
+ * A handset that cannot produce one still signs in; the session then behaves as
+ * every session did before this existed.
+ */
+async function installationHeader(): Promise<Record<string, string>> {
+  try {
+    const id = await getInstallationId();
+    return id ? { 'X-Installation-Id': id } : {};
+  } catch (error) {
+    console.error('Could not read this installation id.', error);
+    return {};
+  }
+}
+
 export const authApi = {
   async register(payload: RegisterPayload): Promise<AuthSession> {
-    const { data } = await apiClient.post<AuthSession>('/auth/register', payload);
+    const { data } = await apiClient.post<AuthSession>('/auth/register', payload, {
+      headers: await installationHeader(),
+    });
     return requireAuthSession(data);
   },
 
   async login(identifier: string, password: string): Promise<AuthSession> {
-    const { data } = await apiClient.post<AuthSession>('/auth/login', { identifier, password });
+    const { data } = await apiClient.post<AuthSession>(
+      '/auth/login',
+      { identifier, password },
+      { headers: await installationHeader() },
+    );
     return requireAuthSession(data);
   },
 
@@ -127,8 +153,13 @@ export const authApi = {
     await apiClient.post('/auth/biometric/enable');
   },
 
-  async logout() {
-    await apiClient.post('/auth/logout');
+  /**
+   * `allDevices` revokes every Sanctum token and push registration on the
+   * account in one transaction (backend note 10.3). Absent or false, it ends
+   * this session only — the shape every shipped build sent before it existed.
+   */
+  async logout(allDevices = false) {
+    await apiClient.post('/auth/logout', allDevices ? { allDevices: true } : {});
   },
 
   async deleteAccount(password: string): Promise<{ deletionCompletesAt: string }> {

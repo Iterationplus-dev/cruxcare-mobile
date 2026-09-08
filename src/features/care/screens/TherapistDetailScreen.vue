@@ -184,7 +184,7 @@ async function requestTherapist() {
 
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : `We could not send your request to ${target.name}. Please try again.`;
     await toast.show(message, 'danger', {
       title: 'Could not send request',

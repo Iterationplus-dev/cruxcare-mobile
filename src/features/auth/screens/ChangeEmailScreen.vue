@@ -110,7 +110,7 @@ async function onSubmit() {
     });
   } catch (error) {
     const message = error instanceof ApiError
-      ? error.message
+      ? error
       : 'We could not update your email. Please try again.';
     await toast.show(message, 'danger', {
       title: 'Could not change email',

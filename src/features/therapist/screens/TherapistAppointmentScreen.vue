@@ -196,7 +196,7 @@ async function startSession() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not start this session. Please try again.';
     await toast.show(message, 'danger', { title: 'Not started' });
   } finally {
@@ -214,7 +214,7 @@ async function endSession() {
     await toast.show('Session ended.', 'success');
   } catch (error) {
     const message =
-      error instanceof ApiError ? error.message : 'We could not end this session. Please try again.';
+      error instanceof ApiError ? error : 'We could not end this session. Please try again.';
     await toast.show(message, 'danger', { title: 'Not ended' });
   } finally {
     busy.value = false;
@@ -247,7 +247,7 @@ async function setStatus(status: AppointmentStatus) {
     // specific than anything phrased here.
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not update this session. Please try again.';
     await toast.show(message, 'danger', { title: 'Not updated' });
   } finally {

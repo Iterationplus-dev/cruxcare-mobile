@@ -1,4 +1,5 @@
 import { readonly, ref } from 'vue';
+import { ApiError } from '@/types/api';
 
 export type ToastTone = 'success' | 'danger' | 'warning' | 'info';
 
@@ -7,6 +8,9 @@ export interface FeedbackOptions {
   dismissLabel?: string;
   /** Auto-dismiss only when a short-lived status is more appropriate than acknowledgement. */
   durationMs?: number;
+  /** The server's id for this failure, shown so it can be quoted to support.
+   *  Filled in automatically when an `ApiError` is passed instead of a string. */
+  reference?: string;
 }
 
 export interface FeedbackMessage {
@@ -16,6 +20,7 @@ export interface FeedbackMessage {
   title: string;
   dismissLabel: string;
   durationMs?: number;
+  reference?: string;
 }
 
 const defaults: Record<ToastTone, Pick<FeedbackMessage, 'title' | 'dismissLabel'>> = {
@@ -58,16 +63,28 @@ function dismiss() {
  * same accessible bottom-sheet dialog instead of an Ionic toast.
  */
 export function useToast() {
-  function show(message: string, tone: ToastTone = 'info', options?: number | FeedbackOptions) {
+  /**
+   * Pass the `ApiError` itself rather than its message wherever there is one:
+   * the sheet then shows the server's reference alongside the sanitised copy,
+   * which is the difference between "it failed" and something support can act
+   * on. A plain string still works and carries no reference.
+   */
+  function show(
+    message: string | ApiError,
+    tone: ToastTone = 'info',
+    options?: number | FeedbackOptions,
+  ) {
     const resolved = normalizeOptions(options);
     const fallback = defaults[tone];
+    const fromError = message instanceof ApiError ? message : null;
     const feedback: FeedbackMessage = {
       id: ++nextId,
-      message,
+      message: fromError ? fromError.message : (message as string),
       tone,
       title: resolved.title ?? fallback.title,
       dismissLabel: resolved.dismissLabel ?? fallback.dismissLabel,
       durationMs: resolved.durationMs,
+      reference: resolved.reference ?? fromError?.reference,
     };
 
     queue.push(feedback);

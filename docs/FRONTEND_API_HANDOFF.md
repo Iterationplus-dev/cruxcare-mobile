@@ -2,8 +2,10 @@
 
 **Audience:** Senior Laravel engineer
 
-**Status:** Frontend contract audit as of 12 August 2026, amended 18 and 28 August 2026. The mobile app has a working mock API layer for the Phase 0/1 surface. It is ready to switch to Laravel once the contracts below are available.
+**Status:** Frontend contract audit as of 12 August 2026, amended 18 and 28 August 2026 and 4 September 2026. The mobile app has a working mock API layer for the Phase 0/1 surface. It is ready to switch to Laravel once the contracts below are available.
 
+> **Amended 4 September 2026 (frontend).** Two defects and one missing endpoint found running an Android build against `cruxcare_dev` are written up in the new **[§10](#10-observed-on-device--two-defects-and-one-missing-endpoint-4-september-2026)**: `PATCH /appointments/{id}` 500s on a missing `therapist_ratings` table, the API is returning raw exception text as the user-facing `message`, and the log-out sheet needs a single call that ends every other session.
+>
 > **Amended 28 August 2026 (backend).** The frontend revision of this note was written before the therapist care-request work landed, and marked those three routes "not built yet". They are built, tested, and now carry `caseFileId`. Their rows below and the note in §4.3 have been corrected in place. `gender` is built as specified. `GET`/`PATCH /me/therapist/profile` remain genuinely outstanding — see the note in §4.3.
 >
 > **Amended 28 August 2026 (frontend, replying).** Answers to the two questions the backend raised, and what the client now does about the empty case file, are in §4.3 under "Frontend answers".
@@ -367,3 +369,161 @@ The following screens exist and communicate the intended backend capability, but
 The immediate TypeScript contract is in `src/api/`, `src/types/`, and `src/mocks/handlers.ts`; frontend tests use that mock contract. Product/business constraints are in `design_handoff_cruxcare_mobile/reference/PRD-clean.md`, while the screen behaviour and UI-state requirements are in `design_handoff_cruxcare_mobile/reference/DesignScope-clean.md` and `design_handoff_cruxcare_mobile/README.md`.
 
 Before Laravel implementation begins, publish the agreed `/api/v1` OpenAPI document and generate or validate the TypeScript API models against it. Any intentional API divergence should be agreed with frontend first, especially response envelopes, money values, pagination, idempotency, and the `User` shape.
+
+## 10. Observed on device — two defects and one missing endpoint (4 September 2026)
+
+> **Answered 4 September 2026 (backend).** All three are closed on their side. 10.1 was four pending migrations in `cruxcare_dev`, `therapist_ratings` among them — the write path was never at fault. 10.2 is fixed harder than asked: the debug branch is gone from the error handler entirely, so 5xx returns fixed copy in every environment and carries an `errorId` in `meta` and on `X-Error-Id`. 10.3 shipped as `POST /auth/logout` with `{ "allDevices": true }` → `204`.
+>
+> **Frontend, replying.** The app now sends the flag instead of looping `DELETE /me/devices/{id}` (`src/api/auth.api.ts`, `src/features/profile/components/LogoutSheet.vue`); the abort-on-partial-failure path is gone with it. `ApiError` keeps sanitising — a seatbelt that never has to fire. Two items are back with us and are tracked in §11.
+
+
+Found against `cruxcare_dev` on an Android build pointed at the live API, not at the mocks.
+
+### 10.1 `PATCH /appointments/{id}` fails with a missing table
+
+A therapist accepting a booking request (`PATCH /api/v1/appointments/25` with `{ "status": "confirmed" }`) returns a 500:
+
+```text
+SQLSTATE[42S02]: Base table or view not found: 1146
+Table 'cruxcare_dev.therapist_ratings' doesn't exist
+(Connection: mysql, Host: 127.0.0.1, Port: 3306, Database: cruxcare_dev,
+ SQL: select `score` from `therapist_ratings` where `appointment_id` = 25 and `client_id` = 1281 limit 1)
+```
+
+The write itself looks fine — the failure is a `score` lookup that runs while the appointment is being serialised, against a table that does not exist in the schema. Accepting and declining are therefore both blocked; the therapist sees an error and the request stays in the Requests tab.
+
+Two things to settle:
+
+1. **The migration is missing from this environment.** Either `therapist_ratings` was never migrated or the code shipped ahead of it. Confirm which, and make the appointment resource resilient to the table being empty (a client who has not rated has no row — that must be `null`, not an exception).
+2. **The mobile contract does not have this field.** The `Appointment` shape the app consumes (§3 and `src/types/care.ts`) is `id, clientId, clientName, therapistId, therapistName, slot, type, status, reason, cancellationCutoff`. There is no `rating` or `score` on it, and the app does not read one. Rating lives on `Therapist.rating`/`ratingCount` only. So the per-appointment lookup is work the mobile client never asked for — if it is not needed by another consumer, take it out of the appointment resource rather than adding a table for it. If it *is* going into the contract, propose the field name and shape first.
+
+### 10.2 Raw exception text is being returned as `message`
+
+The block above is the literal `message` the API sent, and the app rendered it verbatim to the user in an error sheet. Per §2, an error body is `{ message, code?, errors?, meta? }` and `message` is user-facing copy. A stack trace, a SQL statement, the schema name, and the DB host and port are none of those things — this is `APP_DEBUG=true` leaking through the JSON error handler.
+
+Required:
+
+- `APP_DEBUG=false` in every environment a mobile build can reach, `cruxcare_dev` included. Debug detail belongs in the logs.
+- 5xx responses return a fixed, human `message`. Put the correlating identifier in `code` or `meta` if you want the user able to quote something back to support.
+- Never include SQL, class names, file paths, or connection details in any field the client renders.
+
+The frontend no longer trusts this: `ApiError` now sanitises server text before any screen shows it (`src/utils/errorMessage.ts`), keeping the original on `error.detail` for dev logs. That is a seatbelt, not a fix — the API must stop sending it.
+
+### 10.3 Wanted: one call that ends every other session
+
+AM4 (log out confirmation) now offers **"Log out of all devices"**, shown when `GET /me/devices` reports more than the current one. There is no endpoint for it, so the client currently loops `DELETE /me/devices/{id}` over each device where `current` is false and only then calls `POST /auth/logout`. That is N round-trips and it is not atomic — a failure halfway leaves some sessions alive, so the app aborts the logout and tells the user nothing was changed.
+
+Please add one of:
+
+- `POST /auth/logout` accepting `{ "allDevices": true }`, or
+- `DELETE /me/devices` (revoke all but the caller, then the caller).
+
+Either way it should revoke the Sanctum tokens **and** the matching push registrations from `PUSH_NOTIFICATIONS_CONTRACT.md` in the same transaction, and return `204`. This also depends on `GET /me/devices` setting `current` correctly for the calling token — the count in the sheet reads "N other sessions active" straight off it.
+
+Related: §7.4 (Sanctum token lifecycle) still lists per-device revocation as undecided. This is the concrete ask from that item.
+
+## 11. Open with the frontend, from the backend's reply to §10 (4 September 2026)
+
+### 11.1 `Appointment.myRating` — proposed, not agreed
+
+`canRate` has been withdrawn: the rule it duplicated is already enforced at `POST /appointments/{id}/rating`, which refuses with `422 session_not_rateable`. Agreed — a second copy of a rule is a second thing that can drift.
+
+`myRating` (integer 1–5 or `null`, always `null` in a therapist's copy) is still being returned and is recorded on their side as proposed. It buys one thing: a client who has already rated sees their own stars instead of an empty prompt.
+
+**Frontend position:** the app does not read it today, and the rating sheet is a separate screen that can fetch what it needs when it opens. Unless another consumer wants it, take it out and leave `Appointment` at the ten fields in §4.3 — that keeps the resource matching the contract exactly, which is the thing §10.1 was really about. Happy to be overruled if the extra round trip is the worse trade; if it stays, it goes into §4.3 as agreed rather than proposed.
+
+One correction accepted from their reply: `therapist_ratings` itself is not a stray table — it is what fills `TherapistSummary.rating` and `ratingCount`, which §4.3 already promises and the profile screen already reads. §10.1's second point was about the appointment-level fields only.
+
+### 11.2 Signing out one device leaves its push registration alive — built, and wired
+
+> **Built 5 September 2026 (backend), wired same day (frontend).** The installation is recorded on the token at issue time, as asked. The client now sends `X-Installation-Id` on the two calls it makes that mint a token, and the pre-logout `DELETE /devices/token/{installationId}` is gone.
+
+**Only two of the four routes exist in this client.** `POST /auth/register` and `POST /auth/login` both send the header. There is no `/auth/login/verify` in the mobile app — two-factor is a `POST /auth/two-factor` preference toggle, not a login challenge — so nothing sends it there. If a 2FA login challenge is added later, the header goes on it at the same time.
+
+The id is the same value already upserted at `POST /devices/token`, now read from `src/services/installationId.ts` rather than living inside the push service — two callers need it, and it was never really a push concern. It is sent on those two routes only, not on every request: it is a label, not a credential, and there is a test pinning that it stays off everything else.
+
+Sessions that predate this keep their old behaviour, as described — noted for whoever tests it, since the fix will not appear on a session that is already open.
+
+
+
+`DELETE /me/devices/{id}` revokes that session's token but cannot drop the matching push registration, because nothing links a token id to an installation. The handset loses API access and keeps receiving notifications — the exact failure §10.3 was about, one route over. It is reachable from PR4's Active devices screen, so it is a real path, not a theoretical one.
+
+Their two options were: the client sends its `installationId` alongside, or the installation is recorded on the token at issue time and matched server-side.
+
+**Frontend position: the second.** The client can only send the `installationId` of the handset it is running on, and the whole point of that screen is signing out a device you are *not* holding — so the client-side option cannot fix the case that matters. Recording the installation on the token at issue time is the only version that works for a remote sign-out. It is a schema change; please spec it.
+
+## 12. Frontend answers to the §11.2 build note (5 September 2026)
+
+| Their item | State |
+| --- | --- |
+| Send the installation id at sign-in | **Done** — `X-Installation-Id` on register and login; no `/auth/login/verify` exists here |
+| Show `errorId` in the error sheet | **Done** — read from `meta.errorId` and the `X-Error-Id` header |
+| Drop the pre-logout `DELETE /devices/token/{id}` | **Done** — the local FCM teardown stays, the network call is gone |
+| Remove `canRate` / `myRating` | **Nothing to remove** — neither field was ever declared in `src/types/care.ts` or the MSW handlers |
+| Two handsets no longer evict each other | Understood; no client test relied on the old eviction |
+| Shared handsets stop push per account | Understood and correct — the registration belongs to the person signing out |
+
+### 12.1 The error reference is shown, not just captured
+
+`ApiError` now carries `reference`, taken from `meta.errorId` or the `X-Error-Id` header, whichever arrives. `useToast().show()` accepts the `ApiError` itself rather than its message, so the feedback sheet renders the sanitised copy plus a selectable "Quote reference" line beneath it. Every error surface in the app was converted, so a 5xx shows the id wherever it happens rather than only where someone remembered to thread it through.
+
+The header is genuinely the more useful half: it survives a body the interceptor could not parse, which is the case that produced §10.2 in the first place.
+
+### 12.2 One thing we would still take
+
+`GET /me/devices` echoing the installation id back is **not** needed — agreed, and we are not asking for it. What would help instead is the device row telling us which entry is *this installation* rather than only which is the current *token*. They are the same today; they stop being the same the moment a session is reissued on the same handset, and Active devices would then show "this device" against a row the user did not expect. Not urgent, and not worth a schema change on its own — worth knowing before someone builds session refresh.
+
+## 13. Frontend answers to the §12 build guide (5 September 2026)
+
+| Their item | State |
+| --- | --- |
+| 1 · Video call screen | **Wired against the contract.** Token, join, refresh, leave, host-only end. One gap: the Daily client SDK — see §13.1 |
+| 2 · Recording consent | **Built.** Read after joining, both-sides status, withdrawal warning, record button gated on `canRecord` |
+| 3 · `withdrawal_threshold_not_met` | **Handled** on quote *and* settlement, with both figures and the server's currency |
+| 4 · Lapsed plan closes health-profile access | **Nothing to change today** — see §13.3 |
+| 5 · OTP sender, `current`, ten-field Appointment | Understood; no client change, and nothing was pinned to a sender name |
+
+### 13.1 The SDK named in the note is for the wrong stack
+
+The guide says "on React Native that is `react-native-daily-js`". **This app is not React Native.** It is Ionic 8 + Vue 3 + Capacitor — the UI runs in a WebView, so the right package is `@daily-co/daily-js`, Daily's web SDK, which works inside a Capacitor WebView using the platform's own WebRTC. `react-native-daily-js` depends on `react-native-webrtc` and will not install or run here.
+
+Nothing in the contract changes because of this — the same `url` and `token` are what the web SDK's `callObject.join({ url, token })` takes. Only the package name in the guide is wrong, and it is worth correcting before it reaches whoever writes the runbook.
+
+**What is built, and what is not.** The screen is wired end to end against `videoProvider`, the interface the codebase already had for this: it asks for a token on open, joins, refreshes two minutes before `expiresAt`, reads consent after joining, and offers the host-only end control. What is still a stand-in is the single implementation behind that interface (`src/services/video/MockVideoProvider`), which is where `@daily-co/daily-js` goes. Adding a media SDK is a dependency decision plus native permission work (camera and microphone in `AndroidManifest.xml` and `Info.plist`), so it is deliberately not bundled into this pass. Everything else is done and testable against the mock API.
+
+Two things we will need before that implementation can be written:
+
+1. **The Daily domain per environment.** `url` comes back fully formed, so nothing needs configuring for joining — but confirm whether `cruxcare.daily.co` is the domain in every environment or only in `cruxcare_dev`.
+2. **Who calls "start recording".** The guide gives consent endpoints but no start/stop route, so we have read it as an SDK operation the host token permits once both have agreed. The record button is gated on `canRecord` and calls the provider, not the API. Say if that is wrong.
+
+### 13.2 Consent, as built
+
+`GET` on join, `PUT` on the toggle, and the three fields used exactly as described: `mine` is the only control, `theirs` renders as a status line ("Waiting for the other person to agree. Nothing records until you both do."), and the record button is gated on `canRecord` rather than on `mine && theirs`.
+
+Two details worth confirming back:
+
+- **Consent is read after joining, not before.** Asking first would have made it a gate on the call, which is the bundling the note asks us to avoid. It is an explicit act inside the session it applies to.
+- **The withdrawal copy says what actually happens**: "Turning this off stops the recording straight away. What was already recorded is kept." A user who taps it expecting the first ten minutes to vanish would have been misled, so the copy says otherwise before they tap.
+
+The old screen hardcoded `recording = true` and a line reading "This session is being recorded with your consent." That was untrue in every state and is gone.
+
+### 13.3 The lapsed-plan 404 has nothing to land on yet
+
+There is no therapist-side health-profile read in this client. `healthProfileApi.get()` calls `GET /health-profile` with no `clientId` — it is the client reading their own, from Profile and the care hub. No therapist screen calls it.
+
+So the suspension changes nothing in the app today. It is recorded here so that whoever builds the therapist-side view writes the renewal path with it: **suspended, not ended** — "Your plan has expired — renew to continue", never "This client has revoked access", which would be untrue and alarming. Case files staying readable on a lapse is noted too.
+
+### 13.4 One pre-existing bug this surfaced
+
+`ChatThreadScreen` opens the video route with a **thread id** where every other entry point passes an appointment id (`src/features/shared/screens/ChatThreadScreen.vue`). Against the mock provider that was harmless — it joined a room named after whatever it was given. Against a real token endpoint it is a 404, because there is no appointment with that id.
+
+Left as-is rather than guessed at: resolving a thread to its appointment needs a rule about which appointment a thread belongs to, and that is a product question. Flagging it because the video work is what makes it break.
+
+### 13.5 Wallet, as handled
+
+`withdrawal_threshold_not_met` and `daily_limit_exceeded` both render their figures — "Your wallet needs to reach $500.00 before you can withdraw. You have $200.00." Currency comes from `meta.currency`, never assumed. Both codes are handled on `POST /wallet/quotes` and on `POST /wallet/actions`, since a quote is a price and not a permission.
+
+Where the meta block is incomplete, the server's own `message` is shown instead of copy assembled from half a payload. The refusal logic is a pure function with tests (`src/features/wallet/moneyActionErrors.ts`), so the wording is checkable without driving the screen.
+
+Before this, `MoneyActionScreen` caught every failure into one line — "We could not create a server quote. Check the amount and try again." — which is exactly the generic failure on a money screen the note warned about.
+

@@ -200,7 +200,7 @@ async function onSave() {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not save your address. Check your connection and try again.';
     await toast.show(message, 'danger', { title: 'Not saved' });
   } finally {

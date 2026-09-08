@@ -158,7 +158,7 @@ async function setPreference(key: 'payFromWalletFirst' | 'saveMethods', event: E
     input.checked = !wanted;
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not save that. Check your connection and try again.';
     await toast.show(message, 'danger', { title: 'Not saved' });
   } finally {

@@ -153,10 +153,21 @@ const authHandlers: HttpHandler[] = [
     return HttpResponse.json({ enabled: true });
   }),
 
-  http.post(url('/auth/logout'), ({ request }) => {
+  http.post(url('/auth/logout'), async ({ request }) => {
     const auth = request.headers.get('Authorization')?.replace('Bearer ', '');
-    if (auth) tokens.delete(auth);
-    return HttpResponse.json({ loggedOut: true });
+    const body = (await request.json().catch(() => ({}))) as { allDevices?: boolean };
+    const userId = auth ? tokens.get(auth) : undefined;
+
+    // `allDevices` takes every token on the account, not only the caller's.
+    if (body.allDevices && userId) {
+      for (const [token, owner] of [...tokens.entries()]) {
+        if (owner === userId) tokens.delete(token);
+      }
+    } else if (auth) {
+      tokens.delete(auth);
+    }
+
+    return new HttpResponse(null, { status: 204 });
   }),
 
   http.post(url('/auth/password/forgot'), () => HttpResponse.json({ sent: true })),
@@ -898,6 +909,104 @@ const careHandlers: HttpHandler[] = [
     return HttpResponse.json(appt);
   }),
 
+  // -------------------------------------------------------------------------
+  // Video sessions and recording consent (backend note §12)
+  // -------------------------------------------------------------------------
+
+  /**
+   * The room is named by the server, never by the client, and the token is
+   * short-lived. Asking again returns the same room with a fresh token, so a
+   * dropped connection rejoins the call rather than opening a second one.
+   */
+  http.post(url('/appointments/:id/video/token'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const appt = db.appointments.find((a) => a.id === params.id);
+    // A 404 for a stranger and for a missing appointment alike: telling them
+    // apart would confirm that someone else's session exists.
+    if (!appt || (appt.clientId !== user.id && appt.therapistId !== user.id)) {
+      return HttpResponse.json(
+        { message: 'That session is not available.', code: 'appointment_not_found' },
+        { status: 404 },
+      );
+    }
+
+    if (appt.type !== 'video') {
+      return HttpResponse.json(
+        { message: 'This appointment is not a video visit.', code: 'session_not_video', meta: { type: appt.type } },
+        { status: 422 },
+      );
+    }
+
+    const slot = new Date(appt.slot).getTime();
+    const opensAt = slot - 15 * 60 * 1000;
+    const closesAt = slot + 60 * 60 * 1000;
+    const now = Date.now();
+    if (now < opensAt || now > closesAt) {
+      return HttpResponse.json(
+        {
+          message: 'This session is not open yet.',
+          code: 'outside_session_window',
+          meta: { opensAt: new Date(opensAt).toISOString(), closesAt: new Date(closesAt).toISOString() },
+        },
+        { status: 422 },
+      );
+    }
+
+    const roomId = `cc-${appt.id}`;
+    return HttpResponse.json({
+      provider: 'daily',
+      roomId,
+      token: `mock-token-${Date.now()}`,
+      expiresAt: new Date(now + 15 * 60 * 1000).toISOString(),
+      role: appt.therapistId === user.id ? 'host' : 'guest',
+      url: `https://cruxcare.daily.co/${roomId}`,
+    });
+  }),
+
+  /** Ejects everyone. The therapist's control, not a participant leaving. */
+  http.post(url('/appointments/:id/video/end'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+
+    const appt = db.appointments.find((a) => a.id === params.id);
+    if (!appt) return HttpResponse.json({ message: 'That session is not available.', code: 'appointment_not_found' }, { status: 404 });
+    if (appt.therapistId !== user.id) {
+      return HttpResponse.json(
+        { message: 'Only the therapist can end this session.', code: 'not_session_host' },
+        { status: 403 },
+      );
+    }
+
+    recordingConsent.delete(`${appt.id}:${appt.clientId}`);
+    recordingConsent.delete(`${appt.id}:${appt.therapistId}`);
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.get(url('/appointments/:id/video/consent'), ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const appt = db.appointments.find((a) => a.id === params.id);
+    if (!appt || (appt.clientId !== user.id && appt.therapistId !== user.id)) {
+      return HttpResponse.json({ message: 'That session is not available.', code: 'appointment_not_found' }, { status: 404 });
+    }
+    return HttpResponse.json(consentFor(appt, user.id));
+  }),
+
+  http.put(url('/appointments/:id/video/consent'), async ({ request, params }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const appt = db.appointments.find((a) => a.id === params.id);
+    if (!appt || (appt.clientId !== user.id && appt.therapistId !== user.id)) {
+      return HttpResponse.json({ message: 'That session is not available.', code: 'appointment_not_found' }, { status: 404 });
+    }
+
+    const { granted } = (await request.json()) as { granted: boolean };
+    recordingConsent.set(`${appt.id}:${user.id}`, granted === true);
+    return HttpResponse.json(consentFor(appt, user.id));
+  }),
+
   /**
    * Moving an appointment. A past slot is fine as the source — a missed session
    * is the main reason anyone reschedules — but the destination must be ahead.
@@ -1206,8 +1315,23 @@ const careHandlers: HttpHandler[] = [
 // ---------------------------------------------------------------------------
 // Wallet, server-quoted money actions, and notifications
 // ---------------------------------------------------------------------------
+const WITHDRAWAL_THRESHOLD = 200;
 const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string; local: unknown }; stepUpVerified: boolean }>();
 const topUpQuotes = new Map<string, { userId: string; quote: WalletTopUpQuote }>();
+
+/** `${appointmentId}:${userId}` -> a standing yes. Absent is not agreement. */
+const recordingConsent = new Map<string, boolean>();
+
+/**
+ * Unanimity, plus conditions the client cannot see. `canRecord` is the whole
+ * answer so the record button is never shown where recording is switched off.
+ */
+function consentFor(appt: { id: string; clientId: string; therapistId: string }, userId: string) {
+  const otherId = appt.clientId === userId ? appt.therapistId : appt.clientId;
+  const mine = recordingConsent.get(`${appt.id}:${userId}`) === true;
+  const theirs = recordingConsent.get(`${appt.id}:${otherId}`) === true;
+  return { mine, theirs, canRecord: mine && theirs };
+}
 
 /** installationId -> push token, scoped per user. */
 const devices = new Map<string, string>();
@@ -1331,6 +1455,23 @@ const walletHandlers: HttpHandler[] = [
     }
     if (body.kind === 'cooperative-contribution' && amount < 5) {
       return HttpResponse.json({ message: 'The minimum contribution is 5 USD.' }, { status: 422 });
+    }
+    // A balance the wallet must reach before any withdrawal, not a cap on the
+    // amount. Server-configured in Laravel; the figure here is only large
+    // enough to model the refusal, and the demo wallet clears it.
+    if (body.kind === 'withdrawal' && wallet.available < WITHDRAWAL_THRESHOLD) {
+      return HttpResponse.json(
+        {
+          message: 'Your balance has not reached the amount required before a withdrawal can be made.',
+          code: 'withdrawal_threshold_not_met',
+          meta: {
+            required: WITHDRAWAL_THRESHOLD,
+            available: wallet.available,
+            currency: wallet.currency,
+          },
+        },
+        { status: 422 },
+      );
     }
     const fee = body.kind === 'cooperative-contribution' ? 0 : Math.round(amount * 0.05 * 100) / 100;
     const quote = {

@@ -196,7 +196,7 @@ async function respond(request: TherapistCareRequest, action: 'accept' | 'declin
     }
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not send your answer. Please try again.';
     await toast.show(message, 'danger', { title: 'Could not respond', dismissLabel: 'Try again' });
   } finally {

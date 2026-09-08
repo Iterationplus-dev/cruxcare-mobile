@@ -151,7 +151,7 @@ async function respond(id: string, status: AppointmentStatus) {
     // The slot may have gone, or the client withdrawn, while this sat open.
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not update that appointment. Please try again.';
     await toast.show(message, 'danger', { title: 'Not updated' });
   } finally {

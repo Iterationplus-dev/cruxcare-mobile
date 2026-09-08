@@ -178,7 +178,7 @@ async function decide(row: HealthProfileAccess, action: 'grant' | 'revoke') {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not save that. Check your connection and try again.';
     // Nothing is changed locally first, so a failure leaves the screen showing
     // what the server still holds rather than a decision that did not land.

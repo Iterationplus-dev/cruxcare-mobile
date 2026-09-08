@@ -320,7 +320,7 @@ async function onCropConfirmed(crop: AvatarCrop) {
   } catch (error) {
     const message =
       error instanceof ApiError
-        ? error.message
+        ? error
         : 'We could not update your profile photo. Please try again.';
     await toast.show(message, 'danger', { title: 'Could not update photo' });
   } finally {
@@ -353,7 +353,7 @@ async function onSave() {
     // Without this a rejected save left the screen sitting there with no word
     // either way, and the member believing it had gone through.
     const message =
-      error instanceof ApiError ? error.message : 'We could not save your changes. Please try again.';
+      error instanceof ApiError ? error : 'We could not save your changes. Please try again.';
     await toast.show(message, 'danger', { title: 'Not saved' });
   } finally {
     saving.value = false;
