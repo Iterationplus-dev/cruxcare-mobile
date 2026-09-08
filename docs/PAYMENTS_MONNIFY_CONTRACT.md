@@ -1,3 +1,13 @@
+<!--
+  VENDORED COPY — do not edit here.
+
+  Taken from cci/docs/ at 9c4fca4bad7aeb1efb51c88993374a6fd97a9f13
+  (9c4fca4, "Backend for the mobile team's contract notes", 8 September 2026).
+
+  cci/docs/ is canonical, agreed 8 September 2026 (N1.1). Changes belong there;
+  re-vendor this file and update the SHA above rather than editing it, so a stale
+  copy is visible instead of silent.
+-->
 # Payments — Monnify SDK integration and backend contract
 
 **Audience:** Senior Laravel engineer
@@ -68,8 +78,7 @@ Auth, error envelope, and idempotency semantics are per `FRONTEND_API_HANDOFF.md
   "purpose": "therapist-plan",   // "therapist-plan" | "order" | "wallet-topup"
   "subject": "monthly",          // plan tier, checkout-quote id, or order id
   "expectedAmount": 15,          // what the app currently shows
-  "expectedCurrency": "USD",
-  "channel": "card"              // optional: "card" | "bank-transfer"
+  "expectedCurrency": "USD"
 }
 ```
 
@@ -98,10 +107,6 @@ Auth, error envelope, and idempotency semantics are per `FRONTEND_API_HANDOFF.md
 - `422` with `code: "unpayable_subject"` when the subject costs nothing or is not payable by this user (e.g. the free trial tier).
 - Persist the intent with its own reference before returning. The webhook may arrive **before** the app's confirm call — sometimes before the sheet has even closed.
 - Replay the same intent for a repeated `Idempotency-Key` rather than minting a second reference.
-- **`channel` is the customer's stated preference, not a constraint you must honour.** `TherapistPlanScreen` and `WalletTopUpScreen` offer *Card* and *Bank transfer* as separate choices, and the app narrows Monnify's sheet with `paymentMethods: ["CARD"]` / `["ACCOUNT_TRANSFER"]`. Send it so the server can reserve a transfer account ahead of the sheet where that applies. If the field is absent, or names a rail this merchant cannot offer, fall back to the merchant default rather than failing the intent — hiding the only method a customer can use is worse than showing them one extra.
-- **`currency` on the response is now the payer's own currency, not always `NGN`.** A user in Accra receives `GHS`, one in Douala `XAF`, and a user with no supported country on file stays on the base currency. `expectedAmount`/`expectedCurrency` on the *request* remain USD — the client never sends a local amount — so compare the expectation against the base figure and convert only what the sheet will charge. The app formats every payment amount from `intent.currency`; nothing renders a hard-coded symbol. See the local-currency note for the full model: USD is the only currency anything is held in, and local currencies exist only at the funding and payout edges.
-- **`purpose: "wallet-topup"`** carries the `WalletTopUpQuote` id as `subject`. Price the intent from that stored quote — the customer chose the amount, but they already reviewed a server-issued `totalCharge`, and that figure is the one to charge. Reject an expired or foreign quote with `422 stale_quote`.
-- On settlement of a `wallet-topup`, credit `walletCreditedWith` to the wallet and write a `deposit` ledger row. This must be **idempotent against the quote**: the app calls confirm once and may also poll `GET /payments/intents/{ref}`, and a webhook may land between the two.
 
 **On the `gateway` block:** serving merchant credentials from the API means keys and TEST/LIVE rotate without an app release, and a compromised key is revocable server-side. `apiKey` and `contractCode` are *public* merchant identifiers — this is not a secret being leaked. The Monnify **secret key** stays server-side and is used only for `auth/login` and verification. Returning `null` makes the app fall back to its build-time `VITE_MONNIFY_*` values; that fallback exists for local development and should not be relied on in production.
 
@@ -186,6 +191,5 @@ The plan screen prices in USD; Monnify is NGN-first and its contracts are usuall
 
 - **Android and web only.** There is no `ios/` directory in this repo. `packages/capacitor-monnify` has no iOS implementation; adding one means wrapping Monnify's iOS SDK behind the same `definitions.ts`.
 - **No saved cards.** Monnify's checkout SDK charges one transaction and has no vaulting flow, so `MonnifyPaymentProvider` deliberately omits `collectPaymentMethod`. `PaymentMethodsScreen` detects its absence and says so rather than offering a card that could never be charged again. Recurring billing would need Monnify's reserved-account or recurring-card product and a separate contract.
-- **Wallet funding is live.** `WalletTopUpScreen` (`/wallet/top-up`) quotes with `POST /wallet/topups` and settles with `purpose: "wallet-topup"`. It is reachable by every role — the therapist shell has no Wallet tab, so it is linked from the therapist profile as well as wallet home and the client profile.
 - **Checkout still pays by wallet only.** `CheckoutScreen` offers no card option; adding one means opening an intent with `purpose: "order"` exactly as `TherapistPlanScreen` does.
 - **The web fallback is for development.** It drives Monnify's hosted modal so `npm run dev` exercises the same provider path, and loads `sdk.monnify.com` at runtime.

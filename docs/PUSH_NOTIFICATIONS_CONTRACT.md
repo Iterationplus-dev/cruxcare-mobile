@@ -1,3 +1,13 @@
+<!--
+  VENDORED COPY — do not edit here.
+
+  Taken from cci/docs/ at 9c4fca4bad7aeb1efb51c88993374a6fd97a9f13
+  (9c4fca4, "Backend for the mobile team's contract notes", 8 September 2026).
+
+  cci/docs/ is canonical, agreed 8 September 2026 (N1.1). Changes belong there;
+  re-vendor this file and update the SHA above rather than editing it, so a stale
+  copy is visible instead of silent.
+-->
 # Push Notifications — Backend Contract Note
 
 **Audience:** Senior Laravel engineer
@@ -31,24 +41,19 @@ These would each have broken delivery on a real device regardless of the API:
 4. **`PushNotifications` had no `capacitor.config.ts` entry**, so a message arriving while the app was open displayed nothing.
 5. **No unregister on sign-out** — the next person to use the handset would have kept receiving the previous user's notifications.
 
-### Firebase project — client side is done
+### One blocker that is not a code problem
 
-`android/app/google-services.json` is in place, so the `com.google.gms.google-services` Gradle plugin now applies and the FCM resources are generated at build time. The Android app is registered against:
+**`android/app/google-services.json` does not exist.** Without it the `com.google.gms.google-services` Gradle plugin is skipped (see the `try/catch` at the bottom of `android/app/build.gradle`) and registration fails at runtime with a `registrationError`. Someone with Firebase console access must add the Android app `com.cruxcintl.mobile` and drop the file in. `npm install` now prints a warning while it is missing.
 
-| | |
-| --- | --- |
-| Project id | `cruxcare-mobile` |
-| Project number / FCM sender id | `344764946716` |
-| Android package | `com.cruxcintl.mobile` |
-| Mobile SDK app id | `1:344764946716:android:24bcb787cc7becbf11c2d9` |
-
-**Laravel needs a different file from the same project:** the **service account JSON** (Firebase console → Project settings → Service accounts → *Generate new private key*), used to mint the OAuth token for FCM HTTP v1 against `https://fcm.googleapis.com/v1/projects/cruxcare-mobile/messages:send`. That one is a genuine secret — server config only, never the repo, never the app.
-
-> `google-services.json` itself is client config and is extractable from any APK, so it is not a secret in the same sense. It is still kept out of `public/` deliberately: anything in `public/` is copied verbatim into `dist/` and into the APK's web assets, and is served publicly by the web build, which would expose the Android API key on a web origin. `npm install` warns if the file goes missing again.
+> The same Firebase project's **service account JSON** is what Laravel needs for FCM HTTP v1 — it must go in server config, never in the repo and never in the app.
 
 ---
 
 ## 2. Endpoints to build
+
+> **Source of truth.** This file in `cci/docs/` is canonical, agreed 8 September
+> 2026. Vendored copies should record the commit they were taken from, so a
+> stale one is visible rather than silent.
 
 Base URL, auth, error envelope, and cursor pagination are as described in `FRONTEND_API_HANDOFF.md` §1–2. All four routes require an authenticated Sanctum token.
 
@@ -90,6 +95,7 @@ Called on sign-out, **before** the session is torn down, so the request is still
   "optional": {
     "appointments": true,
     "orders": true,
+    "cases": true,
     "chat": true,
     "marketing": false
   },
@@ -150,10 +156,23 @@ The app is built against **FCM HTTP v1** (`https://fcm.googleapis.com/v1/project
 ### 3.2 Rules the app depends on
 
 - **Every `data` value must be a string.** FCM rejects non-string data values outright. `params` in particular is a **JSON-encoded string**, not an object — the app `JSON.parse`s it. A malformed value still opens the screen, just without params.
-- **`route` is a Vue Router *route name*, not a URL path.** This keeps URL structure owned by the app. Current names live in `src/router/routes.ts`; the ones worth targeting are `notifications`, `order-detail`, `orders-list`, `book-appointment`, `care-hub`, `care-requests`, `chat-thread`, `wallet-home`, `wallet-top-up`, `ledger`, `therapist-today`, `therapist-plan`, `appointment-management`, `case-file`, `video-visit`, `admin-approvals`, `security-privacy`. Section 4 maps every event to one of these. An unknown name is not an error — the app falls back to the notifications inbox, which is what makes it safe for the server to reference a route a older build does not have yet.
+- **`route` is a Vue Router *route name*, not a URL path.** This keeps URL structure owned by the app. Current names live in `src/router/routes.ts`; the ones worth targeting are `notifications`, `order-detail`, `orders-list`, `book-appointment`, `chat-thread`, `wallet-home`, `ledger`, `therapist-today`, `appointment-management`, `health-profile-access`, `case-file`, `care-plan`, `care-hub`. An unknown name is not an error — the app falls back to the notifications inbox, which is what makes it safe for the server to reference a route a older build does not have yet.
 - **`channel_id` must be `cruxcare-default`** to match `DEFAULT_CHANNEL_ID` in the push service and the manifest default. A different value creates a second channel the user was never told about.
 - **`category` must be one of** `appointments | orders | wallet | cases | chat | marketing | system` — the same vocabulary as `AppNotification.category` in `GET /notifications`.
-- The category on the wire is **not always the preference key that gated it**. `security` has no wire category of its own: it travels as `system` while still being gated by the unmutable `security` preference. Anything unrecognised degrades to `system`. `App\Support\Push\NotificationCategory` on the API side is the source of truth for both columns.
+- The category on the wire is **not always the preference key** that gated it. `App\Support\Push\NotificationCategory` is the single source of truth for both columns:
+
+  | Preference | Internal / FCM category |
+  | --- | --- |
+  | `security` | `security`, sent on the wire as `system` |
+  | `money` | `wallet` |
+  | `appointments` | `appointments` |
+  | `orders` | `orders` |
+  | `cases` | `cases` |
+  | `chat` | `chat` |
+  | `marketing` | `marketing` |
+  | `system` | `system` |
+
+  `security` has no wire category of its own — it travels as `system` while still being gated by the unmutable `security` preference. Anything unrecognised degrades to `system`.
 - **`notificationId` should match the row `GET /notifications` returns**, so a tap can reconcile with the inbox.
 - Always send both `notification` and `data`. A data-only message is not displayed by the Capacitor plugin when the app is backgrounded.
 
@@ -165,113 +184,145 @@ The app is built against **FCM HTTP v1** (`https://fcm.googleapis.com/v1/project
 - **Handle FCM's error responses**: `UNREGISTERED` and `INVALID_ARGUMENT` on a token mean delete that device row. Retry `UNAVAILABLE`/`INTERNAL` with backoff. Silent failure here degrades into "push stopped working for some users" months later.
 - Never put PHI or money amounts in `title`/`body`. They render on the lock screen. "You have a new case-file note" — not its contents. The channel is declared with `visibility: 0` (private), but do not rely on that alone.
 
----
+#### The case lifecycle — six events (§16.9)
 
-## 4. Notification catalogue — what to send, and when
+All `category: cases`, all optional, persist-first. `care-plan` and `care-hub`
+take the **case** id, not a plan or subscription id: both screens are about one
+case.
 
-Every user-visible action below deserves a push. This list is the build order for the sending side, because **the app cannot raise any of these itself**. A push originates on the server; the device only registers a token, displays what arrives, and routes the tap. "Notify on X" is therefore always server-side work — the client half is already done and shipped.
+| Event | Fires when | Goes to | `route` |
+| --- | --- | --- | --- |
+| Plan proposed | `POST /cases/{id}/plan` | client | `care-plan` |
+| Plan paid for | the settled payment opens the subscription | therapist | `case-file` (the file's own id) |
+| Treatment started | `POST /cases/{id}/start` | client | `care-hub` |
+| Follow-up booked | `POST /cases/{id}/follow-up` | client | `care-hub` |
+| Plan nearly spent | `cruxcare:review-care-plans`, daily | client | `care-plan` |
+| Case closed | `POST /cases/{id}/close` | client | `care-hub` |
 
-Two rules apply to every row:
+No diagnosis or condition in `title`/`body`. "Your therapist has sent you a care
+plan" is the whole message; the reasoning is on the screen behind the login.
+The closing notification is the one exception worth noting: where unused paid
+visits remain it says so, because a client who thinks their sessions died with
+the case has been misled by silence.
 
-- **Persist first, push second** (§3.3). The `GET /notifications` row is the record; the push is the nudge. `notificationId` ties them together.
-- **Required** rows are security or money events. They ignore the optional-category switches in `GET /notifications/prefs` and are what should appear under `required` there. Everything else respects both the category switch and quiet hours.
+#### Health profile access — the two events (§14.5)
 
-Titles and bodies are the sender's to write, under §3.3's rule: no PHI, no amounts, no client names in `title`/`body`, because they render on a lock screen.
+Both are `category: cases`, so they respect the category switch and quiet hours:
+these are neither security nor money.
 
-### 4.1 Care and therapist requests
+| Event | Fires when | Goes to | `route` | `params` |
+| --- | --- | --- | --- | --- |
+| Access requested | `POST /clients/{id}/health-profile/access` | client | `health-profile-access` | `{"id":"<accessId>"}` |
+| Access answered | `.../grant` or `.../revoke` | therapist | `case-file` | `{"id":"<accessId>"}` |
 
-| Event | Fires when | Goes to | `category` | Req. | `route` (+ `params`) | `tag` |
-| --- | --- | --- | --- | --- | --- | --- |
-| Request received | client submits `POST /care/requests` naming a therapist | that therapist | `system` | no | `appointment-management` | `care-req-{id}` |
-| Request in review | staff or the therapist opens it — `status → in-review` | client | `system` | no | `care-requests` | `care-req-{id}` |
-| Request accepted | `status → accepted` | client | `system` | no | `care-hub` | `care-req-{id}` |
-| Request declined | `status → declined` | client | `system` | no | `care-requests` | `care-req-{id}` |
-| Request re-matched | staff attaches a different therapist | client | `system` | no | `care-requests` | `care-req-{id}` |
-| Request closed | `status → closed` with no assignment | client | `system` | no | `care-requests` | `care-req-{id}` |
+The requesting therapist's **name is deliberately absent from the lock screen**.
+The body is sent with the sensitive flag, so it renders as "Open CruxCare to
+view" on the handset while the inbox row keeps the full text — on a health app,
+which clinician is asking is close enough to PHI to stay behind the login. The
+name is on the screen the tap opens, where the client has already authenticated.
 
-An unnamed request goes to a staff queue, not to a device — there is no push for it.
-
-The client's own "request sent" confirmation is an **inbox row only**: they are looking at the screen that just sent it, and a push there is noise. The row still has to exist so the history is complete.
-
-`tag` is the request id throughout, so a request that moves twice replaces its own entry in the shade instead of stacking.
-
-### 4.2 Appointments
-
-| Event | Fires when | Goes to | `category` | Req. | `route` (+ `params`) | `tag` |
-| --- | --- | --- | --- | --- | --- | --- |
-| Appointment requested | `POST /appointments` | therapist | `appointments` | no | `appointment-management` | `appt-{id}` |
-| Appointment confirmed | `status → confirmed` | client | `appointments` | no | `book-appointment` | `appt-{id}` |
-| Appointment cancelled | `status → cancelled` | the other party | `appointments` | no | `book-appointment` | `appt-{id}` |
-| Appointment rescheduled | slot changes | both parties | `appointments` | no | `book-appointment` | `appt-{id}` |
-| Reminder, 24h out | scheduler | client + therapist | `appointments` | no | `book-appointment` | `appt-{id}-24h` |
-| Reminder, 1h out | scheduler | client + therapist | `appointments` | no | `book-appointment` | `appt-{id}-1h` |
-| Visit starting | video visit opens | client + therapist | `appointments` | no | `video-visit` + `{"id":"…"}` | `appt-{id}-live` |
-| Marked no-show | `status → no-show` | client | `appointments` | no | `book-appointment` | `appt-{id}` |
-
-Reminders are the one place `allowTimeSensitive` inside `quietHours` matters — honour it there and nowhere else.
-
-### 4.3 Messages and case files
-
-| Event | Fires when | Goes to | `category` | Req. | `route` (+ `params`) | `tag` |
-| --- | --- | --- | --- | --- | --- | --- |
-| New message | `POST /chat/threads/{id}/messages` | the other participant | `chat` | no | `chat-thread` + `{"id":"…"}` | `thread-{id}` |
-| New case-file note | therapist saves a note that is not a draft | client | `system` | no | `care-hub` | `case-{id}` |
-| New recommendation | therapist recommends a product | client | `system` | no | `care-hub` | `case-{id}` |
-
-Suppress the message push when the recipient is live in that thread — see the realtime question in §6. Collapsing on `thread-{id}` keeps an unread burst to one entry rather than forty.
-
-### 4.4 Orders
-
-| Event | Fires when | Goes to | `category` | Req. | `route` (+ `params`) | `tag` |
-| --- | --- | --- | --- | --- | --- | --- |
-| Order placed | checkout succeeds | buyer | `orders` | no | `order-detail` + `{"id":"…"}` | `order-{id}` |
-| Order payment failed | gateway declines | buyer | `orders` | **yes** | `order-detail` + `{"id":"…"}` | `order-{id}` |
-| Order shipped | fulfilment | buyer | `orders` | no | `order-detail` + `{"id":"…"}` | `order-{id}` |
-| Out for delivery | fulfilment | buyer | `orders` | no | `order-detail` + `{"id":"…"}` | `order-{id}` |
-| Delivered | fulfilment | buyer | `orders` | no | `order-detail` + `{"id":"…"}` | `order-{id}` |
-| Order cancelled or refunded | staff or system | buyer | `orders` | **yes** | `order-detail` + `{"id":"…"}` | `order-{id}` |
-| Ordered on your behalf | therapist orders for a client | client | `orders` | no | `order-detail` + `{"id":"…"}` | `order-{id}` |
-
-### 4.5 Wallet and money
-
-Money movement is **required** across the board: a user cannot switch off being told their balance changed.
-
-| Event | Fires when | Goes to | `category` | Req. | `route` (+ `params`) | `tag` |
-| --- | --- | --- | --- | --- | --- | --- |
-| Wallet funded | a `wallet-topup` intent settles | funder | `wallet` | **yes** | `wallet-home` | `topup-{ref}` |
-| Funding failed | that intent fails, or expires unpaid | funder | `wallet` | **yes** | `wallet-top-up` | `topup-{ref}` |
-| Funding still pending | a bank transfer has not landed after ~15 min | funder | `wallet` | **yes** | `wallet-home` | `topup-{ref}` |
-| Withdrawal submitted | `POST /wallet/actions` accepted | owner | `wallet` | **yes** | `ledger` | `wd-{ref}` |
-| Withdrawal settled or failed | payout resolves | owner | `wallet` | **yes** | `ledger` | `wd-{ref}` |
-| Transfer sent | transfer settles | sender | `wallet` | **yes** | `ledger` | `txf-{ref}` |
-| Transfer received | transfer settles | recipient | `wallet` | **yes** | `ledger` | `txf-{ref}` |
-| Contribution posted | cooperative contribution settles | member | `wallet` | **yes** | `member-cooperative` | `coop-{ref}` |
-| Interest credited | commitment interest run | member | `wallet` | **yes** | `member-commitment` | `int-{period}` |
-| Rank earning credited | earnings run | member | `wallet` | **yes** | `member-earnings` | `rank-{period}` |
-
-Funding deserves particular care. The customer may background the app the moment the gateway sheet closes, and with a bank transfer they almost certainly will. The push is what tells them it worked: `WalletTopUpScreen` shows "awaiting confirmation" and deliberately does not sit there polling.
-
-### 4.6 Plan, verification and account security
-
-| Event | Fires when | Goes to | `category` | Req. | `route` (+ `params`) | `tag` |
-| --- | --- | --- | --- | --- | --- | --- |
-| Plan activated | plan payment settles | therapist | `wallet` | **yes** | `therapist-today` | `plan-{id}` |
-| Plan payment pending | activation returns `pending_payment` and stays there | therapist | `wallet` | **yes** | `therapist-plan` | `plan-{id}` |
-| Plan payment failed | gateway declines | therapist | `wallet` | **yes** | `therapist-plan` | `plan-{id}` |
-| Plan renewal due | 7 days, then 1 day, before expiry | therapist | `system` | no | `therapist-plan` | `plan-renew-{id}` |
-| Plan expired | expiry passes | therapist | `wallet` | **yes** | `therapist-plan` | `plan-{id}` |
-| Verification approved or rejected | admin decides | applicant | `system` | **yes** | `therapist-today` or `become-therapist` | `verify-{id}` |
-| New verification to review | applicant submits | admins | `system` | no | `admin-approvals` | `verify-{id}` |
-| Sign-in on a new device | session created on an unrecognised device | account owner | `system` | **yes** | `security-privacy` | `session-{id}` |
-| Password or email changed | credential change succeeds | account owner | `system` | **yes** | `security-privacy` | `cred-{ts}` |
-| Payout account changed | therapist payout details change | therapist | `system` | **yes** | `therapist-payout-account` | `payout-{ts}` |
-| Deletion scheduled or completed | account deletion flow | account owner | `system` | **yes** | `security-privacy` | `del-{ts}` |
-
-### 4.7 Marketing
-
-Anything promotional is gated on the `marketing` preference being explicitly `true`, sent at `priority: "normal"`, and carries `category: "system"` on the wire. It is the only class of message that may be suppressed entirely.
+Each carries an `id` param, which gives the notification a tag: a second ask
+replaces the first in the shade rather than stacking beside it.
 
 ---
+
+## 4. Notification catalogue
+
+Merged from the mobile team's copy on 8 September 2026 and rebuilt from the send
+sites rather than transcribed, because this table is a claim about what the
+server does and the server is here. Every row below is a live
+`PushDispatcher` call; if a row is wrong, the code is what to change.
+
+`security` and `money` (the preference key for `wallet`) outrank quiet hours and
+cannot be switched off. Everything else respects both.
+
+### 4.1 Care requests and the case lifecycle
+
+| Event | Goes to | `category` | `route` |
+| --- | --- | --- | --- |
+| Care request submitted | client | `cases` | `care-requests` |
+| Care request sent to a named therapist | therapist | `cases` | `therapist-care-requests` |
+| Client withdrew a request | therapist | `cases` | `therapist-care-requests` |
+| Request accepted | client | `cases` | `care-requests` |
+| Request declined | client | `cases` | `care-requests` |
+| Care plan proposed | client | `cases` | `care-plan` |
+| Care plan paid for | therapist | `cases` | `case-file` |
+| Treatment started | client | `cases` | `care-hub` |
+| Follow-up booked | client | `cases` | `care-hub` |
+| Care plan nearly spent | client | `cases` | `care-plan` |
+| Case closed | client | `cases` | `care-hub` |
+| Therapist shared a resource | client | `cases` | — *(held, see 4.5)* |
+
+### 4.2 Health profile access
+
+| Event | Goes to | `category` | `route` | Notes |
+| --- | --- | --- | --- | --- |
+| Access requested | client | `cases` | `health-profile-access` | **sensitive** — the practitioner's name stays off the lock screen |
+| Access granted or withdrawn | therapist | `cases` | `case-file` | Carries the case file's id, not the consent row's |
+
+### 4.3 Appointments
+
+| Event | Goes to | `category` | `route` |
+| --- | --- | --- | --- |
+| Session requested | therapist | `appointments` | — |
+| Session started | client | `appointments` | `video-visit` + id, or none *(see 4.5)* |
+| Session status changed | the other party | `appointments` | — |
+| Reschedule proposed | the other party | `appointments` | — |
+| Session closed as abandoned | both | `appointments` | — |
+| You were rated | therapist | `appointments` | `therapist-profile` |
+
+### 4.4 Money, orders and security
+
+| Event | Goes to | `category` | `route` | Notes |
+| --- | --- | --- | --- | --- |
+| Order placed | buyer | `orders` | — | |
+| Order placed on your behalf | beneficiary | `orders` | — | Admin and staff only; therapists cannot place these |
+| Wallet credited | user | `wallet` | `wallet-home` | **sensitive** |
+| Contribution received | user | `wallet` | `wallet-home` | **sensitive** |
+| Withdrawal submitted | user | `wallet` | `ledger` | **sensitive** |
+| Transfer submitted | user | `wallet` | `ledger` | **sensitive** |
+| Therapist plan activated | therapist | `cases` | — | |
+| Plan payment pending | therapist | `cases` | — | |
+| Password changed | user | `security` | — | Cannot be switched off |
+| Password reset confirmation failed | user | `security` | `security-privacy` | Cannot be switched off |
+| Payout account changed | user | `security` | `wallet-home` | Cannot be switched off |
+| Account deletion requested | user | `security` | — | Cannot be switched off |
+| New chat message | recipient | `chat` | — | |
+
+### 4.5 The route names, and the three that had no screen
+
+Writing this table down found ten sends passing a URL path where §3.2 requires a
+Vue Router route name. An unknown name is not an error — the app falls back to
+the inbox by design — so each of those taps had been landing one screen from
+where it was aimed, with nothing in any log to say so. The fallback that makes
+the contract safe is what hid the bug.
+
+Seven are fixed with names the mobile team supplied on 8 September 2026:
+`care-requests`, `therapist-care-requests`, `therapist-profile`,
+`security-privacy`, and `point-facility-session`. The remaining three needed a
+decision rather than a name.
+
+**`point-facility-session` takes no `:id` yet.** The send carries the param
+anyway. Vue Router drops a param the route has no segment for, so today the tap
+opens the generic session screen — no worse than omitting it — and the moment
+the segment is added it starts resolving with no change on this side.
+
+**Session started has no client-side screen unless it is a video visit.** The
+client app has booking and the care hub, and nothing that opens one appointment.
+So the send routes to `video-visit` with the appointment id when the visit is
+video, and carries no route at all otherwise. Landing in the inbox deliberately
+is honest; routing "your session has started" at the booking flow is not.
+
+**The resource-share push is held entirely.** CD7 "Resources" is designed but
+not built, and there is no route that answers to it, so the notification would
+buzz a client about something they cannot reach. The share is still recorded;
+only the nudge waits, behind `cruxcare.resources.notify_on_share`. Inventing a
+name now would guarantee a silent mismatch the day the screen ships under a
+different one.
+
+`PushRouteContractTest` now scans every source file for a `route:` argument
+beginning with `/` and fails if one appears, so this class of bug cannot return
+quietly.
 
 ## 5. Sequences worth agreeing on
 

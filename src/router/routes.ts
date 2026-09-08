@@ -280,7 +280,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/point-facility/session',
+    // The id is optional because the push carries one and the tab bar does not.
+    // The screen is still a stub and does not read it yet, but with the segment
+    // here the id survives into the route rather than being dropped by the
+    // router — so the notification's params stop going nowhere (backend N3.2).
+    path: '/point-facility/session/:id?',
     name: 'point-facility-session',
     component: () => import('@/features/member/screens/PointFacilityScreen.vue'),
     props: { view: 'session' },
