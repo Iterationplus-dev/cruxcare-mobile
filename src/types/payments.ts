@@ -10,7 +10,7 @@
 
 export type PaymentProviderId = 'monnify' | 'mock';
 
-export type PaymentPurpose = 'therapist-plan' | 'order' | 'wallet-topup';
+export type PaymentPurpose = 'therapist-plan' | 'order' | 'wallet-topup' | 'care-plan';
 
 /**
  * Which rail the customer picked. It is a *preference*, not a guarantee: the

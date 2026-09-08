@@ -5,7 +5,7 @@ import type { User } from '@/types/user';
 import type { Transaction, Wallet } from '@/types/wallet';
 import type { CurrencyIndex, LocalBlock, SupportedCurrency } from '@/types/money';
 import type { SupportTicket } from '@/types/support';
-import type { HealthProfileAccess } from '@/types/care';
+import type { CarePlanOption, CareSubscription, HealthProfileAccess } from '@/types/care';
 import pCayenmis from '@/assets/images/p-cayenmis.jpg';
 import pGreenTea from '@/assets/images/p-green-tea.jpg';
 import pGimPowder from '@/assets/images/p-gim-powder.jpg';
@@ -276,6 +276,64 @@ healthProfiles.set('user-1', {
   lastUpdatedAt: '2025-11-02T00:00:00Z',
 });
 
+/**
+ * The cadences a client is offered (D2b). Priced by the server in the real
+ * thing; here they are fixed so the screen has the four drawn rows plus the
+ * "Most chosen" pill on one of them.
+ */
+export const carePlanOptions: CarePlanOption[] = [
+  {
+    id: 'plan-weekly-1m',
+    cadence: 'weekly',
+    title: '1 visit a week',
+    durationLabel: '1 month',
+    visits: 4,
+    durationDays: 30,
+    amountMinor: 4000,
+    perVisitMinor: 1000,
+    currency: 'USD',
+    recommended: false,
+  },
+  {
+    id: 'plan-twice-3m',
+    cadence: 'twice-weekly',
+    title: '2 visits a week',
+    durationLabel: '3 months',
+    visits: 24,
+    durationDays: 90,
+    amountMinor: 21000,
+    perVisitMinor: 875,
+    currency: 'USD',
+    recommended: true,
+  },
+  {
+    id: 'plan-thrice-6m',
+    cadence: 'thrice-weekly',
+    title: '3 visits a week',
+    durationLabel: '6 months',
+    visits: 72,
+    durationDays: 180,
+    amountMinor: 39000,
+    perVisitMinor: 542,
+    currency: 'USD',
+    recommended: false,
+  },
+  {
+    id: 'plan-thrice-1y',
+    cadence: 'thrice-weekly',
+    title: '3 visits a week',
+    durationLabel: '1 year',
+    visits: 144,
+    durationDays: 365,
+    amountMinor: 72000,
+    perVisitMinor: 500,
+    currency: 'USD',
+    recommended: false,
+  },
+];
+
+export const careSubscriptions: CareSubscription[] = [];
+
 export const caseFiles: CaseFile[] = [
   {
     id: 'case-1',
@@ -302,6 +360,25 @@ export const caseFiles: CaseFile[] = [
     ],
     sessionCount: 3,
     lastSessionAt: '2026-07-28T10:00:00Z',
+    status: 'active',
+    diagnosis: 'Mild lumbar strain with reduced flexion',
+    treatmentPlan: {
+      planId: null,
+      cadence: null,
+      startDate: null,
+      endDate: null,
+      summary: null,
+      proposedAt: null,
+      agreedAt: null,
+    },
+    subscription: null,
+    treatmentStartedAt: null,
+    healthProfileAccess: {
+      status: 'pending',
+      reason: 'To check for conditions that affect which exercises are safe to prescribe.',
+      requestedAt: new Date(Date.now() - 36e5 * 30).toISOString(),
+      respondedAt: null,
+    },
   },
 ];
 
@@ -593,6 +670,7 @@ export const healthProfileAccess: HealthProfileAccess[] = [
     therapistName: 'Amaka Obi',
     clientId: 'user-1',
     status: 'pending',
+    reason: 'To check for conditions that affect which exercises are safe to prescribe.',
     requestedAt: new Date(Date.now() - 36e5 * 30).toISOString(),
     respondedAt: null,
   },

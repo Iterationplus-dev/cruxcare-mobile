@@ -202,6 +202,92 @@ export interface HealthProfile {
   lastUpdatedAt: string | null;
 }
 
+/**
+ * What the server records on the case itself. Only these four are in use
+ * (`new`, `active`, `rejected`, `closed`); the treatment stage a therapist
+ * actually works through is derived from the case file, not from this — see
+ * `caseStage`. Kept open-ended because the server capitalises inconsistently.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type CaseStatus = 'new' | 'active' | 'rejected' | 'closed' | (string & {});
+
+/** How often the client is seen. The catalogue is server-owned; these are the
+ *  four presets drawn in D2b, and `custom` is agreed with the therapist. */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type CarePlanCadence = 'weekly' | 'twice-weekly' | 'thrice-weekly' | 'custom' | (string & {});
+
+/**
+ * One row on the client's care plan screen (D2b).
+ *
+ * Every figure is the server's. `perVisitMinor` is sent rather than divided on
+ * the device: a price the app computes and a price the app charges must never
+ * be two different numbers, and rounding a division is exactly where they part.
+ */
+export interface CarePlanOption {
+  id: string;
+  cadence: CarePlanCadence;
+  /** "2 visits a week" — the server's wording, not assembled from the cadence. */
+  title: string;
+  /** "3 months · 24 visits · $8.75 a visit" is built from these three. */
+  durationLabel: string;
+  visits: number;
+  durationDays: number;
+  amountMinor: number;
+  perVisitMinor: number | null;
+  currency: string;
+  /** Drawn as the "Most chosen" pill. At most one option carries it. */
+  recommended: boolean;
+}
+
+/**
+ * What the client is paying for, once they have. `visitsRemaining` is the
+ * balance the booking screen spends, and it is the server's count — the app
+ * has no way to know about a visit booked on another device.
+ */
+export interface CareSubscription {
+  id: string;
+  planId: string;
+  caseId: string;
+  cadence: CarePlanCadence;
+  status: CareSubscriptionStatus;
+  visitsTotal: number;
+  visitsUsed: number;
+  visitsRemaining: number;
+  startedAt: string | null;
+  renewsAt: string | null;
+  endsAt: string | null;
+  /** Unused visits roll over for 30 days; this is when they stop being real. */
+  rolloverEndsAt: string | null;
+  amountMinor: number;
+  currency: string;
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type CareSubscriptionStatus =
+  | 'awaiting-payment'
+  | 'active'
+  | 'lapsed'
+  | 'cancelled'
+  | (string & {});
+
+/**
+ * The plan the therapist proposes and the client pays for. It is one object
+ * because the three parts only mean anything together: a cadence with no
+ * window is not a course of treatment, and a window with no cadence cannot be
+ * scheduled.
+ */
+export interface TreatmentPlan {
+  planId: string | null;
+  cadence: CarePlanCadence | null;
+  startDate: string | null;
+  endDate: string | null;
+  /** The therapist's own words on what the course is for. Shown to the client
+   *  above the price, because a cadence alone is not a reason to pay. */
+  summary: string | null;
+  proposedAt: string | null;
+  agreedAt: string | null;
+}
+
 export interface CaseFileNote {
   id: string;
   authorId: string;
@@ -249,6 +335,23 @@ export interface CaseFile {
    * from has to come from the same place the counts do.
    */
   relationshipState?: ClientRelationshipState;
+  /**
+   * Whether this therapist may read the client's health profile, carried on the
+   * case file itself so opening one costs a single request rather than two.
+   * Absent on servers older than backend note §15.5, which reads as "never asked".
+   */
+  healthProfileAccess?: CaseFileHealthAccess;
+  /** The proposed course of treatment. Absent until the therapist writes one. */
+  treatmentPlan?: TreatmentPlan;
+  /** The client's paid plan, once there is one. Null while unpaid — which is
+   *  a state the therapist must see, since it is what blocks starting. */
+  subscription?: CareSubscription | null;
+  /** When treatment actually began, as distinct from when it was planned to. */
+  treatmentStartedAt?: string | null;
+  closedAt?: string | null;
+  closingSummary?: string | null;
+  /** Set when the therapist asks for a review after the window ends. */
+  followUpDueAt?: string | null;
 }
 
 /** Matches the server's vocabulary exactly. */
@@ -346,6 +449,27 @@ export interface HealthProfileAccess {
   therapistName: string | null;
   clientId: string;
   status: HealthProfileAccessStatus;
+  /** Why the therapist says they need it, in their own words, capped at 240 by
+   *  the server. Shown to the client on the consent screen: a stated case is a
+   *  different question to a bare demand. Null on rows raised before it existed. */
+  reason: string | null;
   requestedAt: string;
+  respondedAt: string | null;
+}
+
+/**
+ * The same standing decision seen from the therapist's side, where one more
+ * state exists: nobody has asked yet. The server sends `not-requested` rather
+ * than omitting the object, because "never asked" and "asked and refused" are
+ * different screens, and inferring one from the absence of the other reads
+ * correctly for a year and then does not (backend note §15.5).
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type CaseFileAccessStatus = 'not-requested' | HealthProfileAccessStatus;
+
+export interface CaseFileHealthAccess {
+  status: CaseFileAccessStatus;
+  reason: string | null;
+  requestedAt: string | null;
   respondedAt: string | null;
 }

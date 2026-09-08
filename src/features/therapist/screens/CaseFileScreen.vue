@@ -64,6 +64,90 @@
           </div>
         </AppCard>
 
+        <!-- Where this case has got to, and who it is waiting on. Derived from
+             what is recorded rather than from a status column, so it cannot
+             claim a stage the data does not support. -->
+        <AppCard class="cc-stage" :class="'cc-stage--' + stage.waitingOn">
+          <div class="cc-stage__head">
+            <span class="cc-stage__label">{{ stage.label }}</span>
+            <AppBadge v-if="stage.waitingOn === 'client'" tone="warning" label="With the client" />
+          </div>
+          <p class="cc-stage__detail">{{ stage.detail }}</p>
+
+          <div v-if="stageActions.length" class="cc-stage__actions">
+            <AppButton
+              v-for="action in stageActions"
+              :key="action.key"
+              :variant="action.primary ? 'primary' : 'secondary'"
+              :loading="busyAction === action.key"
+              :full-width="false"
+              @click="action.run"
+            >
+              {{ action.label }}
+            </AppButton>
+          </div>
+        </AppCard>
+
+        <!-- The course of treatment, once there is one. Kept apart from the
+             stage card because it is a record, not a prompt. -->
+        <AppCard v-if="plan?.cadence" style="padding: 0">
+          <AppListRow
+            title="Treatment plan"
+            :subtitle="planSubtitleLine"
+            icon="event_repeat"
+            chevron
+            clickable
+            :divider="!!subscription"
+            @click="router.push({ name: 'treatment-plan', params: { id } })"
+          />
+          <AppListRow
+            v-if="subscription"
+            title="Care plan"
+            :subtitle="subscriptionLine"
+            :subtitle-tone="subscriptionTone"
+            icon="payments"
+            :divider="false"
+          />
+        </AppCard>
+
+        <!-- Consent, not a data panel: what it shows in each state is decided
+             by healthProfileAccessView, so the screen cannot invent a fifth. -->
+        <AppCard class="cc-hp">
+          <div class="cc-hp__head">
+            <AppIcon name="medical_information" :color="accessTone" :size="20" />
+            <div class="cc-hp__headings">
+              <span class="cc-text-body-strong" style="font-size: 14.5px">{{ access.title }}</span>
+              <span class="cc-text-caption">{{ access.message }}</span>
+            </div>
+          </div>
+
+          <template v-if="access.showsProfile">
+            <LoadingState v-if="profilePending" label="Loading health profile…" />
+            <dl v-else-if="profile" class="cc-hp__sections">
+              <div v-for="section in profile.sections" :key="section.key" class="cc-hp__section">
+                <dt class="cc-text-caption">{{ section.label }}</dt>
+                <!-- A section with no value was left blank by the client. It is
+                     not the same as one withheld, and must not read as one. -->
+                <dd class="cc-text-body" :class="{ 'cc-unset': !section.value }">
+                  {{ section.value || 'Not recorded' }}
+                </dd>
+              </div>
+            </dl>
+          </template>
+
+          <template v-if="access.canRequest">
+            <AppInput
+              v-model="reasonDraft"
+              label="Why you need it (optional)"
+              placeholder="e.g. To check for conditions that affect which exercises are safe"
+              helper="The client reads this when they decide. 240 characters."
+            />
+            <AppButton variant="secondary" :loading="asking" @click="onAskForAccess">
+              {{ access.kind === 'revoked' ? 'Ask again' : 'Ask to read this profile' }}
+            </AppButton>
+          </template>
+        </AppCard>
+
         <p class="cc-record__label">Client record · {{ (caseFile.clientName || 'CruxCare client').toUpperCase() }}</p>
 
         <!-- TD4's three tiles. Adherence is not among them: the backend has
@@ -167,19 +251,58 @@
         </section>
       </div>
     </ion-content>
+
+    <AppSheet v-model="closing" title="Close this case?">
+      <p class="cc-text-body" style="margin: 0 0 12px">
+        Closing ends the course of treatment. The record stays readable to you both, and any paid
+        visits they have left are unaffected.
+      </p>
+      <textarea
+        v-model="closingSummary"
+        class="cc-textarea"
+        rows="3"
+        maxlength="600"
+        placeholder="How did this course of treatment end?"
+      />
+      <p v-if="closingError" class="cc-close__error">{{ closingError }}</p>
+      <AppButton :loading="busyAction === 'close'" style="margin-bottom: 9px" @click="onCloseCase">
+        Close the case
+      </AppButton>
+      <AppButton variant="text" :disabled="busyAction === 'close'" @click="closing = false">
+        Keep it open
+      </AppButton>
+    </AppSheet>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useQueryClient } from '@tanstack/vue-query';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
-import { AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppInput, AppListRow } from '@/components/ui';
+import {
+  AppBadge,
+  AppButton,
+  AppCard,
+  AppHeader,
+  AppIcon,
+  AppInput,
+  AppListRow,
+  AppSheet,
+} from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { caseFilesApi } from '@/api/case-files.api';
-import { useCaseFile } from '@/composables/useCaseFiles';
+import { healthAccessApi } from '@/api/health-access.api';
+import { useCaseFile, useClientHealthProfile } from '@/composables/useCaseFiles';
 import { findThreadWith, useChatThreads } from '@/composables/useChat';
 import { canEditDiagnosis } from '@/features/therapist/caseFilePermissions';
+import { canScheduleSessions, caseStage } from '@/features/therapist/caseStage';
+import { subscriptionSummary } from '@/features/care/carePlans';
+import { casesApi } from '@/api/cases.api';
+import {
+  healthAccessRequestRefusal,
+  healthProfileAccessView,
+} from '@/features/therapist/healthProfileAccess';
 import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 
@@ -201,6 +324,222 @@ const loadErrorMessage = computed(() =>
     ? loadError.value.message
     : 'Check your connection and try again.',
 );
+
+// --- The case as a course of treatment ---------------------------------------
+const stage = computed(() => caseStage(caseFile.value));
+const plan = computed(() => caseFile.value?.treatmentPlan);
+const subscription = computed(() => caseFile.value?.subscription ?? null);
+const busyAction = ref<string | null>(null);
+const closing = ref(false);
+const closingSummary = ref('');
+const closingError = ref('');
+
+const planSubtitleLine = computed(() => {
+  const current = plan.value;
+  if (!current?.cadence) return 'Not set yet';
+  const window =
+    current.startDate && current.endDate
+      ? formatDate(current.startDate) + ' – ' + formatDate(current.endDate)
+      : 'window not set';
+  return cadenceLabel(current.cadence) + ' · ' + window;
+});
+
+const summary = computed(() => subscriptionSummary(subscription.value));
+const subscriptionLine = computed(() =>
+  summary.value
+    ? [summary.value.visits, summary.value.renewal].filter(Boolean).join(' · ')
+    : 'Not paid for yet',
+);
+const subscriptionTone = computed(() =>
+  summary.value?.tone === 'warning' ? ('warning' as const) : undefined,
+);
+
+interface StageAction {
+  key: string;
+  label: string;
+  primary: boolean;
+  /** Nothing consumes the result — a navigation promise and a plain
+   *  assignment are both legitimate here, so the return type stays open. */
+  run: () => unknown;
+}
+
+/**
+ * What the therapist can do from here. Built from the stage rather than shown
+ * always and disabled: a control that cannot work is worse than one that is not
+ * there, and "waiting on the client" has no therapist action at all.
+ */
+const stageActions = computed<StageAction[]>(() => {
+  const goToPlan: StageAction = {
+    key: 'plan',
+    label: plan.value?.cadence ? 'Edit the plan' : 'Work out a plan',
+    primary: true,
+    run: () => router.push({ name: 'treatment-plan', params: { id } }),
+  };
+
+  switch (stage.value.stage) {
+    case 'assessment':
+      // Nothing to add: the diagnosis field below this card is the action.
+      return [];
+    case 'planning':
+      return [goToPlan];
+    case 'awaiting-payment':
+      // Theirs to do, so the only thing offered is a way to talk about it.
+      return [{ key: 'chat', label: 'Message them', primary: false, run: goMessages }];
+    case 'ready-to-start':
+      return [
+        { key: 'start', label: 'Start treatment', primary: true, run: onStartTreatment },
+        { ...goToPlan, primary: false },
+      ];
+    case 'in-treatment':
+      return [
+        { key: 'schedule', label: 'Schedule a session', primary: true, run: goSchedule },
+        { key: 'close', label: 'Close case', primary: false, run: () => (closing.value = true) },
+      ];
+    case 'follow-up':
+      return [
+        { key: 'follow-up', label: 'Book a follow-up', primary: true, run: onFollowUp },
+        { key: 'close', label: 'Close case', primary: false, run: () => (closing.value = true) },
+      ];
+    default:
+      return [];
+  }
+});
+
+function cadenceLabel(cadence: string): string {
+  const labels: Record<string, string> = {
+    weekly: '1 visit a week',
+    'twice-weekly': '2 visits a week',
+    'thrice-weekly': '3 visits a week',
+    custom: 'Custom cadence',
+  };
+  return labels[cadence] ?? cadence;
+}
+
+function goSchedule() {
+  if (!canScheduleSessions(caseFile.value)) return;
+  router.push({
+    name: 'therapist-calendar',
+    query: { case: id, client: caseFile.value?.clientId ?? '' },
+  });
+}
+
+async function onStartTreatment() {
+  if (busyAction.value) return;
+  busyAction.value = 'start';
+  try {
+    await casesApi.start(id);
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await toast.show('You can schedule sessions against their plan now.', 'success', {
+      title: 'Treatment started',
+    });
+  } catch (error) {
+    await reportCaseError(error, 'Could not start treatment');
+  } finally {
+    busyAction.value = null;
+  }
+}
+
+async function onFollowUp() {
+  if (busyAction.value) return;
+  busyAction.value = 'follow-up';
+  try {
+    // Two weeks out is a default the therapist can move, not a rule — the
+    // server records whatever date it is sent.
+    const dueAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    await casesApi.scheduleFollowUp(id, dueAt, 'Review after the treatment window.');
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await toast.show('They will be reminded, and so will you.', 'success', {
+      title: 'Follow-up booked',
+    });
+  } catch (error) {
+    await reportCaseError(error, 'Could not book that follow-up');
+  } finally {
+    busyAction.value = null;
+  }
+}
+
+async function onCloseCase() {
+  if (!closingSummary.value.trim()) {
+    // Mirrors the server's rule rather than sending a blank to be refused: a
+    // case that ends with no account of how it ended is unusable later.
+    closingError.value = 'Say how this course of treatment ended.';
+    return;
+  }
+  busyAction.value = 'close';
+  closingError.value = '';
+  try {
+    await casesApi.close(id, closingSummary.value.trim());
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    closing.value = false;
+    closingSummary.value = '';
+    await toast.show('The record stays readable to both of you.', 'success', {
+      title: 'Case closed',
+    });
+  } catch (error) {
+    await reportCaseError(error, 'Could not close this case');
+  } finally {
+    busyAction.value = null;
+  }
+}
+
+async function reportCaseError(error: unknown, title: string) {
+  // The case may have moved on in another session, so this refetches before
+  // reporting — the message should describe what is true now.
+  await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+  const message =
+    error instanceof ApiError ? error.message : 'Check your connection and try again.';
+  await toast.show(message, 'warning', { title });
+}
+
+// --- Health profile access ---------------------------------------------------
+const queryClient = useQueryClient();
+const reasonDraft = ref('');
+const asking = ref(false);
+
+const clientId = computed(() => caseFile.value?.clientId ?? '');
+const accessGranted = computed(() => caseFile.value?.healthProfileAccess?.status === 'granted');
+const {
+  data: profile,
+  isPending: profileLoading,
+  error: profileError,
+} = useClientHealthProfile(clientId, accessGranted);
+
+/** vue-query reports a disabled query as pending forever, so the spinner has to
+ *  be gated on the fetch actually being allowed to run. */
+const profilePending = computed(() => accessGranted.value && profileLoading.value && !profile.value);
+
+const access = computed(() => healthProfileAccessView(caseFile.value?.healthProfileAccess, profileError.value));
+
+const accessTone = computed(() => {
+  if (access.value.kind === 'granted') return 'var(--cc-color-primary)';
+  if (access.value.kind === 'lapsed' || access.value.kind === 'unavailable') {
+    return 'var(--cc-color-warning)';
+  }
+  return 'var(--cc-ink-400)';
+});
+
+async function onAskForAccess() {
+  if (!clientId.value || asking.value) return;
+  asking.value = true;
+  try {
+    await healthAccessApi.request(clientId.value, reasonDraft.value);
+    reasonDraft.value = '';
+    // The case file carries the access state, so it is what has gone stale.
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await toast.show(
+      'They will be asked to allow it. You will hear when they answer.',
+      'success',
+      { title: 'Request sent' },
+    );
+  } catch (error) {
+    // A 409 means this screen was looking at a stale answer, so refetching is
+    // the fix and the message says what is actually true now.
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await toast.show(healthAccessRequestRefusal(error), 'warning', { title: 'Not sent' });
+  } finally {
+    asking.value = false;
+  }
+}
 
 const draftNote = ref('');
 
@@ -320,6 +659,82 @@ function formatDate(iso: string) {
 </script>
 
 <style scoped>
+.cc-stage {
+  border-left: 3px solid var(--cc-color-primary);
+}
+
+.cc-stage--client {
+  border-left-color: var(--cc-color-warning);
+}
+
+.cc-stage--nobody {
+  border-left-color: var(--cc-color-success);
+}
+
+.cc-stage__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cc-stage__label {
+  font-size: 15.5px;
+  font-weight: 700;
+}
+
+.cc-stage__detail {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--cc-ink-400);
+}
+
+.cc-stage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cc-close__error {
+  margin: 6px 0 10px;
+  font-size: 12.5px;
+  color: var(--cc-error-surface-text);
+}
+
+.cc-hp__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cc-hp__headings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cc-hp__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--cc-divider);
+}
+
+.cc-hp__section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cc-hp__sections dd {
+  margin: 0;
+}
+
 .cc-record__label {
   margin: 4px 0 -4px;
   font-family: var(--cc-font-interface);

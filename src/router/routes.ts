@@ -365,6 +365,14 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    // D2b. Keyed on the case because the plans offered are the ones the
+    // therapist proposed for it, not a global price list.
+    path: '/care/cases/:id/plan',
+    name: 'care-plan',
+    component: () => import('@/features/care/screens/CarePlanScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     // Where PR4's "Health profile access" row leads: the client's answer to a
     // therapist's request, which had nowhere to land before this.
     path: '/profile/health-profile-access',
@@ -481,6 +489,14 @@ const routes: RouteRecordRaw[] = [
     path: '/therapist/clients/:id',
     name: 'case-file',
     component: () => import('@/features/therapist/screens/CaseFileScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'therapist' },
+  },
+  {
+    // The cadence and window the client is asked to agree to. Its own screen
+    // rather than a sheet on the case file: it is the thing being bought.
+    path: '/therapist/clients/:id/plan',
+    name: 'treatment-plan',
+    component: () => import('@/features/therapist/screens/TreatmentPlanScreen.vue'),
     meta: { requiresAuth: true, requiresRole: 'therapist' },
   },
   {

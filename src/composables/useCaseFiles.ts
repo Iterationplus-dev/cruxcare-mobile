@@ -31,3 +31,23 @@ export function useHealthProfile() {
     retry: false,
   });
 }
+
+/**
+ * One client's health profile, read by their therapist.
+ *
+ * The client id is in the query key rather than only in the closure: without it
+ * a therapist opening a second client's file is served the first one's profile
+ * from cache, which is the one mistake this screen must not make.
+ *
+ * `enabled` keeps it from firing until the case file says access was granted —
+ * an unasked read is a guaranteed 403, and 403s are not retried because no
+ * amount of trying turns a refusal into a yes.
+ */
+export function useClientHealthProfile(clientId: MaybeRef<string>, enabled: MaybeRef<boolean>) {
+  return useQuery({
+    queryKey: computed(() => ['health-profile', 'client', unref(clientId)]),
+    queryFn: () => healthProfileApi.forClient(unref(clientId)),
+    enabled: computed(() => Boolean(unref(enabled) && unref(clientId))),
+    retry: false,
+  });
+}

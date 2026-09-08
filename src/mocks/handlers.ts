@@ -4,10 +4,16 @@ import type { RegisterPayload } from '@/api/auth.api';
 import type { CreateAppointmentPayload } from '@/api/appointments.api';
 import type { ProductQuery } from '@/api/products.api';
 import type { CartItem, CheckoutQuote, Order } from '@/types/marketplace';
-import type { CareRequest, HealthProfile, TherapistCareRequest, WorkingDay } from '@/types/care';
+import type {
+  CareRequest,
+  HealthProfile,
+  HealthProfileAccess,
+  TherapistCareRequest,
+  WorkingDay,
+} from '@/types/care';
 import type { WalletTopUpQuote } from '@/types/wallet';
 import type { TherapistPlanTier, User } from '@/types/user';
-import { genderOptions } from '@/types/user';
+import { fullName, genderOptions } from '@/types/user';
 import {
   MAX_SPECIALTIES,
   MAX_SPECIALTY_LENGTH,
@@ -53,6 +59,24 @@ function maskPhone(phone: string): string {
 
 function paginate<T>(items: T[]) {
   return { data: items, meta: { nextCursor: null, hasMore: false } };
+}
+
+/**
+ * The client answers on their own screen; the therapist reads the answer off
+ * the case file. Two records of one decision, so they are written together —
+ * a grant the case file never heard about is the bug this prevents.
+ */
+function syncCaseFileAccess(row: HealthProfileAccess) {
+  const caseFile = db.caseFiles.find(
+    (c) => c.clientId === row.clientId && c.therapistId === row.therapistId,
+  );
+  if (!caseFile) return;
+  caseFile.healthProfileAccess = {
+    status: row.status,
+    reason: row.reason,
+    requestedAt: row.requestedAt,
+    respondedAt: row.respondedAt,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1201,6 +1225,7 @@ const careHandlers: HttpHandler[] = [
     if (!row) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
     row.status = 'granted';
     row.respondedAt = new Date().toISOString();
+    syncCaseFileAccess(row);
     return HttpResponse.json(row);
   }),
 
@@ -1213,7 +1238,276 @@ const careHandlers: HttpHandler[] = [
     if (!row) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
     row.status = 'revoked';
     row.respondedAt = new Date().toISOString();
+    syncCaseFileAccess(row);
     return HttpResponse.json(row);
+  }),
+
+  /** The therapist asks. Re-asking reopens the same row rather than raising a
+   *  second one the client would have to refuse twice (backend note §15.3). */
+  http.post(url('/clients/:clientId/health-profile/access'), async ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const clientId = String(params.clientId);
+
+    const caseFile = db.caseFiles.find(
+      (c) => c.clientId === clientId && c.therapistId === user.id,
+    );
+    if (!caseFile) {
+      return HttpResponse.json({ message: 'Client not found.', code: 'client_not_found' }, { status: 404 });
+    }
+
+    const body = (await request.json().catch(() => ({}))) as { reason?: string };
+    const reason = body.reason?.trim() ? body.reason.trim().slice(0, 240) : null;
+
+    const existing = db.healthProfileAccess.find(
+      (a) => a.clientId === clientId && a.therapistId === user.id,
+    );
+    if (existing?.status === 'pending') {
+      return HttpResponse.json(
+        {
+          message: 'You have already asked.',
+          code: 'access_already_requested',
+          meta: { requestedAt: existing.requestedAt },
+        },
+        { status: 409 },
+      );
+    }
+    if (existing?.status === 'granted') {
+      return HttpResponse.json(
+        { message: 'Access is already granted.', code: 'access_already_granted' },
+        { status: 409 },
+      );
+    }
+
+    const now = new Date().toISOString();
+    const row = existing ?? {
+      id: `hpa-${db.healthProfileAccess.length + 1}`,
+      therapistId: user.id,
+      therapistName: fullName(user) || null,
+      clientId,
+      status: 'pending' as const,
+      reason,
+      requestedAt: now,
+      respondedAt: null,
+    };
+    row.status = 'pending';
+    row.reason = reason;
+    row.requestedAt = now;
+    row.respondedAt = null;
+    if (!existing) db.healthProfileAccess.push(row);
+
+    caseFile.healthProfileAccess = {
+      status: 'pending',
+      reason,
+      requestedAt: now,
+      respondedAt: null,
+    };
+
+    return HttpResponse.json(row, { status: 201 });
+  }),
+
+  /** Every refusal names itself, so the panel can tell a wait from a no from a
+   *  lapsed plan. Only a plan lapse and an untreated client answer 404. */
+  http.get(url('/clients/:clientId/health-profile'), ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const clientId = String(params.clientId);
+
+    const caseFile = db.caseFiles.find(
+      (c) => c.clientId === clientId && c.therapistId === user.id,
+    );
+    // Which clients a therapist does *not* treat is not probeable.
+    if (!caseFile) {
+      return HttpResponse.json(
+        { message: 'Health profile not found.', code: 'health_profile_not_found' },
+        { status: 404 },
+      );
+    }
+
+    const status = caseFile.healthProfileAccess?.status ?? 'not-requested';
+    if (status !== 'granted') {
+      const code =
+        status === 'pending'
+          ? 'access_pending'
+          : status === 'revoked'
+            ? 'access_revoked'
+            : 'access_not_requested';
+      return HttpResponse.json({ message: 'Not shared.', code }, { status: 403 });
+    }
+
+    const profile = db.healthProfiles.get(clientId);
+    if (!profile) {
+      return HttpResponse.json(
+        { message: 'Health profile not found.', code: 'health_profile_not_found' },
+        { status: 404 },
+      );
+    }
+    return HttpResponse.json(profile);
+  }),
+
+  // --- The case as a course of treatment -----------------------------------
+
+  http.get(url('/care/plans'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    return HttpResponse.json(paginate(db.carePlanOptions));
+  }),
+
+  http.get(url('/care/subscriptions/current'), ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const caseId = new URL(request.url).searchParams.get('caseId');
+    const found = db.careSubscriptions.find((s) => s.caseId === caseId);
+    return HttpResponse.json(found ?? null);
+  }),
+
+  http.post(url('/care/subscriptions'), async ({ request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const body = (await request.json()) as {
+      caseId: string;
+      planId: string;
+      expectedAmountMinor: number;
+    };
+
+    const option = db.carePlanOptions.find((p) => p.id === body.planId);
+    if (!option) {
+      return HttpResponse.json({ message: 'That plan is no longer offered.', code: 'plan_not_found' }, { status: 404 });
+    }
+    // The price the client saw has to be the price they are charged.
+    if (option.amountMinor !== body.expectedAmountMinor) {
+      return HttpResponse.json(
+        {
+          message: 'That price has changed. Check the plan and try again.',
+          code: 'plan_price_changed',
+          meta: { amountMinor: option.amountMinor, currency: option.currency },
+        },
+        { status: 409 },
+      );
+    }
+
+    const caseFile = db.caseFiles.find((c) => c.id === body.caseId);
+    const now = new Date();
+    const ends = new Date(now.getTime() + option.durationDays * 86400000);
+    const subscription = {
+      id: 'sub-' + (db.careSubscriptions.length + 1),
+      planId: option.id,
+      caseId: body.caseId,
+      cadence: option.cadence,
+      status: 'active' as const,
+      visitsTotal: option.visits,
+      visitsUsed: 0,
+      visitsRemaining: option.visits,
+      startedAt: now.toISOString(),
+      renewsAt: ends.toISOString(),
+      endsAt: ends.toISOString(),
+      rolloverEndsAt: new Date(ends.getTime() + 30 * 86400000).toISOString(),
+      amountMinor: option.amountMinor,
+      currency: option.currency,
+    };
+    db.careSubscriptions.push(subscription);
+
+    if (caseFile) {
+      caseFile.subscription = subscription;
+      if (caseFile.treatmentPlan) caseFile.treatmentPlan.agreedAt = now.toISOString();
+    }
+    return HttpResponse.json(subscription, { status: 201 });
+  }),
+
+  http.post(url('/care/subscriptions/:id/cancel'), ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const row = db.careSubscriptions.find((s) => s.id === params.id);
+    if (!row) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+    row.status = 'cancelled';
+    const caseFile = db.caseFiles.find((c) => c.id === row.caseId);
+    if (caseFile) caseFile.subscription = row;
+    return HttpResponse.json(row);
+  }),
+
+  /** Proposing again replaces a standing proposal, but never an agreement. */
+  http.post(url('/cases/:id/plan'), async ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const caseFile = db.caseFiles.find((c) => c.id === params.id);
+    if (!caseFile) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+
+    if (caseFile.subscription && caseFile.subscription.status === 'active') {
+      return HttpResponse.json(
+        {
+          message: 'They have already paid for this plan. Close this course to start a new one.',
+          code: 'plan_already_agreed',
+        },
+        { status: 409 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      planId: string | null;
+      cadence: string;
+      startDate: string;
+      endDate: string;
+      summary: string;
+    };
+
+    caseFile.treatmentPlan = {
+      planId: body.planId,
+      cadence: body.cadence,
+      startDate: body.startDate,
+      endDate: body.endDate,
+      summary: body.summary.slice(0, 600),
+      proposedAt: new Date().toISOString(),
+      agreedAt: null,
+    };
+    caseFile.treatmentStartDate = body.startDate;
+    caseFile.treatmentEndDate = body.endDate;
+    return HttpResponse.json(caseFile.treatmentPlan, { status: 201 });
+  }),
+
+  http.post(url('/cases/:id/start'), ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const caseFile = db.caseFiles.find((c) => c.id === params.id);
+    if (!caseFile) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+
+    // A start date against an unpaid plan would let sessions be booked
+    // against visits nobody bought.
+    if (!caseFile.subscription || caseFile.subscription.status !== 'active') {
+      return HttpResponse.json(
+        { message: 'They have not paid for this plan yet.', code: 'plan_not_paid' },
+        { status: 409 },
+      );
+    }
+    caseFile.treatmentStartedAt = new Date().toISOString();
+    return HttpResponse.json(caseFile);
+  }),
+
+  http.post(url('/cases/:id/follow-up'), async ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const caseFile = db.caseFiles.find((c) => c.id === params.id);
+    if (!caseFile) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+    const body = (await request.json()) as { dueAt: string };
+    caseFile.followUpDueAt = body.dueAt;
+    return HttpResponse.json(caseFile);
+  }),
+
+  http.post(url('/cases/:id/close'), async ({ params, request }) => {
+    const user = currentUser(request);
+    if (!user) return unauthorized();
+    const caseFile = db.caseFiles.find((c) => c.id === params.id);
+    if (!caseFile) return HttpResponse.json({ message: 'Not found.' }, { status: 404 });
+    const body = (await request.json()) as { summary: string };
+    if (!body.summary?.trim()) {
+      return HttpResponse.json(
+        { message: 'Say how this course of treatment ended.', code: 'closing_summary_required' },
+        { status: 422 },
+      );
+    }
+    caseFile.status = 'closed';
+    caseFile.closedAt = new Date().toISOString();
+    caseFile.closingSummary = body.summary.trim();
+    return HttpResponse.json(caseFile);
   }),
 
   http.get(url('/health-profile'), ({ request }) => {

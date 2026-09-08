@@ -70,6 +70,19 @@ export const healthProfileApi = {
     return data;
   },
 
+  /**
+   * The read a grant unlocks, for an assigned therapist. Every refusal names
+   * itself — `access_not_requested`, `access_pending` and `access_revoked` come
+   * back as 403s, and only a lapsed plan or a client this therapist does not
+   * treat answers 404 (backend note §15.2). `healthProfileAccessView` turns
+   * those into what the panel shows; nothing here should switch on the status
+   * code alone.
+   */
+  async forClient(clientId: string): Promise<HealthProfile> {
+    const { data } = await apiClient.get<HealthProfile>(`/clients/${clientId}/health-profile`);
+    return data;
+  },
+
   async update(
     sections: HealthProfile['sections'],
     consentVersion: string,

@@ -51,6 +51,17 @@
           <div class="cc-text-body-strong" style="font-size: 16px">Your care</div>
           <AppCard style="padding: 0">
             <AppListRow
+              v-if="carePlanRow"
+              title="Care plan"
+              :subtitle="carePlanRow.subtitle"
+              :subtitle-tone="carePlanRow.tone"
+              icon="event_repeat"
+              :icon-color="carePlanRow.tone === 'warning' ? 'var(--cc-color-warning)' : undefined"
+              chevron
+              clickable
+              @click="router.push({ name: 'care-plan', params: { id: caseFile!.id } })"
+            />
+            <AppListRow
               title="Health profile"
               :subtitle="healthGapSubtitle"
               icon="medical_information"
@@ -188,6 +199,7 @@ import {
 } from '@/features/care/appointmentState';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
+import { subscriptionSummary } from '@/features/care/carePlans';
 import { useTherapist, useTherapists } from '@/composables/useTherapists';
 import { useCareRequests } from '@/composables/useCareRequests';
 import { presentCareRequest } from '@/features/care/careRequestPresentation';
@@ -210,6 +222,28 @@ const { data: caseFilesPage, isPending: caseFilesPending } = useCaseFiles();
 const caseFile = computed(() =>
   caseFilesPage.value?.data.find((cf) => cf.clientId === auth.user?.id),
 );
+/**
+ * The client's own plan, as a row.
+ *
+ * Absent entirely until a therapist has proposed a cadence — a "Care plan" row
+ * leading to an empty screen would be an invitation to pay for nothing. Once
+ * proposed and unpaid it is the one thing on this screen that is waiting on
+ * them, so it says so rather than sitting silently among the others.
+ */
+const carePlanRow = computed<{ subtitle: string; tone?: 'warning' } | null>(() => {
+  const file = caseFile.value;
+  if (!file?.treatmentPlan?.cadence) return null;
+
+  const summary = subscriptionSummary(file.subscription);
+  if (!summary) {
+    return { subtitle: 'Chosen by your therapist · not paid for yet', tone: 'warning' };
+  }
+  return {
+    subtitle: [summary.visits, summary.renewal].filter(Boolean).join(' · '),
+    tone: summary.tone === 'warning' ? 'warning' : undefined,
+  };
+});
+
 const { data: therapist, isPending: therapistPending } = useTherapist(
   computed(() => caseFile.value?.therapistId ?? ''),
 );
