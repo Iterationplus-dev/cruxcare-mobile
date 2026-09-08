@@ -12,7 +12,7 @@
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 4px">Start with the basics</h2>
         <p class="cc-text-subtitle" style="margin: 0 0 16px">
-          You can shop straight away. Your care profile comes later, only if you book a therapist.
+          Complete your care profile only when booking a therapist.
         </p>
 
         <div class="cc-form-row">
@@ -36,7 +36,7 @@
           v-model="email"
           label="Email"
           type="email"
-          placeholder="amara.okafor@gmail.com"
+          placeholder="amara@gmail.com"
           inputmode="email"
           autocomplete="email"
           :error="errors.email"
@@ -160,7 +160,7 @@
             :class="{ 'cc-strength__bar--filled': i <= strength.score }"
           />
         </div>
-        <p class="cc-text-caption" style="margin: 5px 0 12px">
+        <p class="cc-text-caption" style="margin: 5px 0 6px">
           {{ strength.label }} · 8+ characters, one number
         </p>
 

@@ -20,7 +20,7 @@
         <AppInput
           v-model="identifier"
           label="Username or email"
-          placeholder="amara.okafor or amara@example.com"
+          placeholder="amara12 or amara@example.com"
           type="text"
           inputmode="text"
           autocomplete="username"
