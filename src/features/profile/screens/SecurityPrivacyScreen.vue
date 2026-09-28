@@ -144,7 +144,10 @@ import { IonContent, IonPage } from '@ionic/vue';
 import { AppCard, AppHeader, AppListRow, AppSectionLabel } from '@/components/ui';
 import { useRouter } from 'vue-router';
 import { useQuery } from '@tanstack/vue-query';
-import { healthAccessApi } from '@/api/health-access.api';
+import {
+  pendingHealthAccess,
+  useHealthProfileAccess,
+} from '@/composables/useHealthAccess';
 import { securityApi } from '@/api/security.api';
 import { useAuthStore } from '@/stores/auth';
 import { useLocationStore } from '@/stores/location';
@@ -167,17 +170,14 @@ const router = useRouter();
  * access. Saying "access follows the booking" here was describing the rule the
  * platform used to have.
  */
-const { data: accessRows } = useQuery({
-  queryKey: ['health-profile', 'access'],
-  queryFn: () => healthAccessApi.list(),
-});
+const { data: accessRows } = useHealthProfileAccess();
 
 const healthAccessSubtitle = computed(() => {
   const rows = accessRows.value;
   if (!rows) return 'Only therapists you allow';
 
   const granted = rows.filter((r) => r.status === 'granted').length;
-  const waiting = rows.filter((r) => r.status === 'pending').length;
+  const waiting = pendingHealthAccess(rows).length;
 
   if (waiting > 0) {
     return `${waiting} waiting for your answer`;

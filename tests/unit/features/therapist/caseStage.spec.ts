@@ -40,6 +40,7 @@ const subscription = (over: Partial<CareSubscription> = {}): CareSubscription =>
 
 const file = (over: Partial<CaseFile> = {}): CaseFile => ({
   id: 'case-1',
+  caseId: 'case-record-1',
   clientId: 'user-1',
   therapistId: 'therapist-1',
   notes: [],

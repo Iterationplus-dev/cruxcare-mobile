@@ -135,6 +135,23 @@ export const useAuthStore = defineStore('auth', () => {
     return delivery;
   }
 
+  /**
+   * Leave a signup whose code was never entered.
+   *
+   * Deliberately not `logout()`. The token held for an unverified account is
+   * only good for delivering and checking a code, so `POST /auth/logout`
+   * answers 401, and the push registration it tries to revoke was never made.
+   *
+   * Nothing is destroyed: the account stays registered and unverified on the
+   * server, and signing in again lands back on the code screen with a fresh
+   * one. What this drops is the local session that `hydrate` holds open
+   * precisely so the router can pin the app to that screen — without dropping
+   * it, every way out is redirected straight back.
+   */
+  async function abandonPendingSignup() {
+    await clearSession();
+  }
+
   /** `allDevices` also ends every other session on the account. */
   async function logout(allDevices = false) {
     try {
@@ -192,6 +209,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     refreshUser,
     changeSignupEmail,
+    abandonPendingSignup,
     logout,
     linkMembership,
     activateTherapist,

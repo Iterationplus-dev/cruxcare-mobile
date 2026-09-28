@@ -63,6 +63,19 @@
         </AppCard>
       </div>
 
+      <!-- The server refuses this profile while the client is with someone
+           else, and says so with a 403 rather than pretending the therapist
+           does not exist. Saying "not found" about somebody they saw last week
+           would be a lie the screen then has to explain badly. -->
+      <EmptyState
+        v-else-if="blockedBy"
+        icon="lock"
+        title="Not while your care is open"
+        :message="`You are with ${blockedBy.therapistName ?? 'another therapist'}. Finish or end that course of care and you can see other therapists again.`"
+        primary-action="Go to your care"
+        @primary="router.replace({ name: 'care-mine' })"
+      />
+
       <EmptyState
         v-else
         title="Therapist not found"
@@ -82,14 +95,33 @@
              asking again. Before that, booking would be rejected server-side
              for want of an accepted request, so it is not offered. -->
         <AppButton v-if="isAccepted" @click="bookVisit">Book a visit</AppButton>
-        <AppButton
-          v-else
-          :loading="requesting"
-          :disabled="!!standingRequest"
-          @click="requestTherapist"
-        >
-          {{ standingRequest ? 'Request already sent' : 'Request therapist' }}
-        </AppButton>
+        <template v-else>
+          <!-- A client holds one therapist at a time. Saying who they are with
+               beats a button that only fails when tapped — and the way out is
+               to end that care, so this points at it. -->
+          <div v-if="heldElsewhere" class="cc-td__held">
+            <AppIcon name="info" :size="18" color="var(--cc-color-warning-text)" />
+            <p>
+              You are already with <strong>{{ heldElsewhere.therapistName }}</strong>. End that
+              care first and you can ask {{ therapist.name }} instead.
+            </p>
+          </div>
+          <AppButton
+            v-if="heldElsewhere"
+            variant="secondary"
+            @click="router.push({ name: 'care-mine' })"
+          >
+            Go to your care
+          </AppButton>
+          <AppButton
+            v-else
+            :loading="requesting"
+            :disabled="!!standingRequest"
+            @click="requestTherapist"
+          >
+            {{ standingRequest ? 'Request already sent' : 'Request therapist' }}
+          </AppButton>
+        </template>
       </div>
     </ion-content>
   </ion-page>
@@ -101,6 +133,8 @@ import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { AppAvatar, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
+import { assignedElsewhere, blockedWhileEngaged } from '@/features/care/engagement';
+import { useCareEngagement } from '@/composables/useTherapists';
 import { EmptyState, LoadingState } from '@/components/state';
 import { therapistsApi } from '@/api/therapists.api';
 import { ratingLabel, ratingText } from '@/features/care/therapistRating';
@@ -119,9 +153,14 @@ const toast = useToast();
 const auth = useAuthStore();
 const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const therapistId = computed(() => String(route.params.id ?? ''));
-const { data: therapist, isPending } = useTherapist(therapistId);
+const { data: therapist, isPending, error: loadError } = useTherapist(therapistId);
 const queryClient = useQueryClient();
 const requesting = ref(false);
+const { data: engagementState } = useCareEngagement();
+
+/** Set when the profile itself was refused because of an open course of care,
+ *  which is a different thing from the therapist not existing. */
+const blockedBy = computed(() => blockedWhileEngaged(loadError.value));
 
 /**
  * An empty `languages` array is not a missing one: `[].join(', ')` is `''`, so
@@ -153,6 +192,16 @@ const standingRequestMessage = computed(() =>
     : 'You have already asked this therapist. They will respond to your first request.',
 );
 
+/**
+ * Who the client is tied to, when that is someone other than this therapist.
+ * The server refuses either way; this is what lets the screen say so first.
+ */
+const heldElsewhere = computed(() => {
+  const held = engagementState.value?.engagement;
+  if (!held || held.therapistId === therapist.value?.id) return null;
+  return held;
+});
+
 async function requestTherapist() {
   if (!therapist.value) return;
   const target = therapist.value;
@@ -182,6 +231,23 @@ async function requestTherapist() {
       return;
     }
 
+    // "Already with someone else" is a different refusal from "you already
+    // asked this person", and the way out of it is to end the other care.
+    const elsewhere = assignedElsewhere(error);
+    if (elsewhere) {
+      await queryClient.invalidateQueries({ queryKey: ['care-engagement'] });
+      await toast.show(
+        elsewhere.therapistName
+          ? `You are already with ${elsewhere.therapistName}. End that care first.`
+          : error instanceof ApiError
+            ? error.message
+            : 'You are already with another therapist.',
+        'warning',
+        { title: 'Already with a therapist' },
+      );
+      return;
+    }
+
     const message =
       error instanceof ApiError
         ? error
@@ -197,6 +263,22 @@ async function requestTherapist() {
 </script>
 
 <style scoped>
+.cc-td__held {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 13px;
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-color-warning-tint);
+}
+.cc-td__held p {
+  margin: 0;
+  color: var(--cc-color-warning-text);
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
 .cc-screen {
   --background: var(--cc-surface-app);
 }

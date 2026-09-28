@@ -11,12 +11,28 @@
         >
           <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
         </button>
-        <h1 class="cc-text-h1" style="margin: 0">Shop</h1>
-        <button type="button" class="cc-catalog__cart" aria-label="Cart" @click="goCart">
+        <h1 class="cc-text-h1" style="margin: 0">{{ recommendFor ? 'Recommend' : 'Shop' }}</h1>
+        <!-- No cart while recommending: nothing on this screen is being bought
+             by the person holding the phone, so offering a basket is an
+             invitation to the mistake this mode exists to prevent. -->
+        <button
+          v-if="!recommendFor"
+          type="button"
+          class="cc-catalog__cart"
+          aria-label="Cart"
+          @click="goCart"
+        >
           <AppIcon name="shopping_cart" :size="26" color="var(--cc-ink-600)" />
           <span v-if="cart.itemCount > 0" class="cc-catalog__cart-badge">{{ cart.itemCount }}</span>
         </button>
       </div>
+      <p v-if="recommendFor" class="cc-catalog__for">
+        <AppIcon name="assignment_ind" :size="16" color="var(--cc-color-primary)" />
+        <span
+          >Choosing for <strong>{{ recommendClient || 'your client' }}</strong> — this goes on their
+          case, not your cart.</span
+        >
+      </p>
       <div class="cc-catalog__search">
         <AppIcon name="search" :size="20" color="var(--cc-ink-400)" />
         <input v-model="search" type="search" placeholder="Search products & services" />
@@ -48,7 +64,7 @@
           :key="p.id"
           type="button"
           class="cc-product-card"
-          @click="router.push({ name: 'product-detail', params: { id: p.id } })"
+          @click="openProduct(p.id)"
         >
           <div class="cc-product-card__media">
             <ProductImage :media="p.media" :name="formatProductTitle(p.name)" class="cc-product-card__image" />
@@ -59,8 +75,11 @@
             <div class="cc-text-caption" style="margin-bottom: 8px">{{ p.category }}</div>
             <div class="cc-product-card__foot">
               <MoneyAmount :value="p.price" :currency="p.currency" />
+              <!-- While recommending, the quick-add is the wrong shape: a
+                   recommendation carries a note about how to use it, which
+                   only the detail screen has room to ask for. -->
               <button
-                v-if="p.stock > 0"
+                v-if="p.stock > 0 && !recommendFor"
                 type="button"
                 class="cc-product-card__add"
                 :aria-label="`Add ${formatProductTitle(p.name)} to cart`"
@@ -68,7 +87,13 @@
               >
                 <AppIcon name="add" :size="20" color="var(--cc-color-primary)" />
               </button>
-              <span v-else class="cc-text-body-strong" style="font-size: 11.5px; color: var(--cc-color-primary)"
+              <!-- v-else-if, not v-else: hiding the add button while
+                   recommending must not make every in-stock product claim to
+                   be out of stock. -->
+              <span
+                v-else-if="p.stock === 0"
+                class="cc-text-body-strong"
+                style="font-size: 11.5px; color: var(--cc-color-primary)"
                 >Notify me</span
               >
             </div>
@@ -83,7 +108,7 @@
 import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { AppChip, AppIcon, MoneyAmount } from '@/components/ui';
 import ProductImage from '@/components/marketplace/ProductImage.vue';
 import { EmptyState, LoadingState } from '@/components/state';
@@ -97,9 +122,30 @@ import { formatProductTitle } from '@/features/marketplace/productPresentation';
  * add-to-cart and product taps to login instead. */
 const props = defineProps<{ guestMode?: boolean }>();
 
+const route = useRoute();
 const router = useRouter();
 const cart = useCartStore();
 const toast = useToast();
+
+/**
+ * Set when a therapist opened the catalogue from a case file. It turns the
+ * shop into a picker: the buy actions become "add to treatment plan", and the
+ * chosen product is recorded against the case rather than bought here.
+ */
+const recommendFor = computed(() => (route.query.recommendFor as string) || '');
+const recommendClient = computed(() => (route.query.client as string) || '');
+
+function openProduct(id: string) {
+  router.push({
+    name: 'product-detail',
+    params: { id },
+    // Forwarded, not re-derived: the detail screen is where the choice is
+    // actually made, and it has no other way to know who it is for.
+    query: recommendFor.value
+      ? { recommendFor: recommendFor.value, client: recommendClient.value }
+      : {},
+  });
+}
 
 const search = ref('');
 const category = ref('');
@@ -124,6 +170,23 @@ function goCart() {
 </script>
 
 <style scoped>
+.cc-catalog__for {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 10px 0 0;
+  padding: 9px 11px;
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-color-mist);
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 12px;
+  line-height: 17px;
+}
+.cc-catalog__for strong {
+  color: var(--cc-ink-900);
+}
+
 .cc-catalog__header {
   padding: calc(env(safe-area-inset-top) + 4px) 16px 12px;
   background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.62) 55%, rgba(247, 250, 249, 0.92));

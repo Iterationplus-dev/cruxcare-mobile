@@ -119,7 +119,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import { useQueryClient } from '@tanstack/vue-query';
 import {
   AppAvatar,
   AppButton,
@@ -130,6 +130,7 @@ import {
 } from '@/components/ui';
 import { ErrorState, LoadingState } from '@/components/state';
 import { healthAccessApi } from '@/api/health-access.api';
+import { pendingHealthAccess, useHealthProfileAccess } from '@/composables/useHealthAccess';
 import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 import type { HealthProfileAccess } from '@/types/care';
@@ -146,17 +147,9 @@ const toast = useToast();
 const queryClient = useQueryClient();
 const busyId = ref<string | null>(null);
 
-const {
-  data: rows,
-  isPending,
-  isError,
-  refetch,
-} = useQuery({
-  queryKey: ['health-profile', 'access'],
-  queryFn: () => healthAccessApi.list(),
-});
+const { data: rows, isPending, isError, refetch } = useHealthProfileAccess();
 
-const pending = computed(() => (rows.value ?? []).filter((r) => r.status === 'pending'));
+const pending = computed(() => pendingHealthAccess(rows.value));
 const granted = computed(() => (rows.value ?? []).filter((r) => r.status === 'granted'));
 const refused = computed(() => (rows.value ?? []).filter((r) => r.status === 'revoked'));
 

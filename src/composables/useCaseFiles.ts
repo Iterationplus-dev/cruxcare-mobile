@@ -1,6 +1,7 @@
-import { computed, unref, type MaybeRef } from 'vue';
+import { computed, toValue, type MaybeRefOrGetter, unref, type MaybeRef } from 'vue';
 import { useQuery } from '@tanstack/vue-query';
 import { caseFilesApi, healthProfileApi, type CaseFileListParams } from '@/api/case-files.api';
+import { casesApi } from '@/api/cases.api';
 
 /**
  * The caller's case files. Filtering and searching are server-side, so the
@@ -49,5 +50,27 @@ export function useClientHealthProfile(clientId: MaybeRef<string>, enabled: Mayb
     queryFn: () => healthProfileApi.forClient(unref(clientId)),
     enabled: computed(() => Boolean(unref(enabled) && unref(clientId))),
     retry: false,
+  });
+}
+
+/**
+ * What the client owes for a case. Keyed by the *case* id rather than the case
+ * file's — the billing routes live under `/cases/{caseId}` and the two are
+ * different id spaces.
+ */
+export function useCaseBill(caseId: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: computed(() => ['case-bill', toValue(caseId)]),
+    queryFn: () => casesApi.bill(toValue(caseId)),
+    enabled: computed(() => !!toValue(caseId)),
+  });
+}
+
+/** The products on a case, safe for a client screen to read. */
+export function useCaseRecommendations(caseId: MaybeRefOrGetter<string>) {
+  return useQuery({
+    queryKey: computed(() => ['case-recommendations', toValue(caseId)]),
+    queryFn: () => casesApi.recommendations(toValue(caseId)),
+    enabled: computed(() => !!toValue(caseId)),
   });
 }

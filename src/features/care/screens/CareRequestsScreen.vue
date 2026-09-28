@@ -68,9 +68,43 @@
             >
               Withdraw
             </AppButton>
+            <!-- Withdrawing takes back a request nobody answered. Ending a
+                 relationship somebody accepted is a different act, so it is a
+                 different control — and its label says in advance which of the
+                 two outcomes is waiting. -->
+            <AppButton
+              v-else-if="request.status === 'accepted'"
+              variant="destructive-text"
+              :full-width="false"
+              :loading="discontinuing === request.id"
+              @click="onDiscontinue(request)"
+            >
+              {{ endAction.label }}
+            </AppButton>
           </div>
         </AppCard>
       </div>
+
+      <!-- The dead end, shown rather than hidden behind a toast: the client
+           cannot resolve this in the app, and a bare refusal leaves them stuck
+           with a therapist they have asked to leave. -->
+      <AppSheet v-model="supportOpen" title="This one needs a person">
+        <p class="cc-request__support-lede">
+          There is treatment on this case already — a note, a plan, a product or a payment — so
+          ending it is not something the app can do on its own. Support will sort it out with you.
+        </p>
+        <div class="cc-request__support">
+          <a v-if="support?.email" :href="`mailto:${support.email}`" class="cc-request__contact">
+            <AppIcon name="mail" :size="20" color="var(--cc-color-primary)" />
+            <span>{{ support.email }}</span>
+          </a>
+          <a v-if="support?.phone" :href="`tel:${support.phone}`" class="cc-request__contact">
+            <AppIcon name="call" :size="20" color="var(--cc-color-primary)" />
+            <span>{{ support.phone }}</span>
+          </a>
+          <p v-if="support?.hours" class="cc-request__hours">{{ support.hours }}</p>
+        </div>
+      </AppSheet>
     </ion-content>
   </ion-page>
 </template>
@@ -88,12 +122,16 @@ import {
   AppHeader,
   AppIcon,
   AppPullToRefresh,
+  AppSheet,
 } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { therapistsApi } from '@/api/therapists.api';
 import { useCareRequests } from '@/composables/useCareRequests';
 import { useToast } from '@/composables/useToast';
 import { canCancelCareRequest, presentCareRequest } from '@/features/care/careRequestPresentation';
+import { discontinueAction, supportFromError } from '@/features/care/engagement';
+import { useCareEngagement } from '@/composables/useTherapists';
+import type { SupportContact } from '@/types/care';
 import { formatRelativeTime } from '@/utils/formatTime';
 import { ApiError } from '@/types/api';
 import type { CareRequest } from '@/types/care';
@@ -109,6 +147,55 @@ const queryClient = useQueryClient();
 const { data: page, isPending } = useCareRequests();
 const requests = computed(() => page.value?.data ?? []);
 const cancelling = ref<string | null>(null);
+const discontinuing = ref<string | null>(null);
+const supportOpen = ref(false);
+const support = ref<SupportContact | null>(null);
+
+/** `canDiscontinue` is the server saying which outcome is waiting, so the
+ *  control can be labelled before the tap rather than after. */
+const { data: engagementState } = useCareEngagement();
+const endAction = computed(() => discontinueAction(engagementState.value?.engagement));
+
+/**
+ * Ends a working relationship and frees the client to choose again. Refused
+ * with `discontinue_needs_support` once there is anything to unpick, and that
+ * refusal carries the contact — which is the whole point of showing it.
+ */
+async function onDiscontinue(request: CareRequest) {
+  if (discontinuing.value) return;
+
+  // The engagement already told us this one needs a person, and it carried the
+  // contact. Firing the call anyway would spend a round trip to be refused and
+  // land the client in the same sheet.
+  if (endAction.value.needsSupport) {
+    support.value = engagementState.value?.support ?? null;
+    supportOpen.value = true;
+    return;
+  }
+
+  discontinuing.value = request.id;
+  try {
+    await therapistsApi.discontinueRequest(request.id);
+    await queryClient.invalidateQueries({ queryKey: ['care', 'requests'] });
+    await queryClient.invalidateQueries({ queryKey: ['care-engagement'] });
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await toast.show('You can choose another therapist now.', 'success', {
+      title: 'Care ended',
+    });
+  } catch (error) {
+    const contact = supportFromError(error);
+    if (contact) {
+      support.value = contact;
+      supportOpen.value = true;
+      return;
+    }
+    const message =
+      error instanceof ApiError ? error.message : 'We could not end that. Please try again.';
+    await toast.show(message, 'danger', { title: 'Could not end this', dismissLabel: 'Try again' });
+  } finally {
+    discontinuing.value = null;
+  }
+}
 
 const present = (request: CareRequest) => presentCareRequest(request.status);
 
@@ -140,6 +227,40 @@ async function onCancel(request: CareRequest) {
 </script>
 
 <style scoped>
+.cc-request__support-lede {
+  margin: 0 0 14px;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 13.5px;
+  line-height: 20px;
+}
+.cc-request__support {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cc-request__contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--cc-touch-min);
+  padding: 0 14px;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-md);
+  background: var(--cc-surface-0);
+  color: var(--cc-ink-900);
+  font-family: var(--cc-font-interface);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.cc-request__hours {
+  margin: 2px 0 0;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+}
+
 .cc-screen {
   --background: var(--cc-surface-app);
 }

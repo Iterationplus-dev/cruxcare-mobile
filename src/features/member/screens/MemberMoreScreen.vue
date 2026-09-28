@@ -24,9 +24,16 @@
           <AppListRow title="Switch context" subtitle="Member, client or therapist" icon="switch_account" chevron clickable @click="roleSheetOpen = true" />
           <AppListRow title="Help and support" icon="help" chevron clickable :divider="false" @click="router.push({ name: 'help-support' })" />
         </AppCard>
+        <!-- The member's own way out. "More → Profile → Log out" was the only
+             route to it, and Profile is a client tab this tab bar does not
+             carry — so in the member context there was no reachable log out at
+             all. The client and therapist profiles both end on this button;
+             this is the member's. -->
+        <button type="button" class="cc-more__logout" @click="logoutSheetOpen = true">Log out</button>
       </div>
     </ion-content>
     <RoleSwitchSheet v-model="roleSheetOpen" />
+    <LogoutSheet v-model="logoutSheetOpen" />
   </ion-page>
 </template>
 
@@ -35,6 +42,7 @@ import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppAvatar, AppBadge, AppCard, AppHeader, AppListRow } from '@/components/ui';
+import LogoutSheet from '@/features/profile/components/LogoutSheet.vue';
 import RoleSwitchSheet from '@/features/profile/components/RoleSwitchSheet.vue';
 import { useAuthStore } from '@/stores/auth';
 import { fullName } from '@/types/user';
@@ -42,6 +50,7 @@ import { fullName } from '@/types/user';
 const auth = useAuthStore();
 const router = useRouter();
 const roleSheetOpen = ref(false);
+const logoutSheetOpen = ref(false);
 const name = computed(() => (auth.user ? fullName(auth.user) : ''));
 </script>
 
@@ -51,4 +60,5 @@ const name = computed(() => (auth.user ? fullName(auth.user) : ''));
 .cc-more__identity { display:flex; gap:12px; align-items:center; }
 .cc-more__identity .cc-text-mono { margin-top:2px; color:var(--cc-color-primary); font-size:10.5px; }
 .cc-more__roles { display:flex; gap:5px; margin-top:7px; }
+.cc-more__logout { min-height:var(--cc-touch-min); margin-top:2px; border:none; background:none; font-family:var(--cc-font-interface); font-size:14px; font-weight:600; color:var(--cc-color-danger); cursor:pointer; }
 </style>

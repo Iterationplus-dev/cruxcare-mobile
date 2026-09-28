@@ -338,9 +338,20 @@ export const carePlanOptions: CarePlanOption[] = [
 
 export const careSubscriptions: CareSubscription[] = [];
 
+/**
+ * One moment for the seeded access request, shared by the three fixtures that
+ * describe it — the case file's mirror, the access row, and the inbox. Three
+ * separate `Date.now()` calls would have the same ask happening at three
+ * different times.
+ */
+const healthAccessAskedAt = new Date(Date.now() - 36e5 * 30).toISOString();
+
 export const caseFiles: CaseFile[] = [
   {
     id: 'case-1',
+    // Deliberately unlike the file's own id: the two are separate id
+    // spaces, and a fixture that reused one hid a live 404 for both.
+    caseId: 'case-record-1',
     clientId: 'user-1',
     clientName: 'Amaka Obi',
     therapistId: 'therapist-1',
@@ -358,8 +369,18 @@ export const caseFiles: CaseFile[] = [
         id: 'rec-1',
         productId: 'prod-5',
         productName: 'Lumbar Support Stretcher',
+        quantity: 1,
+        unitPrice: 40,
+        unitPriceMinor: 4000,
+        total: 40,
+        totalMinor: 4000,
+        currency: 'USD',
         note: 'Use nightly for 10 minutes.',
-        orderId: null,
+        status: 'accepted' as const,
+        paidMinor: 0,
+        removable: true,
+        recommendedAt: '2025-12-01T09:00:00Z',
+        respondedAt: '2025-12-01T10:00:00Z',
       },
     ],
     sessionCount: 3,
@@ -380,7 +401,7 @@ export const caseFiles: CaseFile[] = [
     healthProfileAccess: {
       status: 'pending',
       reason: 'To check for conditions that affect which exercises are safe to prescribe.',
-      requestedAt: new Date(Date.now() - 36e5 * 30).toISOString(),
+      requestedAt: healthAccessAskedAt,
       respondedAt: null,
     },
   },
@@ -574,6 +595,127 @@ export function careRequestsFor(userId: string): CareRequest[] {
  */
 export const therapistIdForUser = new Map<string, string>([['user-1', 'therapist-1']]);
 
+/* ---- Therapist earnings ---------------------------------------------- */
+
+/**
+ * The share a therapist keeps of a treatment plan, by the plan they are on.
+ *
+ * Locked to what the client committed to, not read live at each payment: a
+ * therapist who upgrades halfway through a course still earns the old rate on
+ * it, because reading live would retroactively reprice work already sold — and
+ * a plan lapsing between the deposit and the balance would quietly cut what
+ * somebody is paid for work already done.
+ */
+export const THERAPIST_RATES: Record<string, number> = {
+  free_trial: 40,
+  monthly: 50,
+  yearly: 70,
+};
+
+/** No active plan earns the free-tier rate rather than nothing: a lapse is a
+ *  billing conversation, not something to take out of one payment silently. */
+export function therapistPlanFor(userId: string): string {
+  const user = users.find((u) => u.id === userId);
+  const profile = user?.therapistProfile;
+  if (!profile || profile.status !== 'active') return 'free_trial';
+  return profile.plan ?? 'free_trial';
+}
+
+export function therapistRateFor(userId: string): number {
+  return THERAPIST_RATES[therapistPlanFor(userId)] ?? THERAPIST_RATES.free_trial;
+}
+
+export interface StoredEarning {
+  id: string;
+  therapistUserId: string;
+  caseId: string;
+  clientId: string;
+  clientName: string | null;
+  basis: 'treatment' | 'extension';
+  baseMinor: number;
+  ratePercent: number;
+  grossMinor: number;
+  cashMinor: number;
+  loyaltyMinor: number;
+  currency: string;
+  status: 'accrued' | 'due';
+  earnedAt: string;
+  releasedAt: string | null;
+}
+
+/**
+ * Seeded so the earnings screen has the state that actually matters: one
+ * payment cleared, one still clearing. An empty list would only ever show the
+ * empty state, and "visible but not withdrawable" is the case the screen exists
+ * to explain.
+ */
+export const earnings: StoredEarning[] = [
+  {
+    id: 'earn-1',
+    therapistUserId: 'user-1',
+    caseId: 'case-record-1',
+    clientId: 'user-2',
+    clientName: 'Flora Adams',
+    basis: 'treatment',
+    baseMinor: 21000,
+    ratePercent: 50,
+    grossMinor: 10500,
+    cashMinor: 9450,
+    loyaltyMinor: 1050,
+    currency: 'USD',
+    status: 'due',
+    earnedAt: new Date(Date.now() - 36e5 * 24 * 9).toISOString(),
+    releasedAt: new Date(Date.now() - 36e5 * 24 * 2).toISOString(),
+  },
+  {
+    id: 'earn-2',
+    therapistUserId: 'user-1',
+    caseId: 'case-record-2',
+    clientId: 'user-3',
+    clientName: 'Amara Oju',
+    basis: 'treatment',
+    baseMinor: 14700,
+    ratePercent: 50,
+    grossMinor: 7350,
+    cashMinor: 6615,
+    loyaltyMinor: 735,
+    currency: 'USD',
+    // The deposit has settled, so the share is real and visible — and not
+    // withdrawable until the client has paid the course off.
+    status: 'accrued',
+    earnedAt: new Date(Date.now() - 36e5 * 24 * 3).toISOString(),
+    releasedAt: null,
+  },
+];
+
+// A second cleared course, so the cash purse holds a realistic working balance
+// rather than one course's worth. It also keeps loyalty *below* its $100 floor,
+// which is the state worth demoing: a purse with money in it that is not open
+// yet.
+earnings.push({
+  id: 'earn-3',
+  therapistUserId: 'user-1',
+  caseId: 'case-record-3',
+  clientId: 'user-4',
+  clientName: 'Xambi Tulo',
+  basis: 'treatment',
+  baseMinor: 21000,
+  ratePercent: 50,
+  grossMinor: 10500,
+  cashMinor: 9450,
+  loyaltyMinor: 1050,
+  currency: 'USD',
+  status: 'due',
+  earnedAt: new Date(Date.now() - 36e5 * 24 * 21).toISOString(),
+  releasedAt: new Date(Date.now() - 36e5 * 24 * 14).toISOString(),
+});
+
+export function earningsFor(userId: string): StoredEarning[] {
+  return earnings
+    .filter((e) => e.therapistUserId === userId)
+    .sort((a, b) => b.earnedAt.localeCompare(a.earnedAt));
+}
+
 /**
  * Every request naming this therapist, across all clients, newest first. The
  * per-client map cannot answer this on its own — which is exactly the shape
@@ -593,13 +735,28 @@ export function careRequestsForTherapist(
 
 export const notifications: AppNotification[] = [
   {
+    // The seeded ask, as the client meets it: a therapist waiting is news, and
+    // the inbox is where it breaks. Unread on purpose.
+    id: 'notif-hpa-1',
+    category: 'cases',
+    title: 'A therapist asked to read your health profile',
+    body: 'Amaka Obi: “To check for conditions that affect which exercises are safe to prescribe.”',
+    read: false,
+    actionLabel: 'Review request',
+    actionRoute: '/profile/health-profile-access',
+    createdAt: healthAccessAskedAt,
+  },
+  {
     id: 'notif-1',
     category: 'appointments',
     title: 'Appointment confirmed',
     body: 'Your session with Amaka Obi is confirmed for 11 Aug, 10:00.',
     read: false,
     actionLabel: 'View appointment',
-    actionRoute: '/care/appointments/appt-1',
+    // `/care/appointments/:id` is a screen this app has never had, so the tap
+    // resolved to nothing. The client's own care screen is where their next
+    // visit is actually shown.
+    actionRoute: '/tabs/care/mine',
     createdAt: '2026-08-06T12:00:00Z',
   },
 ];
@@ -675,7 +832,7 @@ export const healthProfileAccess: HealthProfileAccess[] = [
     clientId: 'user-1',
     status: 'pending',
     reason: 'To check for conditions that affect which exercises are safe to prescribe.',
-    requestedAt: new Date(Date.now() - 36e5 * 30).toISOString(),
+    requestedAt: healthAccessAskedAt,
     respondedAt: null,
   },
 ];

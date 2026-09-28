@@ -58,6 +58,16 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
 .cc-btn--full {
   width: 100%;
 }
+/* The variants that draw a box need room inside it. A full-width button
+   centres its label in the space it is given, so the omission never showed;
+   an auto-width one is only as wide as its content, and the label then runs
+   into its own rounded corners. Everything is border-box (Ionic's
+   structure.css), so the full-width case is unaffected. The text variants
+   draw no box and stay flush, which is what keeps them aligned in a row. */
+.cc-btn--primary,
+.cc-btn--secondary {
+  padding-inline: var(--cc-space-5);
+}
 .cc-btn:disabled {
   cursor: not-allowed;
 }
@@ -112,6 +122,21 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
   font-size: 13.5px;
   line-height: 20px;
   width: auto;
+}
+
+/**
+ * The two text variants had no disabled treatment at all, so a disabled one
+ * rendered in full primary or danger colour and differed from a live button
+ * only by `cursor: not-allowed` — which does not exist on a handset.
+ *
+ * It showed up as a bright red "Remove" beside a product the client had
+ * already paid for: correctly disabled, and indistinguishable from a control
+ * that works. Tapping it did nothing and said nothing, which is worse than the
+ * refusal it was there to prevent.
+ */
+.cc-btn--text:disabled,
+.cc-btn--destructive-text:disabled {
+  color: var(--cc-ink-300);
 }
 
 .cc-btn__spinner {

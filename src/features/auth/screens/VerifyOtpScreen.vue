@@ -3,7 +3,16 @@
     <ion-header class="cc-otp-header">
       <ion-toolbar class="cc-otp-header__bar">
         <ion-buttons slot="start">
-          <ion-back-button default-href="/auth/welcome" text="" aria-label="Back" />
+          <!-- Not `ion-back-button`: see `onBack`. A signup waiting on a code
+               has no history to go back through that the router will honour. -->
+          <button
+            type="button"
+            class="cc-otp-header__back"
+            :aria-label="purpose === 'signup' ? 'Back to sign in' : 'Back'"
+            @click="onBack"
+          >
+            <AppIcon name="arrow_back_ios_new" :size="22" color="var(--cc-ink-900)" />
+          </button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -39,14 +48,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import {
-  IonBackButton,
-  IonButtons,
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonToolbar,
-} from '@ionic/vue';
+import { IonButtons, IonContent, IonHeader, IonPage, IonToolbar } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { authApi, type OtpChannel } from '@/api/auth.api';
 import AppButton from '@/components/ui/AppButton.vue';
@@ -105,6 +107,37 @@ const deliveryMessage = computed(() => {
   if (sendFailed.value) return `We could not send a code to ${maskedContact.value}. Tap resend to try again.`;
   return `Your code is on its way to ${maskedContact.value}.`;
 });
+
+/**
+ * Leaving the code screen.
+ *
+ * For a signup this is not ordinary back navigation, which is why the
+ * `ion-back-button` that used to sit here could never work whatever its
+ * `default-href` said. An account that has registered but not verified keeps a
+ * session open on purpose, and the router guard redirects every route that is
+ * not this screen straight back to it — so the arrow navigated, was bounced,
+ * and looked broken.
+ *
+ * Leaving therefore means abandoning the attempt rather than stepping back
+ * through history: the held session is dropped first, and only then is there
+ * anywhere to go. The account itself is untouched — signing in again returns
+ * here with a fresh code.
+ *
+ * The other lanes (recovery, Crux ID) hold no such session and have a real
+ * screen behind them, so they step back normally.
+ */
+async function onBack() {
+  if (purpose === 'signup') {
+    await auth.abandonPendingSignup();
+    // `replace`, so the screen they have just abandoned is not what the login
+    // screen's own back button leads to.
+    await router.replace({ name: 'login' });
+    return;
+  }
+
+  if (window.history.state?.back) router.back();
+  else await router.replace({ name: 'login' });
+}
 
 async function onChangeContact() {
   if (purpose === 'signup' && channel === 'email') {
@@ -257,6 +290,16 @@ async function onComplete(value: string) {
 .cc-otp-header__bar {
   --background: var(--cc-surface-app);
   --border-width: 0;
+}
+.cc-otp-header__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cc-touch-min);
+  height: var(--cc-touch-min);
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 .cc-screen {
   --background: var(--cc-surface-app);

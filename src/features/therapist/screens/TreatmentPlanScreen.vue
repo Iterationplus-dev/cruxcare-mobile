@@ -35,7 +35,7 @@
           </p>
 
           <AppSectionLabel label="Cadence" />
-          <AppSelect
+          <AppSheetSelect
             v-model="cadence"
             label="How often you will see them"
             :options="cadenceOptions"
@@ -118,7 +118,15 @@ import { computed, reactive, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQueryClient } from '@tanstack/vue-query';
-import { AppButton, AppCard, AppHeader, AppIcon, AppInput, AppSectionLabel, AppSelect } from '@/components/ui';
+import {
+  AppButton,
+  AppCard,
+  AppHeader,
+  AppIcon,
+  AppInput,
+  AppSectionLabel,
+  AppSheetSelect,
+} from '@/components/ui';
 import { ErrorState, LoadingState } from '@/components/state';
 import { casesApi } from '@/api/cases.api';
 import { useCaseFile } from '@/composables/useCaseFiles';
@@ -257,11 +265,13 @@ function validate(): boolean {
 }
 
 async function onPropose() {
-  if (saving.value || !validate()) return;
+  if (saving.value || !caseFile.value || !validate()) return;
 
   saving.value = true;
   try {
-    await casesApi.proposePlan(caseId, {
+    // The route carries the case *file* id, which is what loaded this screen.
+    // The transition is on the case itself and has its own id.
+    await casesApi.proposePlan(caseFile.value.caseId, {
       planId: caseFile.value?.treatmentPlan?.planId ?? null,
       cadence: cadence.value,
       startDate: startDate.value,
@@ -274,7 +284,10 @@ async function onPropose() {
         : {}),
     });
     await queryClient.invalidateQueries({ queryKey: ['case-files'] });
-    await queryClient.invalidateQueries({ queryKey: ['care-plans', caseId] });
+    // Keyed by the case id, which is what the client's screen queries with —
+    // keyed by the route's case file id this never matched anything.
+    await queryClient.invalidateQueries({ queryKey: ['care-plans', caseFile.value.caseId] });
+    await queryClient.invalidateQueries({ queryKey: ['case-bill'] });
     await toast.show('They can choose and pay for it now.', 'success', { title: 'Plan sent' });
     await router.back();
   } catch (error) {
@@ -310,6 +323,38 @@ function formatDay(iso: string | null | undefined): string {
 </script>
 
 <style scoped>
+/* Scoped styles are per-component, so the screen shell has to be restated
+   here the way every other screen restates it. Without these the content
+   rendered flush to both edges with no gap between the fields. */
+.cc-screen {
+  --background: var(--cc-surface-app);
+}
+/* Padding only, no flex gap: this screen spaces itself with margins — the
+   section labels deliberately tuck up against the field below them — and a
+   gap would be added on top of every one of those. */
+.cc-screen__pad {
+  padding: 16px 16px 28px;
+}
+
+/* AppSectionLabel tucks itself down onto what follows, which suits the
+   profile screens where it heads a group of rows. Here every section is a
+   field that carries its own label, so the tuck collides the two into one
+   crowded block — this screen wants the two read as heading then question. */
+:deep(.cc-section-label) {
+  margin: 18px 0 6px;
+}
+
+.cc-textarea {
+  width: 100%;
+  border: 1px solid var(--cc-line);
+  border-radius: var(--cc-radius-sm);
+  padding: 10px 12px;
+  font-family: var(--cc-font-interface);
+  font-size: 13.5px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
 .cc-tp__lede {
   margin: 4px 0 16px;
   color: var(--cc-ink-400);

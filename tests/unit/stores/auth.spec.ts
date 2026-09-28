@@ -196,4 +196,28 @@ describe('useAuthStore', () => {
     expect(auth.roles).not.toContain('therapist');
     expect(auth.activeRole).toBe('client');
   });
+
+  it('lets an unverified signup be abandoned, so the code screen can be left', async () => {
+    const auth = useAuthStore();
+    await auth.register({
+      firstName: 'Tola',
+      lastName: 'Bello',
+      email: `abandon-${Date.now()}@example.com`,
+      phone: '+2348012340001',
+      password: 'Passw0rd!1',
+      referredBySource: 'other',
+    });
+    expect(auth.token).not.toBeNull();
+
+    await auth.abandonPendingSignup();
+
+    // Both have to go. The router pins the app to the code screen on either
+    // one, so a half-cleared session still has no way out of it.
+    expect(auth.token).toBeNull();
+    expect(auth.isAuthenticated).toBe(false);
+    expect(auth.verificationRequired).toBe(false);
+    // And the held token is gone from the device, not just from memory — it
+    // would otherwise be rehydrated straight back into the same trap.
+    expect(secureStorageMock.remove).toHaveBeenCalledWith('cc_auth_token');
+  });
 });

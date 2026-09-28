@@ -18,7 +18,15 @@
       </div>
     </AppCard>
 
-    <AppCard class="cc-error-state__card cc-error-state__card--grow">
+    <!-- Only when there is something to put in it. Rendered unconditionally
+         this drew a card headed "What you can do" with nothing underneath —
+         on every caller that passes no `options`, which is most of them: the
+         retry usually lives in the `actions` slot below instead. A heading
+         over an empty box is not a suggestion, it is a missing one. -->
+    <AppCard
+      v-if="options.length || reference"
+      class="cc-error-state__card cc-error-state__card--grow"
+    >
       <div class="cc-error-state__card-heading">What you can do</div>
       <div class="cc-error-state__options">
         <div v-for="opt in options" :key="opt.label" class="cc-error-state__option">

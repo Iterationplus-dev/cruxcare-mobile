@@ -6,8 +6,10 @@ import type {
   MoneySubmission,
   Transaction,
   Wallet,
+  WalletSlug,
   WalletTopUpQuote,
 } from '@/types/wallet';
+import type { TherapistEarningsPage } from '@/types/earnings';
 
 /** Read-only surface for this build — withdraw/transfer land in the Finance phase. */
 export const walletApi = {
@@ -16,8 +18,26 @@ export const walletApi = {
     return data;
   },
 
-  async ledger(cursor?: string): Promise<CursorPage<Transaction>> {
+  /**
+   * One statement across every purse. `wallet` narrows it to one — omitted
+   * rather than sent empty, so "all purses" is the absence of a filter rather
+   * than a filter matching nothing.
+   */
+  async ledger(cursor?: string, wallet?: WalletSlug): Promise<CursorPage<Transaction>> {
     const { data } = await apiClient.get<CursorPage<Transaction>>('/wallet/ledger', {
+      params: { cursor, wallet: wallet || undefined },
+    });
+    return data;
+  },
+
+  /**
+   * A therapist's share of what their clients have paid, per payment.
+   *
+   * `meta.summary` is computed over everything rather than the loaded page —
+   * see `EarningsSummary`. Answers `403 therapist_required` to anyone else.
+   */
+  async earnings(cursor?: string): Promise<TherapistEarningsPage> {
+    const { data } = await apiClient.get<TherapistEarningsPage>('/therapist/earnings', {
       params: { cursor },
     });
     return data;

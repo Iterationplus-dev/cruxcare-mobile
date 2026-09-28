@@ -80,7 +80,13 @@ describe('wallet local block', () => {
   });
 
   it('carries its own rate on a money quote so settlement honours what was shown', async () => {
-    const quote = await walletApi.quoteMoneyAction({ kind: 'withdrawal', amount: 100 });
+    // Withdrawals are only quoted Tuesday to Friday; pin a Wednesday so the
+    // test does not fail on the days the window is closed.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 8, 30, 12));
+    const quote = await walletApi
+      .quoteMoneyAction({ kind: 'withdrawal', amount: 100 })
+      .finally(() => vi.useRealTimers());
 
     expect(quote.currency).toBe('USD');
     expect(quote.local).not.toBeNull();

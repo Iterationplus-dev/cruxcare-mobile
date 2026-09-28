@@ -4,11 +4,41 @@
       <h1 class="cc-text-h1" style="margin: 0">Discover therapists</h1>
     </div>
     <ion-content class="cc-screen">
-      <AppPullToRefresh :query-keys="[['therapists'], ['case-files'], ['care', 'requests']]" />
-      <LoadingState v-if="isPending" label="Loading therapists…" />
+      <AppPullToRefresh
+        :query-keys="[['therapists'], ['case-files'], ['care', 'requests'], ['care-engagement']]"
+      />
+      <LoadingState v-if="engagementPending" label="Loading…" />
 
+      <!-- A client holds one therapist at a time, so while they are with
+           someone the directory is not shown at all: browsing people they
+           cannot ask is an invitation to a refusal. Their own care is the only
+           route offered from here. -->
+      <div v-else-if="engagement" class="cc-screen__pad cc-discover__engaged">
+        <AppCard class="cc-discover__engaged-card">
+          <AppIcon name="favorite" :size="26" color="var(--cc-color-primary)" />
+          <h2 class="cc-text-body-strong">You are with {{ engagement.therapistName }}</h2>
+          <p class="cc-text-caption">
+            CruxCare works with one therapist at a time, so the directory is closed while your
+            care is open. Finish or end this course of care and you can choose again.
+          </p>
+          <AppButton @click="router.push({ name: 'care-mine' })">Go to your care</AppButton>
+          <AppButton variant="secondary" @click="router.push({ name: 'care-requests' })">
+            Manage this care
+          </AppButton>
+        </AppCard>
+      </div>
+
+      <LoadingState v-else-if="isPending" label="Loading therapists…" />
+
+      <!-- Only when the *directory* is empty — which is why it is gated on
+           there being no gender filter. `therapists` is the server's answer
+           and gender filters server-side, so a filter nobody matches empties
+           this list too. Ungated, this branch replaced the whole screen on
+           such a filter: the search box and every chip went with it, the
+           filter stayed applied, and on a tab root with no back button there
+           was nothing left to press to undo it. -->
       <EmptyState
-        v-else-if="!therapists?.length"
+        v-else-if="directoryIsEmpty(therapists, gender)"
         icon="health_and_safety"
         title="No therapists available"
         message="No therapist is available to show right now. CruxCare can match you instead."
@@ -81,18 +111,46 @@
           </button>
         </div>
 
+        <div class="cc-discover__chips" role="tablist" aria-label="Filter by gender">
+          <button
+            type="button"
+            role="tab"
+            class="cc-discover__chip"
+            :class="{ 'cc-discover__chip--on': gender === null }"
+            :aria-selected="gender === null"
+            @click="gender = null"
+          >
+            Any gender
+          </button>
+          <button
+            v-for="g in GENDER_FILTERS"
+            :key="g.value"
+            type="button"
+            role="tab"
+            class="cc-discover__chip"
+            :class="{ 'cc-discover__chip--on': gender === g.value }"
+            :aria-selected="gender === g.value"
+            @click="gender = gender === g.value ? null : g.value"
+          >
+            {{ g.label }}
+          </button>
+        </div>
+
         <p class="cc-text-caption cc-discover__count">
           {{ visible.length }} {{ visible.length === 1 ? 'therapist' : 'therapists' }}
           <span v-if="nearbyOnly && myPlace">near {{ myPlace }}</span>
         </p>
 
+        <!-- A gender filter empties the list differently from a search: a
+             therapist who has recorded no gender matches no filter at all, so
+             the list can be empty while therapists plainly exist. -->
         <EmptyState
           v-if="!visible.length"
           icon="search_off"
-          :title="nearbyOnly ? 'None near you' : 'No match'"
-          :message="nearbyOnly
-            ? `No therapist here is listed in ${myPlace ?? 'your area'}. Turn off Near me to see everyone.`
-            : 'No therapist here matches what you searched for.'"
+          :title="emptyTitle"
+          :message="emptyMessage"
+          :primary-action="hasFilters ? 'Clear filters' : undefined"
+          @primary="clearFilters"
         />
 
         <AppCard
@@ -164,7 +222,13 @@ import {
   AppPullToRefresh,
 } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
-import { useTherapists } from '@/composables/useTherapists';
+import { useCareEngagement, useTherapists } from '@/composables/useTherapists';
+import {
+  GENDER_FILTERS,
+  directoryIsEmpty,
+  genderFilterEmptyMessage,
+} from '@/features/care/engagement';
+import type { TherapistGender } from '@/types/care';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { useCareRequests } from '@/composables/useCareRequests';
 import {
@@ -181,7 +245,23 @@ import { formatAddress } from '@/types/user';
 
 /** CD2 · Discover therapists — the Care tab's own screen. */
 const router = useRouter();
-const { data: page, isPending } = useTherapists();
+/** Server-side, so it lives in the query rather than filtering the page we
+ *  happen to hold. */
+const gender = ref<TherapistGender | null>(null);
+
+/** Who this client is already tied to, if anyone. Resolved before the
+ *  directory, because it decides whether there is a directory. */
+const { data: engagementState, isPending: engagementPending } = useCareEngagement();
+const engagement = computed(() => engagementState.value?.engagement ?? null);
+
+// Not merely "no engagement": until the engagement call has answered, we do
+// not yet know whether this client is allowed a directory, and `undefined`
+// would read as "free" and fetch it anyway. Waiting is what keeps another
+// therapist's details off an engaged client's device.
+const { data: page, isPending } = useTherapists(
+  gender,
+  () => !engagementPending.value && !engagement.value,
+);
 const therapists = computed(() => page.value?.data);
 
 const query = ref('');
@@ -215,6 +295,38 @@ const visible = computed(() =>
   }),
 );
 
+const emptyTitle = computed(() => {
+  if (gender.value) return 'Nobody listed';
+  return nearbyOnly.value ? 'None near you' : 'No match';
+});
+
+const emptyMessage = computed(() => {
+  if (nearbyOnly.value) {
+    return `No therapist here is listed in ${myPlace.value ?? 'your area'}. Turn off Near me to see everyone.`;
+  }
+  if (gender.value) return genderFilterEmptyMessage(gender.value);
+  return 'No therapist here matches what you searched for.';
+});
+
+const hasFilters = computed(
+  () => !!query.value.trim() || !!specialty.value || !!gender.value || nearbyOnly.value,
+);
+
+/**
+ * One way out of every empty list.
+ *
+ * The chips are the only control that undoes a filter, and they are in a
+ * horizontally scrolling row — by the time a client has tapped the last one,
+ * "Any gender" is off the left of the screen. An empty result is exactly when
+ * the escape has to be in front of them rather than scrolled away.
+ */
+function clearFilters() {
+  query.value = '';
+  specialty.value = null;
+  gender.value = null;
+  nearbyOnly.value = false;
+}
+
 const nearbyCount = computed(
   () => (therapists.value ?? []).filter((t) => isNearby(t, myAddress.value)).length,
 );
@@ -234,6 +346,26 @@ const ownCareSubtitle = computed(() =>
 </script>
 
 <style scoped>
+.cc-discover__engaged {
+  padding-top: 24px;
+}
+.cc-discover__engaged-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 20px;
+}
+.cc-discover__engaged-card h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.cc-discover__engaged-card p {
+  margin: 0 0 4px;
+}
+.cc-discover__engaged-card > :deep(.cc-btn) {
+  width: 100%;
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

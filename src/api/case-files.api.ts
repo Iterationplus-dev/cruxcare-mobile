@@ -56,9 +56,23 @@ export const caseFilesApi = {
     return data;
   },
 
-  async addRecommendation(id: string, productId: string, note: string | null): Promise<CaseFile> {
+  /**
+   * Puts a product on the case. It lands `pending` and costs the client
+   * nothing until they accept it.
+   *
+   * Re-recommending a product that still has a pending line updates that line
+   * rather than adding a second. Once the client has answered, a further
+   * recommendation adds a new line instead — a line they accepted is a
+   * decision, possibly already paid against, and is never rewritten under them.
+   */
+  async addRecommendation(
+    id: string,
+    productId: string,
+    note: string | null,
+    quantity = 1,
+  ): Promise<CaseFile> {
     const { data } = await apiClient.patch<CaseFile>(`/case-files/${id}`, {
-      recommendation: { productId, note },
+      recommendation: { productId, note, quantity },
     });
     return data;
   },

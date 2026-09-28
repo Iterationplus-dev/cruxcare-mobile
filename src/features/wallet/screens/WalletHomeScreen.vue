@@ -37,6 +37,42 @@
     <ion-content class="cc-screen">
       <AppPullToRefresh :query-keys="[['wallet']]" />
       <div class="cc-screen__pad">
+        <!-- All four purses, from the server's own block and in its own order.
+             The balance above is the e-wallet and always was; three of these
+             were simply invisible, so money a therapist had earned did not
+             appear anywhere in the app. Rendered from `wallets` rather than a
+             list written here, so a fifth purse shows up without a release. -->
+        <div v-if="purses.length" class="cc-wallet__purses">
+          <div
+            v-for="purse in purses"
+            :key="purse.slug"
+            class="cc-wallet__purse"
+            :class="{ 'cc-wallet__purse--payable': purse.capabilities.withdraw }"
+          >
+            <div class="cc-wallet__purse-head">
+              <span class="cc-text-caption">{{ purse.name }}</span>
+              <AppBadge v-if="purse.capabilities.withdraw" label="PAYS OUT" tone="success" />
+            </div>
+            <MoneyAmount :value="purse.available" :currency="purse.currency" />
+            <!-- Pending is named rather than hidden: an empty-looking cash
+                 wallet is usually money that has not cleared, and a therapist
+                 who reads it as empty raises a ticket. -->
+            <span v-if="purse.pending > 0" class="cc-wallet__purse-pending">
+              <MoneyAmount :value="purse.pending" :currency="purse.currency" />
+              clearing
+            </span>
+            <span v-if="pendingWhy(purse)" class="cc-wallet__purse-why">{{ pendingWhy(purse) }}</span>
+            <span v-else-if="purse.minimumReached === false && purse.minimumWithdrawal" class="cc-wallet__purse-why">
+              Opens at <MoneyAmount :value="purse.minimumWithdrawal" :currency="purse.currency" />.
+            </span>
+          </div>
+        </div>
+
+        <div v-if="windowLine" class="cc-wallet__window">
+          <AppIcon name="calendar_month" :size="18" color="var(--cc-color-primary)" />
+          <span>{{ windowLine }}</span>
+        </div>
+
         <div class="cc-wallet__actions">
           <button v-for="a in actions" :key="a.label" type="button" class="cc-wallet__action" @click="a.onClick">
             <span class="cc-wallet__action-icon"><AppIcon :name="a.icon" :size="22" color="var(--cc-color-primary)" /></span>
@@ -84,10 +120,12 @@ import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { AppCard, AppIcon, MoneyAmount } from '@/components/ui';
+import { AppBadge, AppCard, AppIcon, MoneyAmount } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useLedger, useWallet } from '@/composables/useWallet';
 import { ledgerIconForType } from '@/features/wallet/ledgerPresentation';
+import { pendingExplanation, pursesOf, windowSummary } from '@/features/wallet/walletPurses';
+import type { WalletPurse } from '@/types/wallet';
 import { formatRelativeTime } from '@/utils/formatTime';
 
 /** E1 · Wallet home. Committed/Coop-saved tiles return with the Finance
@@ -102,6 +140,15 @@ const relativeUpdated = computed(() => (wallet.value ? formatRelativeTime(wallet
 /** `local` is null for most users, and an individual amount inside it can be
  * null too — neither is a zero balance, so both fall back to showing USD alone. */
 const localAvailable = computed(() => wallet.value?.local?.available ?? null);
+
+/** Empty on a server that sends no `wallets` block — which is not an empty
+ *  wallet, so the single-balance header above still carries the screen. */
+const purses = computed(() => pursesOf(wallet.value));
+const windowLine = computed(() => windowSummary(wallet.value?.withdrawalWindow));
+
+function pendingWhy(purse: WalletPurse) {
+  return pendingExplanation(purse);
+}
 
 const actions = [
   { icon: 'add_card', label: 'Top up', onClick: () => router.push({ name: 'wallet-top-up' }) },
@@ -195,6 +242,53 @@ function formatDate(iso: string) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.cc-wallet__purses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.cc-wallet__purse {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 13px;
+  border-radius: var(--cc-radius-lg);
+  border: 1px solid var(--cc-line);
+  background: var(--cc-surface-0);
+  min-width: 0;
+}
+/* The one distinction that matters on this screen is which purses can actually
+   reach a bank account, so that is the only one drawn. */
+.cc-wallet__purse--payable {
+  border-color: color-mix(in srgb, var(--cc-color-primary) 34%, transparent);
+  background: var(--cc-color-mist);
+}
+.cc-wallet__purse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.cc-wallet__purse-pending,
+.cc-wallet__purse-why {
+  font-family: var(--cc-font-interface);
+  font-size: 11.5px;
+  line-height: 16px;
+  color: var(--cc-ink-400);
+}
+.cc-wallet__window {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px;
+  border-radius: var(--cc-radius-lg);
+  background: var(--cc-color-mist);
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--cc-ink-600);
 }
 .cc-wallet__actions {
   display: grid;

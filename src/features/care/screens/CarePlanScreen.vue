@@ -2,6 +2,14 @@
   <ion-page>
     <AppHeader title="Care plan" show-back :botanical="false" />
     <ion-content class="cc-screen">
+      <!-- Above the plan catalogue and outside its loading and error states:
+           what the client owes, and the products waiting on their answer, do
+           not depend on the cadence list and must not disappear with it. -->
+      <div class="cc-screen__pad cc-plan__billing">
+        <CaseBillCard :case-id="caseId" />
+        <RecommendedProducts :case-id="caseId" />
+      </div>
+
       <LoadingState v-if="isPending" label="Loading plans…" />
 
       <ErrorState
@@ -21,19 +29,32 @@
         message="Your therapist sets the cadence for your treatment. You will be able to pay for it here once they have."
       />
 
+      <!-- Chosen already, so the catalogue is not shown again.
+           Choosing the cadence is a decision the client has made; re-offering
+           the list underneath their own bill invites them to make it twice and
+           reads as though it had not registered. What replaces it says what
+           they picked and where the money goes out, which is the only thing
+           left to do on this screen. -->
+      <div v-else-if="hasChosenPlan" class="cc-screen__pad cc-plan">
+        <div class="cc-plan__chosen">
+          <AppIcon name="check_circle" :size="22" color="var(--cc-color-primary)" />
+          <div class="cc-plan__chosen-body">
+            <span class="cc-text-body-strong">{{ chosenTitle }}</span>
+            <span class="cc-text-caption">{{ chosenDetail }}</span>
+          </div>
+        </div>
+        <div class="cc-plan__notice">
+          <AppIcon name="info" :size="20" color="var(--cc-color-warning-text)" />
+          <p>{{ chosenNotice }}</p>
+        </div>
+      </div>
+
       <div v-else class="cc-screen__pad cc-plan">
         <h2 class="cc-plan__title">Choose your visit cadence</h2>
         <p class="cc-plan__lede">
           Every plan includes chat with your therapist, your case file, and video or in-person
           visits.
         </p>
-
-        <!-- The therapist's own words on what this course is for. Without it a
-             cadence is a price with no reason attached to it. -->
-        <AppCard v-if="planSummary" class="cc-plan__summary">
-          <span class="cc-text-caption">YOUR THERAPIST RECOMMENDS</span>
-          <p class="cc-text-body">{{ planSummary }}</p>
-        </AppCard>
 
         <fieldset class="cc-plan__options">
           <legend class="cc-visually-hidden">Visit cadence</legend>
@@ -87,12 +108,19 @@
       </div>
     </ion-content>
 
-    <div v-if="selected" class="cc-plan__footer">
+    <!-- Choosing is not paying. Picking the plan is what puts a price on the
+         treatment, which is what makes the deposit and the instalments above
+         possible — the money then leaves from the bill, where the client can
+         see the whole case rather than one line of it. -->
+    <div v-if="selected && !hasChosenPlan" class="cc-plan__footer">
       <div class="cc-plan__footer-row">
         <span class="cc-text-caption">{{ selected.title }} · {{ selected.durationLabel }}</span>
-        <span class="cc-text-body-strong">{{ planPrice(selected) }} today</span>
+        <span class="cc-text-body-strong">{{ planPrice(selected) }}</span>
       </div>
-      <AppButton :loading="paying" @click="onSubscribe">Subscribe to this plan</AppButton>
+      <AppButton :loading="choosing" @click="onChoose">Choose this plan</AppButton>
+      <p class="cc-plan__footer-note">
+        Nothing is charged yet — this only sets what your treatment costs.
+      </p>
     </div>
   </ion-page>
 </template>
@@ -102,13 +130,14 @@ import { computed, ref, watch } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
-import { AppBadge, AppButton, AppCard, AppHeader, AppIcon } from '@/components/ui';
+import { AppBadge, AppButton, AppHeader, AppIcon } from '@/components/ui';
 import { EmptyState, ErrorState, LoadingState } from '@/components/state';
 import { carePlansApi } from '@/api/care-plans.api';
-import { caseFilesApi } from '@/api/case-files.api';
-import { paymentsApi } from '@/api/payments.api';
-import { PaymentUnavailableError, resolvePaymentProvider } from '@/services/payment';
+import { casesApi } from '@/api/cases.api';
+import { useCaseBill } from '@/composables/useCaseFiles';
 import { planPrice, planSubtitle } from '@/features/care/carePlans';
+import CaseBillCard from '@/features/care/components/CaseBillCard.vue';
+import RecommendedProducts from '@/features/care/components/RecommendedProducts.vue';
 import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 
@@ -116,6 +145,12 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const queryClient = useQueryClient();
+/**
+ * The *case* id, not the case file's. `/care/plans`, the bill and the
+ * recommendation routes are all keyed by it, and passing a case file id here
+ * is answered with "That case could not be found" — which is exactly what this
+ * screen did until the care hub was corrected to pass the right one.
+ */
 const caseId = route.params.id as string;
 
 const {
@@ -128,19 +163,58 @@ const {
   queryFn: () => carePlansApi.list(caseId),
 });
 
-// Fetched alongside so the therapist's reasoning sits on the screen where the
-// money is asked for, rather than one back-tap away on the care hub.
-const { data: caseFile } = useQuery({
-  queryKey: ['case-files', caseId],
-  queryFn: () => caseFilesApi.get(caseId),
-});
+// The therapist's plan summary used to be fetched here, from
+// `GET /case-files/{id}`. That route also returns the diagnosis and clinical
+// notes still marked `draft`, so reading it put the clinical record on the
+// patient's device to render one sentence written for them. Until the summary
+// is available on a client-safe route, the bill above carries this screen.
 
 const options = computed(() => plans.value ?? []);
 const hasBespoke = computed(() => options.value.some((o) => o.bespoke));
-const planSummary = computed(() => caseFile.value?.treatmentPlan?.summary?.trim() || null);
 
 const selectedId = ref<string | null>(null);
-const paying = ref(false);
+const choosing = ref(false);
+
+/**
+ * Whether a plan has been picked already.
+ *
+ * Read off the bill, because a priced treatment is exactly what choosing
+ * produces. Which plan it is cannot be told from here — neither the bill nor
+ * the catalogue names it — so the button says "change to this plan" rather
+ * than marking a row as chosen.
+ */
+const { data: bill } = useCaseBill(() => caseId);
+const hasChosenPlan = computed(() => (bill.value?.treatmentTotalMinor ?? 0) > 0);
+
+/**
+ * Whether any money has gone against treatment.
+ *
+ * A deposit was 70% of a particular price, so once one is paid the plan is
+ * fixed — the server refuses a change with `treatment_part_paid`. The cadence
+ * is therefore not merely chosen at this point but settled, and the copy says
+ * so rather than implying it could still be swapped.
+ */
+const planPaidAgainst = computed(() => (bill.value?.treatmentPaidMinor ?? 0) > 0);
+
+/** The chosen row, where the catalogue marks one. Older servers do not, and an
+ *  unnamed plan is better than the wrong name. */
+const chosenOption = computed(() => options.value.find((o) => o.chosen) ?? null);
+
+const chosenTitle = computed(() =>
+  chosenOption.value ? chosenOption.value.title : 'Your plan is set',
+);
+
+const chosenDetail = computed(() => {
+  const option = chosenOption.value;
+  if (option) return `${option.durationLabel} · ${planPrice(option)}`;
+  return 'Your therapist set the cadence and you have agreed to it.';
+});
+
+const chosenNotice = computed(() =>
+  planPaidAgainst.value
+    ? 'This cadence is now fixed — you have paid against it. Your therapist can extend the treatment window if you need longer.'
+    : 'Pay for it from the case total above, in full or as a deposit. Message your therapist if the cadence needs to change.',
+);
 
 /** Seeded from the therapist's own plan where there is one, then from the
  *  server's recommendation — never from the cheapest or the first. The default
@@ -163,80 +237,79 @@ function onCustom() {
   router.push({ name: 'care-hub', query: { ask: 'custom-plan', case: caseId } });
 }
 
-async function onSubscribe() {
+/**
+ * Records which plan the client is buying. Nobody is charged.
+ *
+ * The therapist's window is untouched: the plan says what is being bought,
+ * the therapist says when it happens.
+ */
+async function onChoose() {
   const option = selected.value;
-  if (!option || paying.value) return;
+  if (!option || choosing.value) return;
 
-  paying.value = true;
+  choosing.value = true;
   try {
-    const intent = await paymentsApi.createIntent({
-      purpose: 'care-plan',
-      subject: option.id,
-      // The figure on screen, so the server refuses a stale price rather than
-      // charging one the client never saw.
-      expectedAmount: option.amountMinor / 100,
-      expectedCurrency: option.currency,
-    });
-
-    const provider = resolvePaymentProvider(intent.gateway);
-    const result = await provider.collectPayment({
-      reference: intent.reference,
-      amount: intent.amount,
-      currency: intent.currency,
-      description: intent.description,
-      customerName: intent.customerName,
-      customerEmail: intent.customerEmail,
-      gateway: intent.gateway,
-    });
-
-    if (result.outcome === 'cancelled') {
-      await toast.show('No payment was taken. Your plan is unchanged.', 'info', {
-        title: 'Payment cancelled',
-      });
-      return;
-    }
-
-    if (result.outcome === 'failed') {
-      await toast.show(result.message ?? 'That payment did not go through.', 'danger', {
-        title: 'Payment failed',
-        dismissLabel: 'Try again',
-      });
-      return;
-    }
-
-    // What the device saw is a hint. The server verifies the reference with the
-    // gateway, so the subscription is its answer and not the SDK's.
-    await carePlansApi.subscribe({
-      caseId,
-      planId: option.id,
-      paymentToken: intent.reference,
-      expectedAmountMinor: option.amountMinor,
-      expectedCurrency: option.currency,
-    });
-
-    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await casesApi.choosePlan(caseId, option.id);
+    await queryClient.invalidateQueries({ queryKey: ['case-bill'] });
     await queryClient.invalidateQueries({ queryKey: ['care-plans', caseId] });
-    await toast.show('Your therapist can now start your treatment.', 'success', {
-      title: 'Plan active',
-    });
-    await router.replace({ name: 'care-hub' });
+    await queryClient.invalidateQueries({ queryKey: ['case-files'] });
+    await toast.show(
+      `${option.title} is your plan. Pay for it from the case total above, in full or as a deposit.`,
+      'success',
+      { title: 'Plan chosen' },
+    );
   } catch (error) {
-    if (error instanceof PaymentUnavailableError) {
-      await toast.show(error.message, 'danger', { title: 'Payment unavailable' });
+    // Once a deposit is paid it was 70% of a particular price, so the plan is
+    // fixed. Refetch so the screen stops offering a change it cannot make.
+    if (error instanceof ApiError && error.code === 'treatment_part_paid') {
+      await queryClient.invalidateQueries({ queryKey: ['case-bill'] });
+      await toast.show(error.message, 'warning', { title: 'Already part paid' });
       return;
     }
     const message =
-      error instanceof ApiError
-        ? error.message
-        : 'We could not start that payment. Please try again.';
-    await toast.show(message, 'danger', { title: 'Payment failed', dismissLabel: 'Try again' });
+      error instanceof ApiError ? error.message : 'We could not set that plan. Please try again.';
+    await toast.show(message, 'danger', { title: 'Not saved', dismissLabel: 'Try again' });
   } finally {
-    paying.value = false;
+    choosing.value = false;
   }
 }
+
 </script>
 
 <style scoped>
+/* Scoped styles are per-component, so the screen shell has to be restated
+   here the way every other screen restates it. Padding only, no flex gap:
+   this screen spaces itself with margins. */
+.cc-screen {
+  --background: var(--cc-surface-app);
+}
+.cc-screen__pad {
+  padding: 16px 16px 28px;
+}
+
+/* Its own padded block, so the panels keep the screen gutter while sitting
+   outside the branch that owns the rest of the padding. */
+.cc-plan__billing:empty {
+  display: none;
+}
+.cc-plan__chosen {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--cc-radius-lg);
+  background: var(--cc-color-mist);
+  margin-bottom: 14px;
+}
+.cc-plan__chosen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.cc-plan__billing {
+  padding-bottom: 0;
+}
 .cc-plan__title {
   font-size: 24px;
   font-weight: 700;
@@ -400,6 +473,13 @@ async function onSubscribe() {
   background: var(--cc-surface-0);
 }
 
+.cc-plan__footer-note {
+  margin: 8px 0 0;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 11.5px;
+  line-height: 16px;
+}
 .cc-plan__footer-row {
   display: flex;
   align-items: baseline;

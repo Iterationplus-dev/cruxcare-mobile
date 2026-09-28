@@ -12,6 +12,11 @@ const ledgerTypeIcons: Record<TransactionType, string> = {
   'cooperative-contribution': 'savings',
   'cooperative-help': 'volunteer_activism',
   'rank-earning': 'workspace_premium',
+  // Deliberately not the `deposit` wallet icon: money that arrived because
+  // somebody was treated is not money the therapist funded, and the two rows
+  // sit next to each other in one statement.
+  earning: 'medical_services',
+  'loyalty-reserve': 'loyalty',
 };
 
 /**

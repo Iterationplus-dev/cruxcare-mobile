@@ -5,6 +5,7 @@ import type { CaseFile } from '@/types/care';
 function caseFile(overrides: Partial<CaseFile> = {}): CaseFile {
   return {
     id: 'case-1',
+    caseId: 'case-record-1',
     clientId: 'user-1',
     therapistId: 'therapist-1',
     notes: [],
@@ -44,9 +45,14 @@ describe('presentClientRow', () => {
     expect(presentClientRow(caseFile({ sessionCount: 1 }), now).subtitle).toBe('1 session');
   });
 
-  it('reads zero sessions for a client who has only just been accepted', () => {
-    // The case file opens empty, so this is the first thing a therapist sees.
-    expect(presentClientRow(caseFile(), now).subtitle).toBe('0 sessions');
+  it('names the absence of sessions rather than counting to zero', () => {
+    // The case file opens empty, so this is the first thing a therapist sees —
+    // and a caseload of freshly accepted clients read as a column of zeroes.
+    expect(presentClientRow(caseFile(), now).subtitle).toBe('No sessions yet');
+    // Still joined with whatever else the row has to say.
+    expect(presentClientRow(caseFile({ nextSessionAt: '2026-09-02T16:00:00' }), now).subtitle).toBe(
+      'No sessions yet · next 2 Sept 16:00',
+    );
   });
 
   it('replaces the summary when a note is unwritten, and asks for attention', () => {

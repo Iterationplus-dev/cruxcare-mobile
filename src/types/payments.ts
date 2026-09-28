@@ -10,7 +10,14 @@
 
 export type PaymentProviderId = 'monnify' | 'mock';
 
-export type PaymentPurpose = 'therapist-plan' | 'order' | 'wallet-topup' | 'care-plan';
+export type PaymentPurpose =
+  | 'therapist-plan'
+  | 'order'
+  | 'wallet-topup'
+  | 'care-plan'
+  /** What a client owes for one case: treatment plus the products they
+   *  accepted. The only purpose that takes a caller-specified `amount`. */
+  | 'case-balance';
 
 /**
  * Which rail the customer picked. It is a *preference*, not a guarantee: the
@@ -38,7 +45,52 @@ export interface CreatePaymentIntentPayload {
    * intent the customer completes another way.
    */
   channel?: PaymentChannel;
+  /**
+   * `case-balance` only: which part of the bill is being settled.
+   *
+   * Named rather than a free amount, so there is no way to construct a
+   * part-payment the rules do not allow — the server prices the item from the
+   * bill. Omitted means `everything`.
+   */
+  item?: CasePaymentItem;
 }
+
+/**
+ * The payable pieces of a case.
+ *
+ * Only the treatment plan can be split, and only ever 70/30: the deposit is
+ * what starts treatment, the balance falls due at the midpoint of the window.
+ * Products are goods being dispatched rather than care delivered over months,
+ * so they always settle in full.
+ */
+export type CasePaymentItem =
+  | 'treatment-deposit'
+  | 'treatment-balance'
+  | 'treatment'
+  | 'products'
+  /**
+   * The instalment that is due now, plus every accepted product, in one
+   * charge.
+   *
+   * It exists because those two are what a client on instalments actually owes
+   * today: the plan is split over the course, but the goods are not, so paying
+   * "what I owe right now" previously meant two trips through the card sheet
+   * for one decision. `everything` is still the other button — that one settles
+   * the future instalment as well.
+   *
+   * The server resolves "due now" from the schedule, exactly as it does for the
+   * named steps. The app must not work out which step that is: a device
+   * deciding the balance is due before the deposit is how a plan gets paid in
+   * the wrong order.
+   */
+  | 'due-plus-products'
+  /**
+   * Extra visits a therapist offered after the course started. Paid in full and
+   * before they take effect — until this settles the window has not moved and
+   * the sessions are not the client's to book.
+   */
+  | 'extensions'
+  | 'everything';
 
 /**
  * Merchant credentials for the gateway SDK. Served by the API rather than
