@@ -66,18 +66,21 @@
              Optional throughout: nobody is stopped from registering for
              withholding where they are. -->
         <AppSheetSelect
-          v-if="countryOptions.length"
+          v-if="countryOptions.length || !countriesLoaded"
           v-model="countryId"
           label="Country (optional)"
           title="Where are you?"
           placeholder="Select your country"
           :options="countryOptions"
+          searchable
+          search-placeholder="Search countries"
+          :loading="countriesLoading"
+          :load-error="countriesError"
+          @retry="retryCountries()"
           clearable
           clear-label="Remove my location"
         />
-        <!-- The active-country list is only readable once signed in, and this
-             screen is not. Until a public list exists the field asks rather
-             than offering an empty menu. -->
+        <!-- Free text is offered only after a successful lookup returns no countries. -->
         <AppInput
           v-else
           v-model="country"
@@ -89,12 +92,17 @@
 
         <template v-if="countryId || country">
           <AppSheetSelect
-            v-if="stateOptions.length"
+            v-if="countryId && (stateOptions.length || !statesLoaded)"
             v-model="stateId"
             label="State (optional)"
             title="Select your state"
             placeholder="Select your state"
             :options="stateOptions"
+            searchable
+            search-placeholder="Search states"
+            :loading="statesLoading"
+            :load-error="statesError"
+            @retry="retryStates()"
           />
           <!-- No list for this country yet, so the field asks rather than
                offering an empty menu that cannot be answered. -->
@@ -285,13 +293,13 @@ const stateId = ref('');
 const cityId = ref('');
 
 /** Switched-on countries, read without a session — registration has none. */
-const { data: countries } = useCountries();
+const { data: countries, isSuccess: countriesLoaded, isFetching: countriesLoading, isError: countriesError, refetch: retryCountries } = useCountries();
 const countryOptions = computed(() =>
   (countries.value ?? []).map((c) => ({ value: c.id, label: c.name })),
 );
 
 const selectedCountryId = computed(() => countryId.value || null);
-const { data: states } = useStates(selectedCountryId);
+const { data: states, isSuccess: statesLoaded, isFetching: statesLoading, isError: statesError, refetch: retryStates } = useStates(selectedCountryId);
 const stateOptions = computed(() =>
   (states.value ?? []).map((s) => ({ value: s.id, label: s.name })),
 );
