@@ -43,7 +43,7 @@
           <AppListRow
             v-for="s in sections"
             :key="s.key"
-            :title="s.label"
+            :title="`${s.label}: (${sectionHints[s.key]})`"
             :subtitle="s.value ?? 'Not provided'"
             :icon="s.value ? 'check_circle' : 'error'"
             :icon-color="s.value ? 'var(--cc-color-success)' : 'var(--cc-color-warning)'"
@@ -114,6 +114,21 @@ const sectionPlaceholders: Record<HealthProfileSection['key'], string> = {
   lifestyle: 'e.g. Mostly vegetarian, exercises 3x a week',
   labResults: 'e.g. FBC 12 Aug — haemoglobin 11.2 g/dL, everything else normal',
   additional: 'Anything else your therapist should know — past surgery, family history, what you have already tried.',
+};
+
+/**
+ * A short example after each row's name, so the list says what kind of answer
+ * a section wants before it is opened. Kept shorter than the sheet's
+ * placeholder: the row title wraps, and a full sentence would swamp the list.
+ */
+const sectionHints: Record<HealthProfileSection['key'], string> = {
+  basics: '34 yrs, 68 kg, 1.66 m',
+  conditions: 'Mild scoliosis',
+  allergies: 'Penicillin, shellfish',
+  medications: 'Metformin 500mg',
+  lifestyle: 'Mostly vegetarian',
+  labResults: 'FBC, haemoglobin',
+  additional: 'Past surgery, family history',
 };
 
 const defaultSections: HealthProfileSection[] = [

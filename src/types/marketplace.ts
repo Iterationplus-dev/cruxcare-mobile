@@ -67,13 +67,24 @@ export interface Order {
   createdAt: string;
 }
 
+/** How an order can be paid. An order is placed only once it is paid for. */
+export type CheckoutPaymentMethod = 'wallet' | 'card';
+
 /** Server-quoted checkout preview — the only source of the resulting total/fees/balance. */
 export interface CheckoutQuote {
+  /** The `subject` of a card payment intent. A new quote replaces the old one,
+   *  so a card payment always starts from the latest quote's id. */
+  quoteId: string;
   subtotal: number;
   fees: number;
   total: number;
   currency: string;
-  /** Wallet balance after this order pays, computed server-side — never derived on the client. */
+  /** Wallet balance after this order pays, computed server-side — never derived
+   *  on the client. Negative is the shortfall. */
   walletBalanceAfter: number;
+  /** False means a wallet order would be refused with `insufficient_funds`. */
+  walletSufficient: boolean;
+  /** The options to offer, in the order to show them. */
+  paymentMethods: CheckoutPaymentMethod[];
   expiresAt: string;
 }

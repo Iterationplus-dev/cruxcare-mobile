@@ -280,6 +280,26 @@ async function payByGateway(channel: PaymentChannel) {
 
     // `authorized` and `pending` both hand off to the server: what the device
     // saw is a hint, and activation still returns 202 until Monnify confirms.
+    //
+    // Confirm first. Without it the server can only learn of the payment from
+    // Monnify's webhook — which never reaches a local API, and lags even when
+    // it does — so activation came back `pending_payment` for a card that had
+    // already been charged. Wallet top-up has always done this.
+    try {
+      const confirmation = await paymentsApi.confirm(intent.reference, result.gatewayReference);
+      if (confirmation.status === 'failed' || confirmation.status === 'cancelled') {
+        await toast.show(confirmation.message, 'danger', {
+          title: 'Payment failed',
+          dismissLabel: 'Try again',
+        });
+        return;
+      }
+    } catch {
+      // The card may well have been charged, so this is not a payment failure.
+      // Activation resolves the intent itself and answers `pending_payment`
+      // honestly if the server still cannot see it.
+    }
+
     await activate(intent.reference);
   } catch (e) {
     if (e instanceof PaymentUnavailableError) {

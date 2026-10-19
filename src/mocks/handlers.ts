@@ -436,23 +436,81 @@ const marketplaceHandlers: HttpHandler[] = [
     if (!user) return unauthorized();
     const cart = db.getCart(user.id);
     const wallet = db.wallets.get(user.id);
+    const walletBalanceAfter = (wallet?.available ?? 0) - cart.subtotal;
     const quote: CheckoutQuote = {
+      quoteId: crypto.randomUUID(),
       subtotal: cart.subtotal,
       fees: 0,
       total: cart.subtotal,
       currency: cart.currency,
-      walletBalanceAfter: (wallet?.available ?? 0) - cart.subtotal,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      walletBalanceAfter,
+      walletSufficient: walletBalanceAfter >= 0,
+      paymentMethods: ['wallet', 'card'],
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
     };
+    // A new quote replaces the old one, so a card payment started from an
+    // earlier quote no longer matches.
+    for (const [id, saved] of checkoutQuotes) if (saved.userId === user.id) checkoutQuotes.delete(id);
+    checkoutQuotes.set(quote.quoteId, { userId: user.id, quote });
     return HttpResponse.json(quote);
   }),
 
-  http.post(url('/orders'), ({ request }) => {
+  http.post(url('/orders'), async ({ request }) => {
     const user = currentUser(request);
     if (!user) return unauthorized();
+
+    // A retry with the same key gets the same order, never a second one.
+    const idempotencyKey = request.headers.get('Idempotency-Key') ?? '';
+    const replay = placedOrders.get(idempotencyKey);
+    if (replay) return HttpResponse.json(replay);
+
+    const { paymentToken } = (await request.json().catch(() => ({}))) as { paymentToken?: string };
     const cart = db.getCart(user.id);
+    const wallet = db.wallets.get(user.id);
+    const byCard = typeof paymentToken === 'string' && paymentToken.startsWith('CCPAY-');
+
+    if (paymentToken !== 'wallet' && !byCard) {
+      return HttpResponse.json(
+        { message: 'That payment method is not supported.', code: 'payment_method_unsupported' },
+        { status: 422 },
+      );
+    }
+
+    if (byCard) {
+      const intent = paymentIntents.get(paymentToken);
+      if (!intent || intent.userId !== user.id || intent.purpose !== 'order') {
+        return HttpResponse.json(
+          { message: 'We could not find that payment. Please pay again.', code: 'payment_not_found' },
+          { status: 422 },
+        );
+      }
+      if (!intent.settled) {
+        return HttpResponse.json(
+          { message: 'Your payment is still being confirmed.', code: 'payment_not_settled' },
+          { status: 409 },
+        );
+      }
+      if (checkoutQuotes.get(intent.subject ?? '')?.userId !== user.id) {
+        return HttpResponse.json(
+          { message: 'That payment was not for this checkout. Please check out again.', code: 'payment_subject_mismatch' },
+          { status: 422 },
+        );
+      }
+    }
+
     if (cart.items.length === 0) {
       return HttpResponse.json({ message: 'Your cart is empty.' }, { status: 422 });
+    }
+
+    if (!byCard && (wallet?.available ?? 0) < cart.subtotal) {
+      return HttpResponse.json(
+        {
+          message: 'Your wallet balance is too low for this order.',
+          code: 'insufficient_funds',
+          meta: { available: wallet?.available ?? 0, required: cart.subtotal, currency: cart.currency },
+        },
+        { status: 422 },
+      );
     }
     const order: Order = {
       id: db.nextId('order'),
@@ -472,11 +530,12 @@ const marketplaceHandlers: HttpHandler[] = [
       createdAt: new Date().toISOString(),
     };
     db.orders.push(order);
+    placedOrders.set(idempotencyKey, order);
     cart.items = [];
     db.recalcCart(cart);
 
-    const wallet = db.wallets.get(user.id);
-    if (wallet) {
+    // A card order was paid at the gateway; only a wallet order debits the wallet.
+    if (wallet && !byCard) {
       wallet.available -= order.total;
       wallet.lastUpdatedAt = new Date().toISOString();
       const ledger = db.ledgers.get(user.id) ?? [];
@@ -2502,6 +2561,12 @@ const WITHDRAWAL_THRESHOLD = 200;
 const moneyQuotes = new Map<string, { userId: string; quote: { id: string; kind: 'withdrawal' | 'transfer' | 'cooperative-contribution'; amount: number; fee: number; recipientReceives: number; balanceAfter: number; currency: string; expiresAt: string; recipient?: string; local: unknown }; stepUpVerified: boolean }>();
 const topUpQuotes = new Map<string, { userId: string; quote: WalletTopUpQuote }>();
 
+/** The latest checkout quote per user, by `quoteId` — the subject of a card order payment. */
+const checkoutQuotes = new Map<string, { userId: string; quote: CheckoutQuote }>();
+
+/** Idempotency key -> the order it placed. */
+const placedOrders = new Map<string, Order>();
+
 /** `${appointmentId}:${userId}` -> a standing yes. Absent is not agreement. */
 const recordingConsent = new Map<string, boolean>();
 
@@ -3122,8 +3187,12 @@ const paymentHandlers: HttpHandler[] = [
     const caseDue =
       body.purpose === 'case-balance' ? caseItemDueMinor(body.subject ?? '', body.item) : 0;
 
+    const checkoutQuote =
+      body.purpose === 'order' ? checkoutQuotes.get(body.subject ?? '') : undefined;
     const baseAmount = topUp
       ? topUp.quote.totalCharge
+      : checkoutQuote && checkoutQuote.userId === user.id
+        ? checkoutQuote.quote.total
       : body.purpose === 'therapist-plan'
         ? (PLAN_PRICE_MINOR[body.subject ?? ''] ?? 0) / 100
         : body.purpose === 'case-balance'

@@ -97,9 +97,10 @@ const isEmail = computed(() => route.params.field !== 'phone');
 const value = ref('');
 const code = ref('');
 const channel = ref<'sms' | 'whatsapp'>('sms');
+/** The code goes to the current number, so WhatsApp only makes sense when there is one (handoff §19). */
 const channelOptions = [
   { value: 'sms', label: 'SMS' },
-  { value: 'whatsapp', label: 'WhatsApp' },
+  ...(auth.user?.phone ? [{ value: 'whatsapp', label: 'WhatsApp' }] : []),
 ];
 
 /** Set once the server has sent a code; its presence is what moves the screen

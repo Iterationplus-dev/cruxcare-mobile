@@ -20,7 +20,8 @@
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 6px">Enter the 5-digit code</h2>
         <p class="cc-text-body" style="margin: 0 0 22px; font-size: 13.5px">
-          {{ deliveryMessage }} <a href="#" @click.prevent="onChangeContact">change {{ contactKind }}</a>
+          {{ deliveryMessage }} {{ purposeLine }}
+          <a href="#" @click.prevent="onChangeContact">change {{ contactKind }}</a>
         </p>
 
         <OtpInput
@@ -28,12 +29,26 @@
           :length="5"
           :cooldown-remaining="cooldown"
           @complete="onComplete"
-          @resend="onResend"
+          @resend="onResend()"
         />
+
+        <!-- "Sent" only means queued: a number that is not on WhatsApp fails
+             silently after the API has answered, so once the cooldown passes
+             offer the other rails rather than only another WhatsApp attempt. -->
+        <div v-if="channel === 'whatsapp' && cooldown === 0 && !sending" class="cc-otp-fallback">
+          <span class="cc-text-caption">Didn't get it?</span>
+          <button type="button" class="cc-otp-fallback__btn" @click="onResend('sms')">Send by SMS</button>
+          <button type="button" class="cc-otp-fallback__btn" @click="onResend('email')">Send by email</button>
+        </div>
 
         <div class="cc-otp-hint">
           <AppIcon :name="deliveryIcon" :size="20" color="var(--cc-color-primary)" />
-          <p>Codes expire after 10 minutes. Three wrong attempts locks the code and sends a fresh one.</p>
+          <p>
+            <template v-if="channel === 'whatsapp'">
+              Check WhatsApp for a message from {{ WHATSAPP_SENDER }}.
+            </template>
+            {{ expiryLine }} Three wrong attempts locks the code, and you will need to request a new one.
+          </p>
         </div>
       </div>
 
@@ -74,18 +89,44 @@ const toast = useToast();
 
 const purpose = (route.query.purpose as 'signup' | 'recovery' | 'member-link') ?? 'signup';
 const requestedChannel = route.query.channel;
-const channel: OtpChannel = requestedChannel === 'email' || requestedChannel === 'sms' || requestedChannel === 'whatsapp'
-  ? requestedChannel
-  : purpose === 'signup'
-    ? 'email'
-    : 'sms';
-const contact = (route.query.contact as string) ?? (channel === 'email' ? auth.user?.email : auth.user?.phone) ?? '';
-const contactKind = channel === 'email' ? 'email' : channel === 'whatsapp' ? 'WhatsApp' : 'number';
-const deliveryLabel = channel === 'email' ? 'email' : channel === 'whatsapp' ? 'WhatsApp' : 'phone';
-const deliveryIcon = channel === 'email' ? 'mail' : channel === 'whatsapp' ? 'chat' : 'sms';
+/** A ref because "Didn't get it?" can move a WhatsApp code to SMS or email. */
+const channel = ref<OtpChannel>(
+  requestedChannel === 'email' || requestedChannel === 'sms' || requestedChannel === 'whatsapp'
+    ? requestedChannel
+    : purpose === 'signup'
+      ? 'email'
+      : 'sms',
+);
+/** Already masked by the API (`destination`); replaced whenever a resend reports a new one. */
+const contact = ref((route.query.contact as string) ?? '');
+const contactKind = computed(() => (channel.value === 'email' ? 'email' : channel.value === 'whatsapp' ? 'WhatsApp' : 'number'));
+const deliveryLabel = computed(() => (channel.value === 'email' ? 'email' : channel.value === 'whatsapp' ? 'WhatsApp' : 'phone'));
+const deliveryIcon = computed(() => (channel.value === 'email' ? 'mail' : channel.value === 'whatsapp' ? 'chat' : 'sms'));
 const initialResendAvailableAt = typeof route.query.resendAvailableAt === 'string'
   ? route.query.resendAvailableAt
   : undefined;
+
+/**
+ * The WhatsApp message reads the same for every purpose — signup, recovery,
+ * wallet — so the screen has to say what this code is for (handoff §19). The
+ * sender is named by number too: the display name is still in Meta review and
+ * some phones show only the number.
+ */
+const WHATSAPP_SENDER = "Crux Caring Int'l (+234 916 420 2838)";
+const purposeLine = {
+  signup: 'Enter it to verify your account.',
+  recovery: 'Enter it to recover your account.',
+  'member-link': 'Enter it to confirm your Crux ID.',
+}[purpose];
+
+/** From the server's `expiresAt`, not a hard-coded ten minutes. */
+const expiresAt = ref(typeof route.query.expiresAt === 'string' ? route.query.expiresAt : undefined);
+const expiryLine = computed(() => {
+  const at = expiresAt.value ? new Date(expiresAt.value) : null;
+  return at && !Number.isNaN(at.getTime())
+    ? `This code expires at ${at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`
+    : 'Codes expire after 10 minutes.';
+});
 /**
  * Callers that dispatched a code before navigating say so with `sent=true`.
  * Login and the pending-signup route guard cannot: `/auth/login` only issues a
@@ -97,15 +138,22 @@ const redirectName = (route.query.redirect as string) ?? 'health-profile-gate';
 const cruxId = route.query.cruxId as string | undefined;
 const identifier = route.query.identifier as string | undefined;
 
-const maskedContact = computed(() => contact || 'your registered contact');
-
 const sending = ref(false);
 const sendFailed = ref(false);
 
+/**
+ * Recovery never names a destination: its replies carry `destination: null`
+ * so they cannot confirm an account exists, and echoing what was typed would
+ * claim a code went to an email that may have been sent to WhatsApp.
+ */
 const deliveryMessage = computed(() => {
-  if (sending.value) return `Sending your code to ${maskedContact.value}…`;
-  if (sendFailed.value) return `We could not send a code to ${maskedContact.value}. Tap resend to try again.`;
-  return `Your code is on its way to ${maskedContact.value}.`;
+  if (sending.value) return 'Sending your code…';
+  if (sendFailed.value) return 'We could not send a code. Tap resend to try again.';
+  if (purpose === 'recovery') return `If an account matches, we've sent a code by ${deliveryLabel.value}.`;
+  if (!contact.value) return `We sent a code to your ${deliveryLabel.value}.`;
+  if (channel.value === 'whatsapp') return `We sent a code to WhatsApp on ${contact.value}.`;
+  if (channel.value === 'sms') return `We sent a code by SMS to ${contact.value}.`;
+  return `We sent a code to ${contact.value}.`;
 });
 
 /**
@@ -140,7 +188,7 @@ async function onBack() {
 }
 
 async function onChangeContact() {
-  if (purpose === 'signup' && channel === 'email') {
+  if (purpose === 'signup' && channel.value === 'email') {
     await router.push({
       name: 'register-change-email',
       query: { redirect: redirectName },
@@ -176,14 +224,32 @@ function startCooldown(resendAvailableAt?: string) {
 }
 
 /** Recovery stays non-enumerating, so it reports no delivery timing to echo back. */
-async function requestCode(): Promise<string | undefined> {
+async function requestCode(via: OtpChannel = channel.value): Promise<string | undefined> {
   if (purpose === 'recovery' && identifier) {
-    await authApi.requestPasswordReset(identifier, channel);
+    await authApi.requestPasswordReset(identifier, via);
     return undefined;
   }
 
-  const delivery = await authApi.requestOtp(channel, purpose);
+  const delivery = await authApi.requestOtp(via, purpose, purpose === 'member-link' ? cruxId : undefined);
+  contact.value = delivery.destination ?? '';
+  expiresAt.value = delivery.expiresAt;
   return delivery.resendAvailableAt;
+}
+
+/**
+ * A request inside the server's cooldown is `422 otp_cooldown` with
+ * `meta.retryAfterSeconds`. A code went out moments ago and is still live, so
+ * this is not a failure — the countdown just restarts from the server's figure.
+ */
+function applyServerCooldown(e: unknown): boolean {
+  if (!(e instanceof ApiError) || e.code !== 'otp_cooldown') return false;
+  const retryAfter = Number(e.meta?.retryAfterSeconds);
+  startCooldown(
+    Number.isFinite(retryAfter) && retryAfter > 0
+      ? new Date(Date.now() + retryAfter * 1000).toISOString()
+      : undefined,
+  );
+  return true;
 }
 
 async function sendInitialCode() {
@@ -192,11 +258,7 @@ async function sendInitialCode() {
     startCooldown(await requestCode());
     sendFailed.value = false;
   } catch (e) {
-    // The server's resend cooldown means a code went out moments ago and is
-    // still live — that is the happy path, not a delivery failure.
-    if (e instanceof ApiError && e.code === 'otp_cooldown') {
-      const retryAfter = Number(e.meta?.retryAfterSeconds);
-      if (Number.isFinite(retryAfter) && retryAfter > 0) cooldown.value = Math.ceil(retryAfter);
+    if (applyServerCooldown(e)) {
       sendFailed.value = false;
       return;
     }
@@ -227,24 +289,31 @@ onMounted(() => {
 });
 onBeforeUnmount(() => clearInterval(timer));
 
-async function onResend() {
+/** `via` switches rail for "Didn't get it?"; omitted, it resends on the current one. */
+async function onResend(via: OtpChannel = channel.value) {
   if (sending.value) return;
 
+  sending.value = true;
   try {
-    const resendAvailableAt = await requestCode();
+    const resendAvailableAt = await requestCode(via);
 
+    channel.value = via;
     sendFailed.value = false;
     code.value = '';
     startCooldown(resendAvailableAt);
-    await toast.show('Your verification code is on its way to your ' + deliveryLabel + '.', 'success', {
+    await toast.show('Your verification code is on its way to your ' + deliveryLabel.value + '.', 'success', {
       title: 'Code queued',
     });
   } catch (e) {
+    if (applyServerCooldown(e)) return;
+
     const message = e instanceof ApiError ? e.message : 'We could not queue a new code. Please try again.';
     await toast.show(message, 'danger', {
       title: 'Could not resend code',
       dismissLabel: 'Try again',
     });
+  } finally {
+    sending.value = false;
   }
 }
 async function onComplete(value: string) {
@@ -256,7 +325,7 @@ async function onComplete(value: string) {
       router.replace({ name: redirectName, query: { identifier, code: value } });
       return;
     }
-    await authApi.verifyOtp(value, purpose);
+    await authApi.verifyOtp(value, purpose, purpose === 'member-link' ? cruxId : undefined);
     if (purpose === 'signup') {
       // The OTP endpoint changes the account on the server. Refresh before
       // navigating so the route guard cannot bounce a verified user back here.
@@ -269,9 +338,12 @@ async function onComplete(value: string) {
   } catch (e) {
     const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.';
     const attempts = e instanceof ApiError ? (e.meta?.attemptsRemaining as number) ?? null : null;
+    // At zero the code is dead server-side; another guess cannot work.
     const retryMessage = attempts === null
       ? message
-      : `${message} You have ${attempts} attempt${attempts === 1 ? '' : 's'} left.`;
+      : attempts === 0
+        ? 'That code is now locked. Request a new code to try again.'
+        : `${message} You have ${attempts} attempt${attempts === 1 ? '' : 's'} left.`;
     code.value = '';
     await toast.show(retryMessage, 'danger', {
       title: 'Verification failed',
@@ -319,6 +391,25 @@ async function onComplete(value: string) {
 }
 .cc-otp-hint {
   background: var(--cc-color-mist);
+}
+.cc-otp-fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 14px;
+  margin-top: 4px;
+}
+.cc-otp-fallback__btn {
+  min-height: var(--cc-touch-min);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cc-color-primary);
+  font-family: var(--cc-font-interface);
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
 }
 .cc-otp-hint p,
 .cc-otp-lockout p {

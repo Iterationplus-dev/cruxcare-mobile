@@ -201,6 +201,11 @@ const requestingCode = ref(false);
 const submitting = ref(false);
 const stepUpOpen = ref(false);
 const securityCode = ref('');
+// A pasted code may carry spaces or a "Code:" prefix; keep only the digits.
+watch(securityCode, (value) => {
+  const digits = value.replace(/\D/g, '').slice(0, 5);
+  if (digits !== value) securityCode.value = digits;
+});
 
 /** The server-converted twin of the quote. Null for anyone with no supported
  * country, which is the common case — the screen then reads exactly as before.

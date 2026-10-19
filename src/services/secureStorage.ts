@@ -60,4 +60,10 @@ export const SECURE_STORAGE_KEYS = {
    * identifier — it is generated here and dies with the install.
    */
   pushInstallationId: 'cc_push_installation_id',
+  /**
+   * A card payment for a checkout that has not become an order yet. The server
+   * does not place a paid order on its own, so it is kept until the order is
+   * placed or the payment is known to be dead.
+   */
+  pendingOrderPayment: 'cc_pending_order_payment',
 } as const;

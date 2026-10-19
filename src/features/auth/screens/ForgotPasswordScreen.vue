@@ -17,9 +17,20 @@
           Tell us where to send a reset code. It has to be the email or phone already on the account.
         </p>
 
+        <div v-if="recoveryError" class="cc-notice cc-notice--error" role="alert">
+          <AppIcon name="error" :size="20" color="var(--cc-error-surface-text)" />
+          <p>
+            {{ recoveryError.message }}
+            <template v-if="recoveryError.kind === 'phone_shared'">
+              No email on the account?
+              <a href="#" @click.prevent="router.push({ name: 'assisted-recovery' })">Start account recovery</a>.
+            </template>
+          </p>
+        </div>
+
         <div class="cc-channels">
           <button
-            v-for="option in channelOptions"
+            v-for="option in visibleChannelOptions"
             :key="option.key"
             type="button"
             class="cc-channel"
@@ -38,9 +49,10 @@
 
         <AppInput
           v-model="identifier"
-          label="Email or phone"
+          :label="identifierLabel"
           placeholder="amara.okafor@gmail.com"
           autocomplete="username"
+          :invalid="recoveryError?.kind === 'identifier_ambiguous'"
         />
 
         <div class="cc-notice">
@@ -60,21 +72,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { IonButtons, IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { AppButton, AppIcon, AppInput } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
+import { useToast } from '@/composables/useToast';
+import { ApiError } from '@/types/api';
+import {
+  ALL_RECOVERY_CHANNELS,
+  recoveryErrorState,
+  type RecoveryChannel,
+  type RecoveryErrorState,
+} from '@/features/auth/recoveryErrors';
 
 const router = useRouter();
+const toast = useToast();
 
 /** ion-back-button did nothing here when login was reached via replace(). */
 function goBack() {
   if (window.history.state?.back) router.back();
   else router.replace({ name: 'login' });
 }
-type RecoveryChannel = 'sms' | 'whatsapp' | 'email';
-
 /** WhatsApp and SMS both reach the account phone; the API validates all three. */
 const channelOptions: { key: RecoveryChannel; icon: string; label: string }[] = [
   { key: 'sms', icon: 'sms', label: 'Text me' },
@@ -86,13 +105,60 @@ const channel = ref<RecoveryChannel>('sms');
 const identifier = ref('');
 const submitting = ref(false);
 
+const DEFAULT_IDENTIFIER_LABEL = 'Email or phone';
+const identifierLabel = ref(DEFAULT_IDENTIFIER_LABEL);
+const allowedChannels = ref<RecoveryChannel[]>(ALL_RECOVERY_CHANNELS);
+const visibleChannelOptions = computed(() =>
+  channelOptions.filter((option) => allowedChannels.value.includes(option.key)),
+);
+
+/** A shared-phone 422 and the identifier it answered. Whether a phone is
+ *  shared is the API's call on each request, so editing the identifier lifts
+ *  the error and any channel restriction rather than carrying them over. */
+const recoveryError = ref<RecoveryErrorState | null>(null);
+let recoveryErrorFor = '';
+watch(identifier, (value) => {
+  if (!recoveryError.value || value === recoveryErrorFor) return;
+  recoveryError.value = null;
+  allowedChannels.value = ALL_RECOVERY_CHANNELS;
+});
+
+function applyRecoveryError(state: RecoveryErrorState) {
+  if (state.kind === 'identifier_ambiguous') {
+    identifier.value = '';
+    identifierLabel.value = state.identifierLabel;
+    allowedChannels.value = ALL_RECOVERY_CHANNELS;
+  } else {
+    allowedChannels.value = state.allowedChannels;
+    channel.value = state.allowedChannels[0];
+  }
+  recoveryErrorFor = identifier.value;
+  recoveryError.value = state;
+}
+
 async function onSubmit() {
   submitting.value = true;
+  const contact = identifier.value;
   try {
-    await authApi.requestPasswordReset(identifier.value, channel.value);
+    await authApi.requestPasswordReset(contact, channel.value);
     router.push({
       name: 'register-otp',
-      query: { purpose: 'recovery', contact: identifier.value, channel: channel.value, sent: 'true', redirect: 'reset-password', identifier: identifier.value },
+      query: { purpose: 'recovery', contact, channel: channel.value, sent: 'true', redirect: 'reset-password', identifier: contact },
+    });
+    // Ionic keeps this page alive in the stack; don't greet a returning user with the old address.
+    identifier.value = '';
+    identifierLabel.value = DEFAULT_IDENTIFIER_LABEL;
+    recoveryError.value = null;
+    allowedChannels.value = ALL_RECOVERY_CHANNELS;
+  } catch (e) {
+    const state = recoveryErrorState(e, contact);
+    if (state) {
+      applyRecoveryError(state);
+      return;
+    }
+    await toast.show(e instanceof ApiError ? e : 'We could not send a reset code. Please try again.', 'danger', {
+      title: 'Could not send code',
+      dismissLabel: 'Try again',
     });
   } finally {
     submitting.value = false;
@@ -160,6 +226,13 @@ async function onSubmit() {
 .cc-notice--muted {
   background: var(--cc-surface-app);
   border: 1px solid var(--cc-line);
+}
+.cc-notice--error {
+  background: var(--cc-error-surface);
+  border: 1px solid var(--cc-input-error-border);
+}
+.cc-notice--error p {
+  color: var(--cc-error-surface-text);
 }
 .cc-notice p {
   margin: 0;

@@ -132,8 +132,21 @@ export const authApi = {
     return requireAuthSession(data);
   },
 
-  async requestOtp(channel: OtpChannel, purpose: 'signup' | 'recovery' | 'member-link'): Promise<OtpRequestResult> {
-    const { data } = await apiClient.post<OtpRequestResult>('/auth/otp/request', { channel, purpose });
+  /**
+   * `cruxId` is required by the API when `purpose` is `member-link` — it 422s
+   * without it, though the handoff table has not caught up. Left out for the
+   * other purposes, which have no Crux ID to send.
+   */
+  async requestOtp(
+    channel: OtpChannel,
+    purpose: 'signup' | 'recovery' | 'member-link',
+    cruxId?: string,
+  ): Promise<OtpRequestResult> {
+    const { data } = await apiClient.post<OtpRequestResult>('/auth/otp/request', {
+      channel,
+      purpose,
+      ...(cruxId ? { cruxId } : {}),
+    });
     return data;
   },
 
@@ -141,10 +154,12 @@ export const authApi = {
     const { data } = await apiClient.post<OtpRequestResult>('/auth/signup/email', { email });
     return data;
   },
-  async verifyOtp(code: string, purpose: 'signup' | 'recovery' | 'member-link') {
+  /** Same `cruxId` rule as requestOtp: the API 422s without it for `member-link`. */
+  async verifyOtp(code: string, purpose: 'signup' | 'recovery' | 'member-link', cruxId?: string) {
     const { data } = await apiClient.post<{ verified: boolean }>('/auth/otp/verify', {
       code,
       purpose,
+      ...(cruxId ? { cruxId } : {}),
     });
     return data;
   },

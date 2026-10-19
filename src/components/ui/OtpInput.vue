@@ -10,7 +10,6 @@
         type="text"
         inputmode="numeric"
         autocomplete="one-time-code"
-        maxlength="1"
         :value="digits[i] ?? ''"
         :aria-label="`Digit ${i + 1} of ${length}`"
         :aria-invalid="!!error"
@@ -63,11 +62,40 @@ function commit() {
   if (value.length === props.length) emit('complete', value);
 }
 
-function onInput(i: number, e: Event) {
-  const raw = (e.target as HTMLInputElement).value.replace(/\D/g, '');
-  digits.value[i] = raw.slice(-1) ?? '';
+/** Spreads a run of digits across the boxes from `start`, then focuses the last one filled. */
+function fill(start: number, text: string) {
+  const next = [...digits.value];
+  const chars = text.slice(0, props.length - start).split('');
+  chars.forEach((d, k) => (next[start + k] = d));
+  digits.value = next;
   commit();
-  if (raw && i < props.length - 1) inputs.value[i + 1]?.focus();
+  inputs.value[Math.min(start + chars.length, props.length) - 1]?.focus();
+}
+
+/**
+ * No `maxlength="1"` on the boxes: Android keyboards paste a clipboard chip as
+ * an ordinary input event, not a `paste`, and the limit cut a whole code down
+ * to its first digit. WhatsApp codes have no autofill, so paste is the fast
+ * path (backend handoff §19) and has to survive every route in.
+ */
+function onInput(i: number, e: Event) {
+  const target = e.target as HTMLInputElement;
+  const raw = target.value.replace(/\D/g, '');
+  const old = digits.value[i] ?? '';
+
+  // More than one new digit at once is a paste or autofill, not typing.
+  if (raw.length - (old ? 1 : 0) > 1) {
+    fill(i, raw);
+    target.value = digits.value[i] ?? '';
+    return;
+  }
+
+  // Typing into a filled box leaves both digits; keep the one just typed.
+  const typed = old && raw.length === 2 ? (raw[0] === old ? raw[1] : raw[0]) : raw.slice(-1);
+  digits.value[i] = typed;
+  target.value = typed;
+  commit();
+  if (typed && i < props.length - 1) inputs.value[i + 1]?.focus();
 }
 
 function onKeydown(i: number, e: KeyboardEvent) {
@@ -80,9 +108,13 @@ function onPaste(e: ClipboardEvent) {
   const text = e.clipboardData?.getData('text').replace(/\D/g, '') ?? '';
   if (!text) return;
   e.preventDefault();
-  digits.value = text.slice(0, props.length).split('');
-  commit();
-  inputs.value[Math.min(text.length, props.length) - 1]?.focus();
+  // A whole code replaces whatever was there; a fragment continues from the box it landed in.
+  if (text.length >= props.length) {
+    digits.value = [];
+    fill(0, text);
+  } else {
+    fill(Math.max(0, inputs.value.indexOf(e.target as HTMLInputElement)), text);
+  }
 }
 
 onMounted(() => inputs.value[0]?.focus());

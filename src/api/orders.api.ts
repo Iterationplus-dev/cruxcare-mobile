@@ -24,6 +24,13 @@ export const ordersApi = {
     return data;
   },
 
+  /**
+   * Places an order that is already paid for. `paymentToken` is `wallet` (the
+   * server debits it, or refuses with `insufficient_funds`) or the `CCPAY-…`
+   * reference of a settled card payment; anything else is
+   * `payment_method_unsupported`. The server never places a paid card order by
+   * itself, so this must be called once the payment settles.
+   */
   async checkout(idempotencyKey: string, paymentToken: string): Promise<Order> {
     const { data } = await apiClient.post<Order>(
       '/orders',
