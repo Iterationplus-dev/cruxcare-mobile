@@ -4,7 +4,7 @@
       <div class="cc-video__topbar">
         <span v-if="recording" class="cc-video__rec">REC</span>
         <span class="cc-video__timer cc-text-mono">{{ elapsed }}</span>
-        <button type="button" class="cc-video__flip" aria-label="Flip camera">
+        <button type="button" class="cc-video__flip" aria-label="Flip camera" @click="flipCamera">
           <AppIcon name="flip_camera_ios" :size="24" color="#fff" />
         </button>
       </div>
@@ -20,13 +20,19 @@
           </AppButton>
           <AppButton variant="text" @click="router.back()">Back to appointment</AppButton>
         </div>
-        <span v-else class="cc-text-mono" style="color: #8a9a93">
-          {{ joined ? 'therapist video feed' : 'Connecting…' }}
-        </span>
+        <MediaTrack v-else-if="remote?.videoTrack" :track="remote.videoTrack" class="cc-video__remote" />
+        <span v-else class="cc-video__waiting">{{ stageLabel }}</span>
       </div>
 
+      <!-- The other person's sound. Video elements stay muted; this is the
+           only thing in the call that plays audio. -->
+      <MediaTrack v-if="remote?.audioTrack" kind="audio" :track="remote.audioTrack" />
+
       <div v-if="!problem" class="cc-video__self">
-        <span class="cc-text-mono" style="color: #8a9a93; font-size: 11.5px">you</span>
+        <MediaTrack v-if="self?.videoTrack && cameraOn" :track="self.videoTrack" mirror />
+        <span v-else class="cc-text-mono" style="color: #8a9a93; font-size: 11.5px">
+          {{ cameraOn ? 'you' : 'camera off' }}
+        </span>
       </div>
 
       <div v-if="!problem" class="cc-video__bottom">
@@ -88,7 +94,8 @@ import { IonPage } from '@ionic/vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppButton from '@/components/ui/AppButton.vue';
-import { videoProvider, type VideoRoomHandle } from '@/services/video/VideoProvider';
+import MediaTrack from '@/features/shared/components/MediaTrack.vue';
+import { videoProviderFor, type VideoParticipant, type VideoRoomHandle } from '@/services/video';
 import { videoApi } from '@/api/video.api';
 import { videoJoinProblem, type VideoJoinProblem } from '@/features/shared/videoSessionErrors';
 import { useToast } from '@/composables/useToast';
@@ -118,6 +125,20 @@ const seconds = ref(0);
 const consent = ref<RecordingConsent>({ mine: false, theirs: false, canRecord: false });
 const savingConsent = ref(false);
 let room: VideoRoomHandle | null = null;
+let unsubscribers: (() => void)[] = [];
+
+/** Everyone in the call, as the provider last reported it. */
+const participants = ref<VideoParticipant[]>([]);
+const self = computed(() => participants.value.find((p) => p.local) ?? null);
+/** A visit is two people, so the first other person is the one on the stage. */
+const remote = computed(() => participants.value.find((p) => !p.local) ?? null);
+const otherParty = computed(() => (isHost.value ? 'your client' : 'your therapist'));
+
+const stageLabel = computed(() => {
+  if (!joined.value) return 'Connecting…';
+  if (!remote.value) return `Waiting for ${otherParty.value} to join…`;
+  return `${remote.value.name}'s camera is off`;
+});
 let timer: ReturnType<typeof setInterval> | undefined;
 let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -166,11 +187,15 @@ async function connect() {
   try {
     const session = await videoApi.token(appointmentId);
     isHost.value = session.role === 'host';
-    room = await videoProvider.join({
+    room = await videoProviderFor(session.provider).join({
       url: session.url,
       token: session.token,
       roomId: session.roomId,
     });
+    unsubscribers = [
+      room.onParticipants((all) => (participants.value = all)),
+      room.onEnded(onCallEnded),
+    ];
     joined.value = true;
     scheduleRefresh(session.expiresAt);
     clearInterval(timer);
@@ -188,11 +213,36 @@ async function connect() {
 
 onMounted(() => void connect());
 
-onBeforeUnmount(() => {
+/** The call ended without this person leaving: the therapist ended it for
+ *  everyone, or the connection to the room was lost. */
+function onCallEnded(reason: 'ended' | 'error', message?: string) {
+  releaseRoom();
+  problem.value =
+    reason === 'ended'
+      ? { title: 'The session has ended', message: 'The call has finished. You can close this screen.', retryable: false }
+      : { title: 'The call dropped', message: message ?? 'The connection to the call was lost.', retryable: true };
+}
+
+function releaseRoom() {
+  unsubscribers.forEach((unsubscribe) => unsubscribe());
+  unsubscribers = [];
+  participants.value = [];
+  joined.value = false;
+  recording.value = false;
   clearInterval(timer);
   clearTimeout(refreshTimer);
-  void room?.leave();
+  room = null;
+}
+
+onBeforeUnmount(() => {
+  const leaving = room;
+  releaseRoom();
+  void leaving?.leave();
 });
+
+async function flipCamera() {
+  await room?.flipCamera();
+}
 
 async function toggleMute() {
   muted.value = !muted.value;
@@ -236,7 +286,9 @@ function openChat() {
 
 /** Leaving is the provider's own call and needs nothing from the API. */
 async function leave() {
-  await room?.leave();
+  const leaving = room;
+  releaseRoom();
+  await leaving?.leave();
   router.back();
 }
 
@@ -352,11 +404,26 @@ async function endForEveryone() {
   cursor: pointer;
 }
 .cc-video__stage {
+  position: relative;
   flex: 1;
   display: grid;
   place-items: center;
 }
+.cc-video__remote {
+  position: absolute;
+  inset: 0;
+}
+.cc-video__waiting {
+  max-width: 260px;
+  padding: 0 20px;
+  text-align: center;
+  color: #8a9a93;
+  font-family: var(--cc-font-interface);
+  font-size: 14px;
+}
 .cc-video__self {
+  overflow: hidden;
+  z-index: 1;
   position: absolute;
   top: 110px;
   right: 16px;

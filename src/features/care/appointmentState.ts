@@ -135,8 +135,10 @@ export function statusBadge(
   }
 }
 
-/** The room opens a little before the hour, so nobody is refused at 13:59. */
-export const JOIN_OPENS_MINUTES = 10;
+/** The room opens a little before the hour, so nobody is refused at 13:59.
+ *  The same 15 minutes the server enforces on the video token and on start —
+ *  at 10 the app hid Join for five minutes in which the server would let you in. */
+export const JOIN_OPENS_MINUTES = 15;
 
 /**
  * How long a *confirmed* session stays joinable after its start time.

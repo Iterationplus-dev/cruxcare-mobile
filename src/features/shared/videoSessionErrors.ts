@@ -22,6 +22,10 @@ function timeOf(meta: Record<string, unknown> | undefined, key: string): string 
  * should never have been there.
  */
 export function videoJoinProblem(error: unknown): VideoJoinProblem {
+  if (error instanceof Error && error.name === 'VideoProviderUnsupportedError') {
+    return { title: 'Update needed', message: error.message, retryable: false };
+  }
+
   if (!(error instanceof ApiError)) {
     return {
       title: 'Could not connect',
