@@ -1,12 +1,12 @@
 import { http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it } from 'vitest';
-import { authApi } from '@/api/auth.api';
+import { authApi, type AuthSession } from '@/api/auth.api';
 import { setAuthTokenGetter } from '@/api/client';
 import { server } from '@/mocks/server';
 
 describe('authApi login identifier resolution', () => {
   it('accepts a username', async () => {
-    const session = await authApi.login('amaka.obi', 'Passw0rd!1');
+    const session = (await authApi.login('amaka.obi', 'Passw0rd!1')) as AuthSession;
 
     expect(session.user.email).toBe('demo@cruxcare.app');
   });
@@ -32,6 +32,40 @@ describe('authApi login identifier resolution', () => {
       status: 502,
       code: 'invalid_auth_response',
     });
+  });
+
+  it('returns the challenge when the account has two-step verification on', async () => {
+    const challenge = {
+      status: 'otp_required',
+      channel: 'sms',
+      destination: '**********6383',
+      expiresAt: '2026-10-19T17:51:52+00:00',
+      resendAvailableAt: '2026-10-19T17:42:52+00:00',
+    };
+    server.use(http.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, () => HttpResponse.json(challenge)));
+
+    await expect(authApi.login('amaka.obi', 'Passw0rd!1')).resolves.toEqual(challenge);
+  });
+
+  it('sends the code with the same credentials to finish a two-step login', async () => {
+    let payload: unknown;
+    let installationId: string | null = null;
+    server.use(
+      http.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login/verify`, async ({ request }) => {
+        payload = await request.json();
+        installationId = request.headers.get('X-Installation-Id');
+        return HttpResponse.json({
+          token: 'verified-token',
+          user: { id: 'u1', roles: ['client'], email: 'demo@cruxcare.app' },
+        });
+      }),
+    );
+
+    const session = await authApi.verifyLogin('amaka.obi', 'Passw0rd!1', '12345');
+
+    expect(payload).toEqual({ identifier: 'amaka.obi', password: 'Passw0rd!1', code: '12345' });
+    expect(installationId).toBeTruthy();
+    expect(session.token).toBe('verified-token');
   });
 
   it('requests signup OTPs by email', async () => {
@@ -65,7 +99,7 @@ describe('authApi.updateMe gender', () => {
   afterEach(() => setAuthTokenGetter(() => null));
 
   async function signIn() {
-    const session = await authApi.login('amaka.obi', 'Passw0rd!1');
+    const session = (await authApi.login('amaka.obi', 'Passw0rd!1')) as AuthSession;
     setAuthTokenGetter(() => session.token);
     return session;
   }
