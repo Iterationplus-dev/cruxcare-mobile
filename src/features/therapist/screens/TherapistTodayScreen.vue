@@ -78,7 +78,7 @@
             title="No sessions today"
             message="Your accepted appointments for today will show up here."
           />
-          <AppCard v-else style="padding: 0">
+          <AppCard v-else class="cc-td__schedule" style="padding: 0">
             <AppListRow
               v-for="a in todaysAppointments"
               :key="a.id"
@@ -122,7 +122,7 @@
 <script setup lang="ts">
 import { AppPullToRefresh } from '@/components/ui';
 import { computed } from 'vue';
-import { IonContent, IonPage } from '@ionic/vue';
+import { IonContent, IonPage, onIonViewWillEnter } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import {
   AppAvatar,
@@ -177,8 +177,12 @@ const draftNoteCount = computed(
   () => caseFiles?.value?.data.reduce((sum, cf) => sum + cf.notes.filter((n) => n.draft).length, 0) ?? 0,
 );
 
-const { data: threads } = useChatThreads();
+const { data: threads, refetch: refetchThreads } = useChatThreads();
 const unreadCount = computed(() => threads?.value?.reduce((sum, t) => sum + t.unreadCount, 0) ?? 0);
+
+// Ionic keeps this tab alive, so coming back to it does not remount it and the
+// query would not ask again. Re-read on every return, e.g. after a chat.
+onIonViewWillEnter(() => void refetchThreads());
 
 const { data: wallet } = useWallet();
 
@@ -210,6 +214,10 @@ function goPlan() {
 </script>
 
 <style scoped>
+/* The client's name is what a therapist scans the day's list for. */
+.cc-td__schedule :deep(.cc-row__title) {
+  font-weight: 700;
+}
 .cc-screen {
   --background: var(--cc-surface-app);
 }

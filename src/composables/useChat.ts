@@ -17,17 +17,37 @@ export function findThreadWith(
   return threads.find((t) => t.participantId === participantId);
 }
 
+/** How often unread counts are re-read while the app is open. There is no
+ *  realtime channel yet, and push only refreshes them when it is delivered. */
+export const CHAT_THREADS_POLL_MS = 30_000;
+
+/**
+ * The thread list carries every unread count. It polls because nothing else
+ * reliably tells the app a message arrived: Ionic keeps screens alive, so a
+ * dashboard read once at sign-in otherwise shows that number for good.
+ */
 export function useChatThreads() {
   return useQuery({
     queryKey: ['chat', 'threads'],
     queryFn: () => chatApi.listThreads(),
+    refetchInterval: CHAT_THREADS_POLL_MS,
+    refetchIntervalInBackground: false,
   });
 }
 
 export function useChatMessages(threadId: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: ['chat', 'threads', threadId, 'messages'],
-    queryFn: () => chatApi.getMessages(threadId),
+    queryFn: async () => {
+      const page = await chatApi.getMessages(threadId);
+      // Reading the messages is what marks them read server-side, so the
+      // counts held for the thread list are now too high. `exact`, because
+      // this query's own key starts with the list's and a prefix match would
+      // refetch it again, forever.
+      void queryClient.invalidateQueries({ queryKey: ['chat', 'threads'], exact: true });
+      return page;
+    },
   });
 }
 
