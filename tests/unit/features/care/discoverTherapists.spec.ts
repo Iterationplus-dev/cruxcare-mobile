@@ -6,6 +6,7 @@ import {
   isNearby,
   matchesTherapistQuery,
   slotAbsenceLabel,
+  sortTherapists,
   specialtyChips,
 } from '@/features/care/discoverTherapists';
 import type { TherapistSummary } from '@/types/care';
@@ -240,5 +241,35 @@ describe('slotAbsenceLabel', () => {
     expect(slotAbsenceLabel(therapist({ fullyBooked: false, schedulePublished: true }))).toBe(
       'No slots listed',
     );
+  });
+});
+
+describe('sortTherapists', () => {
+  const list = [
+    therapist({ id: 'a', name: 'Zara', rating: null, nextAvailableSlot: '2026-10-21T09:00:00Z' }),
+    therapist({ id: 'b', name: 'Ade', rating: 4.2, nextAvailableSlot: null }),
+    therapist({ id: 'c', name: 'Mo', rating: 4.8, nextAvailableSlot: '2026-10-20T15:00:00Z' }),
+  ];
+  const ids = (sorted: { id: string }[]) => sorted.map((t) => t.id);
+
+  it('keeps the given order for relevance', () => {
+    expect(ids(sortTherapists(list, 'relevance'))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('puts the highest rated first and the unrated last', () => {
+    expect(ids(sortTherapists(list, 'rating'))).toEqual(['c', 'b', 'a']);
+  });
+
+  it('puts the soonest slot first and no slot last', () => {
+    expect(ids(sortTherapists(list, 'soonest'))).toEqual(['c', 'a', 'b']);
+  });
+
+  it('sorts by name', () => {
+    expect(ids(sortTherapists(list, 'name'))).toEqual(['b', 'c', 'a']);
+  });
+
+  it('does not reorder the list it was given', () => {
+    sortTherapists(list, 'name');
+    expect(ids(list)).toEqual(['a', 'b', 'c']);
   });
 });

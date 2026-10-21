@@ -57,3 +57,19 @@ export function formatMoney(
 export function localeFor(currency: string): string {
   return LOCALE_BY_CURRENCY[currency?.toUpperCase()] ?? 'en-US';
 }
+
+/**
+ * Renders an amount the API published in minor units.
+ *
+ * The case bill publishes every figure twice — `total` and `totalMinor` — and
+ * only the minor one is safe to compute on: JSON renders a whole float as a
+ * bare integer, so a `total` of 210.0 arrives as `210` and cannot be told from
+ * minor units by looking at it. Do the arithmetic in minor, convert once here.
+ */
+export function formatMinor(
+  amountMinor: number,
+  currency: string,
+  options: FormatMoneyOptions = {},
+): string {
+  return formatMoney(amountMinor / 100, currency, options);
+}

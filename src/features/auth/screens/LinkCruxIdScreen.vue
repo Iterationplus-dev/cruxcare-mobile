@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
   IonBackButton,
   IonButtons,
@@ -67,26 +67,47 @@ import { useRoute, useRouter } from 'vue-router';
 import { AppButton, AppCard, AppIcon, AppInput } from '@/components/ui';
 import { authApi } from '@/api/auth.api';
 import { useAuthStore } from '@/stores/auth';
+import { useToast } from '@/composables/useToast';
+import { ApiError } from '@/types/api';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const toast = useToast();
 const forTherapist = route.query.forTherapist === 'true';
 
-const cruxId = ref('');
-const channel = ref<'whatsapp' | 'sms' | 'email'>('whatsapp');
+// A signed-in member already holds a Crux ID, so start from it rather than
+// making them type it again. The user can still be hydrating on a cold start,
+// so fill it in when it arrives — but never over something they have typed.
+const accountCruxId = computed(() => auth.user?.cruxId ?? auth.user?.membership?.cruxId ?? '');
+const cruxId = ref(accountCruxId.value);
+watch(accountCruxId, (value) => {
+  if (value && !cruxId.value) cruxId.value = value;
+});
 const submitting = ref(false);
 
+/**
+ * WhatsApp and SMS reach the same number, so both appear only when the account
+ * has one (handoff §19) — `phone` was sliced unguarded before, which threw for
+ * an account without it.
+ */
+const phone = auth.user?.phone;
+const maskedPhone = phone ? `••• ${phone.slice(-4)}` : '';
 const channels = [
-  { key: 'whatsapp' as const, icon: 'chat', label: 'WhatsApp', masked: `+•• ${auth.user?.phone.slice(-4) ?? ''}` },
-  { key: 'sms' as const, icon: 'sms', label: 'SMS', masked: `+•• ${auth.user?.phone.slice(-4) ?? ''}` },
+  ...(phone
+    ? [
+        { key: 'whatsapp' as const, icon: 'chat', label: 'WhatsApp', masked: maskedPhone },
+        { key: 'sms' as const, icon: 'sms', label: 'SMS', masked: maskedPhone },
+      ]
+    : []),
   { key: 'email' as const, icon: 'mail', label: 'Email', masked: auth.user?.email ?? '' },
 ];
+const channel = ref<'whatsapp' | 'sms' | 'email'>(channels[0].key);
 
 async function onSend() {
   submitting.value = true;
   try {
-    const delivery = await authApi.requestOtp(channel.value, 'member-link');
+    const delivery = await authApi.requestOtp(channel.value, 'member-link', cruxId.value.trim());
     router.push({
       name: 'register-otp',
       query: {
@@ -94,11 +115,17 @@ async function onSend() {
         contact: delivery.destination ?? channels.find((c) => c.key === channel.value)?.masked,
         channel: channel.value,
         resendAvailableAt: delivery.resendAvailableAt,
+        expiresAt: delivery.expiresAt,
         sent: 'true',
         redirect: forTherapist ? 'therapist-plan' : 'client-settings',
-        cruxId: cruxId.value,
+        cruxId: cruxId.value.trim(),
       },
     });
+  } catch (e) {
+    // Without this a rejected request just stopped the spinner, and the
+    // button looked like it did nothing.
+    const message = e instanceof ApiError ? e.message : 'We could not send a code. Please try again.';
+    await toast.show(message, 'danger', { title: 'Could not send code' });
   } finally {
     submitting.value = false;
   }

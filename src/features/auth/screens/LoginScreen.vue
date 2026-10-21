@@ -12,6 +12,7 @@
         <div class="cc-login-mark">
           <img :src="logoMark" class="cc-login-mark__image" alt="" />
         </div>
+        <template v-if="!challenge">
         <h2 class="cc-text-h1" style="margin: 0 0 5px; text-align: center">Welcome back</h2>
         <p class="cc-text-body" style="margin: 0 0 20px; font-size: 13.5px; text-align: center">
           Log in with your username or email address.
@@ -20,7 +21,7 @@
         <AppInput
           v-model="identifier"
           label="Username or email"
-          placeholder="amara.okafor or amara@example.com"
+          placeholder="amara12 or amara@example.com"
           type="text"
           inputmode="text"
           autocomplete="username"
@@ -88,6 +89,33 @@
             and an agent verifies you.
           </p>
         </div>
+        </template>
+
+        <template v-else>
+          <h2 class="cc-text-h1" style="margin: 0 0 5px; text-align: center">Enter your code</h2>
+          <p class="cc-text-body" style="margin: 0 0 20px; font-size: 13.5px; text-align: center">
+            Two-step verification is on for this account. We sent a code by {{ challengeChannel }}<template
+              v-if="challenge.destination"
+            > to {{ challenge.destination }}</template>.
+          </p>
+          <OtpInput
+            v-model="code"
+            :length="LOGIN_CODE_LENGTH"
+            :error="codeError"
+            :cooldown-remaining="cooldown"
+            @complete="onVerify"
+            @resend="onResendCode"
+          />
+          <AppButton
+            :loading="submitting"
+            :disabled="code.length < LOGIN_CODE_LENGTH"
+            style="margin: 16px 0 8px"
+            @click="onVerify"
+          >
+            Verify and log in
+          </AppButton>
+          <AppButton variant="text" :disabled="submitting" @click="leaveChallenge">Use a different account</AppButton>
+        </template>
       </div>
 
       <div class="cc-screen__footer">
@@ -104,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import {
   IonBackButton,
   IonButtons,
@@ -117,6 +145,8 @@ import { useRoute, useRouter } from 'vue-router';
 import AppButton from '@/components/ui/AppButton.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import AppInput from '@/components/ui/AppInput.vue';
+import OtpInput from '@/components/ui/OtpInput.vue';
+import type { LoginChallenge } from '@/api/auth.api';
 import { biometric } from '@/services/biometric';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from '@/composables/useToast';
@@ -169,7 +199,11 @@ async function onSubmit() {
 
   submitting.value = true;
   try {
-    await auth.login(normalizedIdentifier, password.value, keepLoggedIn.value);
+    const pending = await auth.login(normalizedIdentifier, password.value, keepLoggedIn.value);
+    if (pending) {
+      openChallenge(pending);
+      return;
+    }
     navigateAfterLogin();
   } catch (e) {
     const failureMessage = e instanceof ApiError ? loginFailureMessage(e) : 'Something went wrong. Please try again.';
@@ -199,6 +233,88 @@ async function onBiometricLogin() {
   await auth.hydrate();
   if (auth.isAuthenticated) navigateAfterLogin();
 }
+/**
+ * Two-step login. A right password on an account with two-step on answers
+ * `otp_required` instead of a session; the code then goes to
+ * `/auth/login/verify` together with the same identifier and password, which
+ * the server checks again. Logging in again is how a fresh code is sent.
+ */
+const LOGIN_CODE_LENGTH = 5;
+const challenge = ref<LoginChallenge | null>(null);
+const code = ref('');
+const codeError = ref('');
+const cooldown = ref(0);
+let cooldownTimer: ReturnType<typeof setInterval> | undefined;
+
+const challengeChannel = computed(() => {
+  const channel = challenge.value?.channel;
+  if (channel === 'sms') return 'SMS';
+  if (channel === 'whatsapp') return 'WhatsApp';
+  return channel ?? 'SMS';
+});
+
+function startCooldown(until: string | null) {
+  clearInterval(cooldownTimer);
+  const tick = () => {
+    cooldown.value = until ? Math.max(0, Math.ceil((new Date(until).getTime() - Date.now()) / 1000)) : 0;
+    if (!cooldown.value) clearInterval(cooldownTimer);
+  };
+  tick();
+  if (cooldown.value) cooldownTimer = setInterval(tick, 1000);
+}
+
+function openChallenge(pending: LoginChallenge) {
+  challenge.value = pending;
+  code.value = '';
+  codeError.value = '';
+  startCooldown(pending.resendAvailableAt);
+}
+
+function leaveChallenge() {
+  challenge.value = null;
+  code.value = '';
+  codeError.value = '';
+  password.value = '';
+  clearInterval(cooldownTimer);
+}
+
+async function onVerify() {
+  if (submitting.value || code.value.length < LOGIN_CODE_LENGTH) return;
+  submitting.value = true;
+  codeError.value = '';
+  try {
+    await auth.verifyLogin(identifier.value.trim(), password.value, code.value, keepLoggedIn.value);
+    clearInterval(cooldownTimer);
+    navigateAfterLogin();
+  } catch (e) {
+    code.value = '';
+    codeError.value = e instanceof ApiError ? loginFailureMessage(e) : 'Something went wrong. Please try again.';
+  } finally {
+    submitting.value = false;
+  }
+}
+
+async function onResendCode() {
+  if (submitting.value) return;
+  submitting.value = true;
+  codeError.value = '';
+  try {
+    const pending = await auth.login(identifier.value.trim(), password.value, keepLoggedIn.value);
+    if (!pending) {
+      navigateAfterLogin();
+      return;
+    }
+    openChallenge(pending);
+    await toast.show('A new code is on its way.', 'info', { title: 'Code sent' });
+  } catch (e) {
+    codeError.value = e instanceof ApiError ? loginFailureMessage(e) : 'We could not send a new code. Please try again.';
+  } finally {
+    submitting.value = false;
+  }
+}
+
+onBeforeUnmount(() => clearInterval(cooldownTimer));
+
 function goForgotPassword() {
   router.push({ name: 'forgot-password' });
 }

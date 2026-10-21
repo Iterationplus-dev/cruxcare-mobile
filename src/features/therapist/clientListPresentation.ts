@@ -53,8 +53,16 @@ export function presentClientRow(caseFile: CaseFile, now: Date = new Date()): Cl
 
   const parts: string[] = [];
 
+  /**
+   * "No sessions yet", not "0 sessions".
+   *
+   * A newly accepted client has nothing to count, and a caseload of them read
+   * as a column of zeroes — a figure where a state belongs. The zero is also
+   * the one session count that is never the therapist's record of anything; it
+   * is the absence of one, and the copy says so.
+   */
   const sessions = caseFile.sessionCount ?? 0;
-  parts.push(`${sessions} ${sessions === 1 ? 'session' : 'sessions'}`);
+  parts.push(sessions === 0 ? 'No sessions yet' : `${sessions} ${sessions === 1 ? 'session' : 'sessions'}`);
 
   if (caseFile.nextSessionAt) {
     const next = formatNextSession(caseFile.nextSessionAt, now);

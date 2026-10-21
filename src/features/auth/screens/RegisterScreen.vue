@@ -12,7 +12,7 @@
       <div class="cc-screen__pad">
         <h2 class="cc-text-h1" style="margin: 0 0 4px">Start with the basics</h2>
         <p class="cc-text-subtitle" style="margin: 0 0 16px">
-          You can shop straight away. Your care profile comes later, only if you book a therapist.
+          Complete your care profile only when booking a therapist.
         </p>
 
         <div class="cc-form-row">
@@ -36,7 +36,7 @@
           v-model="email"
           label="Email"
           type="email"
-          placeholder="amara.okafor@gmail.com"
+          placeholder="amara@gmail.com"
           inputmode="email"
           autocomplete="email"
           :error="errors.email"
@@ -66,18 +66,21 @@
              Optional throughout: nobody is stopped from registering for
              withholding where they are. -->
         <AppSheetSelect
-          v-if="countryOptions.length"
+          v-if="countryOptions.length || !countriesLoaded"
           v-model="countryId"
           label="Country (optional)"
           title="Where are you?"
           placeholder="Select your country"
           :options="countryOptions"
+          searchable
+          search-placeholder="Search countries"
+          :loading="countriesLoading"
+          :load-error="countriesError"
+          @retry="retryCountries()"
           clearable
           clear-label="Remove my location"
         />
-        <!-- The active-country list is only readable once signed in, and this
-             screen is not. Until a public list exists the field asks rather
-             than offering an empty menu. -->
+        <!-- Free text is offered only after a successful lookup returns no countries. -->
         <AppInput
           v-else
           v-model="country"
@@ -89,12 +92,17 @@
 
         <template v-if="countryId || country">
           <AppSheetSelect
-            v-if="stateOptions.length"
+            v-if="countryId && (stateOptions.length || !statesLoaded)"
             v-model="stateId"
             label="State (optional)"
             title="Select your state"
             placeholder="Select your state"
             :options="stateOptions"
+            searchable
+            search-placeholder="Search states"
+            :loading="statesLoading"
+            :load-error="statesError"
+            @retry="retryStates()"
           />
           <!-- No list for this country yet, so the field asks rather than
                offering an empty menu that cannot be answered. -->
@@ -160,7 +168,7 @@
             :class="{ 'cc-strength__bar--filled': i <= strength.score }"
           />
         </div>
-        <p class="cc-text-caption" style="margin: 5px 0 12px">
+        <p class="cc-text-caption" style="margin: 5px 0 6px">
           {{ strength.label }} · 8+ characters, one number
         </p>
 
@@ -285,13 +293,13 @@ const stateId = ref('');
 const cityId = ref('');
 
 /** Switched-on countries, read without a session — registration has none. */
-const { data: countries } = useCountries();
+const { data: countries, isSuccess: countriesLoaded, isFetching: countriesLoading, isError: countriesError, refetch: retryCountries } = useCountries();
 const countryOptions = computed(() =>
   (countries.value ?? []).map((c) => ({ value: c.id, label: c.name })),
 );
 
 const selectedCountryId = computed(() => countryId.value || null);
-const { data: states } = useStates(selectedCountryId);
+const { data: states, isSuccess: statesLoaded, isFetching: statesLoading, isError: statesError, refetch: retryStates } = useStates(selectedCountryId);
 const stateOptions = computed(() =>
   (states.value ?? []).map((s) => ({ value: s.id, label: s.name })),
 );

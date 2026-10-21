@@ -56,9 +56,23 @@ export const caseFilesApi = {
     return data;
   },
 
-  async addRecommendation(id: string, productId: string, note: string | null): Promise<CaseFile> {
+  /**
+   * Puts a product on the case. It lands `pending` and costs the client
+   * nothing until they accept it.
+   *
+   * Re-recommending a product that still has a pending line updates that line
+   * rather than adding a second. Once the client has answered, a further
+   * recommendation adds a new line instead — a line they accepted is a
+   * decision, possibly already paid against, and is never rewritten under them.
+   */
+  async addRecommendation(
+    id: string,
+    productId: string,
+    note: string | null,
+    quantity = 1,
+  ): Promise<CaseFile> {
     const { data } = await apiClient.patch<CaseFile>(`/case-files/${id}`, {
-      recommendation: { productId, note },
+      recommendation: { productId, note, quantity },
     });
     return data;
   },
@@ -67,6 +81,19 @@ export const caseFilesApi = {
 export const healthProfileApi = {
   async get(): Promise<HealthProfile> {
     const { data } = await apiClient.get<HealthProfile>('/health-profile');
+    return data;
+  },
+
+  /**
+   * The read a grant unlocks, for an assigned therapist. Every refusal names
+   * itself — `access_not_requested`, `access_pending` and `access_revoked` come
+   * back as 403s, and only a lapsed plan or a client this therapist does not
+   * treat answers 404 (backend note §15.2). `healthProfileAccessView` turns
+   * those into what the panel shows; nothing here should switch on the status
+   * code alone.
+   */
+  async forClient(clientId: string): Promise<HealthProfile> {
+    const { data } = await apiClient.get<HealthProfile>(`/clients/${clientId}/health-profile`);
     return data;
   },
 

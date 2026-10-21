@@ -280,7 +280,11 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/point-facility/session',
+    // The id is optional because the push carries one and the tab bar does not.
+    // The screen is still a stub and does not read it yet, but with the segment
+    // here the id survives into the route rather than being dropped by the
+    // router — so the notification's params stop going nowhere (backend N3.2).
+    path: '/point-facility/session/:id?',
     name: 'point-facility-session',
     component: () => import('@/features/member/screens/PointFacilityScreen.vue'),
     props: { view: 'session' },
@@ -362,6 +366,14 @@ const routes: RouteRecordRaw[] = [
     path: '/profile/edit',
     name: 'edit-profile',
     component: () => import('@/features/profile/screens/EditProfileScreen.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    // D2b. Keyed on the case because the plans offered are the ones the
+    // therapist proposed for it, not a global price list.
+    path: '/care/cases/:id/plan',
+    name: 'care-plan',
+    component: () => import('@/features/care/screens/CarePlanScreen.vue'),
     meta: { requiresAuth: true },
   },
   {
@@ -481,6 +493,14 @@ const routes: RouteRecordRaw[] = [
     path: '/therapist/clients/:id',
     name: 'case-file',
     component: () => import('@/features/therapist/screens/CaseFileScreen.vue'),
+    meta: { requiresAuth: true, requiresRole: 'therapist' },
+  },
+  {
+    // The cadence and window the client is asked to agree to. Its own screen
+    // rather than a sheet on the case file: it is the thing being bought.
+    path: '/therapist/clients/:id/plan',
+    name: 'treatment-plan',
+    component: () => import('@/features/therapist/screens/TreatmentPlanScreen.vue'),
     meta: { requiresAuth: true, requiresRole: 'therapist' },
   },
   {

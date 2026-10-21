@@ -65,5 +65,76 @@ export function moneyRefusal(error: unknown): MoneyRefusal | null {
     };
   }
 
+  /**
+   * The purse has a floor and the *balance* has not reached it — not the
+   * request. Someone sitting on $120 may take $20 of it; someone on $80 may
+   * take nothing, however little they ask for.
+   */
+  if (error.code === 'loyalty_minimum_not_met') {
+    const required = figure(error.meta, 'required');
+    const available = figure(error.meta, 'available');
+    const title = 'Your loyalty wallet is not open yet';
+
+    if (required === null || available === null || !currency) {
+      return { title, message: error.message };
+    }
+    return {
+      title,
+      message:
+        `Loyalty opens at ${formatMoney(required, currency)}. ` +
+        `You have ${formatMoney(available, currency)} — it keeps building as you earn.`,
+    };
+  }
+
+  /**
+   * Money is there, it is just not clear yet. Saying "insufficient funds" to
+   * somebody looking at a figure on their own screen is how a correct refusal
+   * becomes a support ticket, so the pending amount is named.
+   */
+  if (error.code === 'insufficient_funds') {
+    const pending = figure(error.meta, 'pending');
+    const title = 'Not enough cleared yet';
+
+    if (pending === null || pending <= 0 || !currency) {
+      return { title: 'Not enough in that wallet', message: error.message };
+    }
+    return {
+      title,
+      message:
+        `${formatMoney(pending, currency)} is still clearing — it becomes available once your ` +
+        'client has finished paying for their course.',
+    };
+  }
+
+  /**
+   * Asked to withdraw from a purse that does not pay out. Not a limit the user
+   * can wait out, so it does not offer to try again later.
+   */
+  if (error.code === 'wallet_not_withdrawable') {
+    return {
+      title: 'That wallet does not pay out',
+      message: error.message,
+    };
+  }
+
   return null;
+}
+
+/**
+ * The withdrawal window is shut.
+ *
+ * Kept apart from `moneyRefusal` because it is not a refusal about the money:
+ * nothing is wrong with the amount or the balance, it is simply the wrong day.
+ * It is also checked twice — once when the quote is minted and again when the
+ * action settles, so a quote taken at 23:58 on Friday cannot pay out on
+ * Saturday — and both calls route through here.
+ */
+export function withdrawalWindowRefusal(error: unknown): MoneyRefusal | null {
+  if (!(error instanceof ApiError) || error.code !== 'withdrawal_window_closed') return null;
+  return {
+    title: 'Withdrawals are closed right now',
+    // The server's own sentence: it knows the days, and they are configuration
+    // rather than something to restate here and let drift.
+    message: error.message,
+  };
 }

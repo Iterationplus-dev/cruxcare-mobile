@@ -2,17 +2,27 @@ import { apiClient } from './client';
 import type { CursorPage } from '@/types/api';
 import type { TherapistPlanOption } from '@/features/therapist/plans';
 import type {
+  CareEngagement,
   CareRequest,
   TherapistAvailabilityDay,
+  SupportContact,
+  TherapistGender,
   TherapistRota,
   TherapistSummary,
   WorkingDay,
 } from '@/types/care';
 
 export const therapistsApi = {
-  async list(cursor?: string): Promise<CursorPage<TherapistSummary>> {
+  /**
+   * `gender` narrows the directory server-side. There is no "no preference"
+   * value — omitting it returns everyone — and an off-list value is a 422
+   * rather than a silently ignored filter.
+   */
+  async list(params: { cursor?: string; gender?: TherapistGender } = {}): Promise<
+    CursorPage<TherapistSummary>
+  > {
     const { data } = await apiClient.get<CursorPage<TherapistSummary>>('/therapists', {
-      params: { cursor },
+      params: { cursor: params.cursor, gender: params.gender },
     });
     return data;
   },
@@ -98,11 +108,58 @@ export const therapistsApi = {
    * Returns the created request in full so the tracking screen can show it
    * without a second round trip.
    */
-  async requestAssignment(reason: string, therapistId?: string): Promise<CareRequest> {
+  async requestAssignment(
+    reason: string,
+    therapistId?: string,
+    preferredTherapistGender?: TherapistGender,
+  ): Promise<CareRequest> {
     const { data } = await apiClient.post<CareRequest>('/care/requests', {
       reason,
       ...(therapistId ? { therapistId } : {}),
+      // Only ever sent on an unassigned request, and the server ignores it
+      // otherwise: a preference stored beside a therapist the client picked on
+      // purpose would invite a reassignment to "correct" their own choice.
+      ...(!therapistId && preferredTherapistGender ? { preferredTherapistGender } : {}),
     });
+    return data;
+  },
+
+  /**
+   * The one therapist this client is currently tied to, or null when they are
+   * free to choose. `meta.mayChooseAnotherTherapist` is what gates the request
+   * button; it is one call for the whole directory rather than one per card.
+   */
+  async engagement(): Promise<{
+    engagement: CareEngagement | null;
+    mayChoose: boolean;
+    support: SupportContact | null;
+  }> {
+    const { data } = await apiClient.get<{
+      data: CareEngagement | null;
+      meta?: { mayChooseAnotherTherapist?: boolean; support?: SupportContact | null };
+    }>('/care/engagement');
+    return {
+      engagement: data.data,
+      // Absent reads as free rather than blocked: refusing to let someone ask
+      // for care because a field is missing is the worse failure.
+      mayChoose: data.meta?.mayChooseAnotherTherapist ?? !data.data,
+      // Sent here as well as on the 409, so a client whose case cannot be ended
+      // in the app gets the contact without first being refused.
+      support: data.meta?.support ?? null,
+    };
+  },
+
+  /**
+   * Ends a working relationship and frees the client to choose again. Distinct
+   * from `cancelRequest`, which withdraws a request nobody has accepted.
+   *
+   * Succeeds only while there is nothing to unpick. Once the therapist has
+   * diagnosed, written a note, proposed a plan, recommended a product, started
+   * treatment, held a session or been paid, it answers
+   * `409 discontinue_needs_support` — see `supportFromError`.
+   */
+  async discontinueRequest(id: string): Promise<CareRequest> {
+    const { data } = await apiClient.post<CareRequest>(`/care/requests/${id}/discontinue`);
     return data;
   },
 

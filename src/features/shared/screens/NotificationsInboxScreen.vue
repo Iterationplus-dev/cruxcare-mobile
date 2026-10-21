@@ -10,7 +10,7 @@
       </div>
       <div class="cc-inbox__chips">
         <AppChip :label="`All ${notifications?.length ?? 0}`" :selected="category === 'all'" @click="category = 'all'" />
-        <AppChip label="Care" :selected="category === 'appointments'" @click="category = 'appointments'" />
+        <AppChip label="Care" :selected="category === 'care'" @click="category = 'care'" />
         <AppChip label="Money" :selected="category === 'wallet'" @click="category = 'wallet'" />
         <AppChip label="Orders" :selected="category === 'orders'" @click="category = 'orders'" />
       </div>
@@ -30,6 +30,21 @@
         </div>
       </AppCard>
     </ion-content>
+
+    <!-- The notification itself, opened. The row used to be a link and nothing
+         else: a tap either navigated or — for the ones that carry no route,
+         and for the ones whose route this build does not have — did nothing at
+         all, silently. Its own text, and when it arrived, are content worth
+         reaching even when there is nowhere further to go. -->
+    <AppSheet v-model="detailOpen" :title="opened?.title">
+      <div v-if="opened" class="cc-notif-detail">
+        <div class="cc-text-caption">{{ formatWhen(opened.createdAt) }}</div>
+        <p class="cc-notif-detail__body">{{ opened.body }}</p>
+        <AppButton v-if="openTarget" @click="goToTarget">
+          {{ opened.actionLabel ?? 'Open' }}
+        </AppButton>
+      </div>
+    </AppSheet>
   </ion-page>
 </template>
 
@@ -38,7 +53,7 @@ import { AppPullToRefresh } from '@/components/ui';
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { AppCard, AppChip, AppIcon } from '@/components/ui';
+import { AppButton, AppCard, AppChip, AppIcon, AppSheet } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import { useMarkNotificationRead, useNotifications } from '@/composables/useNotifications';
 import { homeRouteForRole } from '@/router/roleHome';
@@ -50,14 +65,33 @@ const router = useRouter();
 const auth = useAuthStore();
 const { data: notifications, isPending } = useNotifications();
 const markRead = useMarkNotificationRead();
-const category = ref<'all' | NotificationCategory>('all');
+type Filter = 'all' | 'care' | 'wallet' | 'orders';
+const category = ref<Filter>('all');
 
-const filtered = computed(() =>
-  category.value === 'all' ? notifications.value ?? [] : (notifications.value ?? []).filter((n) => n.category === category.value),
-);
+/**
+ * A chip covers the categories a person would look under it, not one server
+ * value. "Care" is the case and the appointments on it: a client looking for
+ * "your therapist has sent you a plan" reaches for Care, and `cases` rows
+ * would otherwise sit outside every chip but All.
+ */
+const filterCategories: Record<Exclude<Filter, 'all'>, NotificationCategory[]> = {
+  care: ['appointments', 'cases'],
+  wallet: ['wallet'],
+  orders: ['orders'],
+};
+
+const filtered = computed(() => {
+  const all = notifications.value ?? [];
+  if (category.value === 'all') return all;
+  const wanted = filterCategories[category.value];
+  return all.filter((n) => wanted.includes(n.category));
+});
 
 const iconMap: Record<NotificationCategory, string> = {
   appointments: 'event_upcoming',
+  // The course of treatment rather than one session of it.
+  cases: 'folder_shared',
+  marketing: 'campaign',
   orders: 'local_shipping',
   wallet: 'savings',
   chat: 'forum',
@@ -67,9 +101,50 @@ function iconFor(c: NotificationCategory) {
   return iconMap[c] ?? 'notifications';
 }
 
+const detailOpen = ref(false);
+const opened = ref<AppNotification | null>(null);
+
+/**
+ * Where the open notification leads, or null when it leads nowhere.
+ *
+ * Resolved rather than pushed blind. `actionRoute` is a path chosen by the
+ * server, and an unknown one is explicitly not an error — an older build is
+ * meant to degrade, not break (push contract §3.2). `router.push` on a path
+ * this build has no route for matches nothing and renders a blank page, so the
+ * degrade has to be checked for rather than assumed: no match, no button.
+ */
+const openTarget = computed(() => {
+  const path = opened.value?.actionRoute;
+  if (!path) return null;
+  const resolved = router.resolve(path);
+  return resolved.matched.length ? resolved.fullPath : null;
+});
+
 function onOpen(n: AppNotification) {
   if (!n.read) markRead.mutate(n.id);
-  if (n.actionRoute) router.push(n.actionRoute);
+  opened.value = n;
+  detailOpen.value = true;
+}
+
+function goToTarget() {
+  const target = openTarget.value;
+  if (!target) return;
+  // Closed first: leaving the sheet mounted over the screen it opened means
+  // coming back to a page with a modal still sitting on it.
+  detailOpen.value = false;
+  router.push(target);
+}
+
+function formatWhen(iso: string): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return '';
+  return at.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 function onMarkAll() {
   notifications.value?.filter((n) => !n.read).forEach((n) => markRead.mutate(n.id));
@@ -140,6 +215,19 @@ function goBack() {
 }
 .cc-notif__body {
   flex: 1;
+}
+.cc-notif-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+.cc-notif-detail__body {
+  margin: 0;
+  font-family: var(--cc-font-interface);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--cc-ink-600);
 }
 .cc-notif__dot {
   width: 8px;

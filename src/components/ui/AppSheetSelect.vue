@@ -21,9 +21,28 @@
     <p v-if="error" class="cc-field__error" role="alert">{{ error }}</p>
 
     <AppSheet v-model="open" :title="title ?? label">
-      <div class="cc-sheet-select__options">
+      <AppInput
+        v-if="searchable"
+        v-model="searchQuery"
+        class="cc-sheet-select__search"
+        :label="searchPlaceholder"
+        :placeholder="searchPlaceholder"
+        type="search"
+        inputmode="search"
+        autocomplete="off"
+      >
+        <template #leading>
+          <AppIcon name="search" :size="20" color="var(--cc-ink-400)" />
+        </template>
+      </AppInput>
+      <p v-if="loading" class="cc-sheet-select__empty" role="status">Loading options…</p>
+      <div v-else-if="loadError" class="cc-sheet-select__empty" role="alert">
+        <p>Could not load options. Please try again.</p>
+        <button type="button" class="cc-sheet-select__clear" @click="emit('retry')">Try again</button>
+      </div>
+      <div v-else class="cc-sheet-select__options">
         <button
-          v-for="opt in options"
+          v-for="opt in filteredOptions"
           :key="opt.value"
           type="button"
           class="cc-sheet-select__option"
@@ -39,6 +58,9 @@
             color="var(--cc-color-primary)"
           />
         </button>
+        <p v-if="!filteredOptions.length" class="cc-sheet-select__empty" role="status">
+          No matches found. Try another search.
+        </p>
       </div>
 
       <!-- Outside the list, because removing a value is not one of the values.
@@ -58,7 +80,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue';
+import { computed, ref, useId, watch } from 'vue';
+import AppInput from './AppInput.vue';
 import AppIcon from './AppIcon.vue';
 import AppSheet from './AppSheet.vue';
 
@@ -79,13 +102,33 @@ const props = withDefaults(
     /** Adds a row that returns the field to its placeholder, emitting ''. */
     clearable?: boolean;
     clearLabel?: string;
+    searchable?: boolean;
+    searchPlaceholder?: string;
+    loading?: boolean;
+    loadError?: boolean;
   }>(),
-  { placeholder: 'Select one', clearable: false, clearLabel: 'Clear selection' },
+  {
+    placeholder: 'Select one',
+    clearable: false,
+    clearLabel: 'Clear selection',
+    searchable: false,
+    searchPlaceholder: 'Search options',
+  },
 );
 
-const emit = defineEmits<{ 'update:modelValue': [string] }>();
+const emit = defineEmits<{ 'update:modelValue': [string]; retry: [] }>();
 
 const open = ref(false);
+const searchQuery = ref('');
+watch(open, () => {
+  searchQuery.value = '';
+});
+const filteredOptions = computed(() => {
+  const query = searchQuery.value.trim().toLocaleLowerCase();
+  return props.searchable && query
+    ? props.options.filter((option) => option.label.toLocaleLowerCase().includes(query))
+    : props.options;
+});
 const labelId = `cc-sheet-select-${useId()}`;
 const selectedLabel = computed(
   () => props.options.find((o) => o.value === props.modelValue)?.label,
@@ -98,6 +141,16 @@ function select(value: string) {
 </script>
 
 <style scoped>
+.cc-sheet-select__search {
+  margin-bottom: 16px;
+}
+.cc-sheet-select__empty {
+  padding: 16px;
+  margin: 0;
+  font-family: var(--cc-font-interface);
+  color: var(--cc-ink-500);
+  font-size: 14.5px;
+}
 .cc-field {
   display: flex;
   flex-direction: column;

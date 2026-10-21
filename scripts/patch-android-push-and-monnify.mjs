@@ -126,6 +126,25 @@ edit('android/app/src/main/AndroidManifest.xml', (source) => {
     );
   }
 
+  // Video visits run Daily inside the WebView, which reaches the camera and
+  // microphone through getUserMedia. Capacitor turns that into the Android
+  // runtime prompt, but only for permissions the manifest declares — without
+  // these the call joins with no picture and no sound. The camera feature is
+  // optional so the app still installs on a device without one.
+  if (!next.includes('android.permission.RECORD_AUDIO')) {
+    next = next.replace(
+      '    <uses-permission android:name="android.permission.INTERNET" />',
+      [
+        '    <uses-permission android:name="android.permission.INTERNET" />',
+        '    <!-- Video visits: camera and microphone, asked for when a call starts. -->',
+        '    <uses-permission android:name="android.permission.CAMERA" />',
+        '    <uses-permission android:name="android.permission.RECORD_AUDIO" />',
+        '    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />',
+        '    <uses-feature android:name="android.hardware.camera" android:required="false" />',
+      ].join('\n'),
+    );
+  }
+
   // Without these, Firebase falls back to the app launcher icon (rendered as a
   // grey square) and files every message under a "Miscellaneous" channel the
   // user cannot tune. The channel id must match DEFAULT_CHANNEL_ID in

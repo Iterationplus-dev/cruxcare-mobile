@@ -147,3 +147,45 @@ export function formatNextSlot(iso: string | null, now: Date = new Date()): stri
   if (sameDay) return `Today ${time}`;
   return `${at.toLocaleDateString('en-GB', { weekday: 'short' })} ${time}`;
 }
+
+export type TherapistSort = 'relevance' | 'rating' | 'soonest' | 'name';
+
+export const THERAPIST_SORTS: { value: TherapistSort; label: string }[] = [
+  { value: 'relevance', label: 'Relevance' },
+  { value: 'rating', label: 'Highest rated' },
+  { value: 'soonest', label: 'Soonest available' },
+  { value: 'name', label: 'Name A–Z' },
+];
+
+/**
+ * Re-orders an already filtered list. `relevance` keeps discoverTherapists'
+ * own order. The others leave whoever has no figure to compare — unrated, or
+ * no slot to offer — at the bottom rather than mixed in, and a stable sort
+ * keeps the relevance order among ties.
+ */
+export function sortTherapists(therapists: TherapistSummary[], sort: TherapistSort): TherapistSummary[] {
+  if (sort === 'relevance') return therapists;
+
+  const list = [...therapists];
+  if (sort === 'name') {
+    return list.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
+  }
+
+  if (sort === 'rating') {
+    return list.sort((a, b) => {
+      if (a.rating === null || b.rating === null) return Number(a.rating === null) - Number(b.rating === null);
+      return b.rating - a.rating;
+    });
+  }
+
+  const at = (t: TherapistSummary) => {
+    const time = t.nextAvailableSlot ? new Date(t.nextAvailableSlot).getTime() : NaN;
+    return Number.isNaN(time) ? Infinity : time;
+  };
+  return list.sort((a, b) => {
+    const diff = at(a) - at(b);
+    return Number.isNaN(diff) ? 0 : diff;
+  });
+}

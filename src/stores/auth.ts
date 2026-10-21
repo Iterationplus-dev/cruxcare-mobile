@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { authApi, type RegisterPayload } from '@/api/auth.api';
+import { authApi, type AuthSession, type LoginChallenge, type RegisterPayload } from '@/api/auth.api';
 import { setAuthTokenGetter, setUnauthorizedHandler } from '@/api/client';
 import { secureStorage, SECURE_STORAGE_KEYS } from '@/services/secureStorage';
 import { ApiError } from '@/types/api';
@@ -109,8 +109,19 @@ export const useAuthStore = defineStore('auth', () => {
     await persistToken(session.token);
   }
 
-  async function login(identifier: string, password: string, keepLoggedIn = true) {
-    const session = await authApi.login(identifier, password);
+  /** Signs in, or returns the challenge when the account wants a code first. */
+  async function login(identifier: string, password: string, keepLoggedIn = true): Promise<LoginChallenge | null> {
+    const result = await authApi.login(identifier, password);
+    if ('status' in result) return result;
+    await startSession(result, keepLoggedIn);
+    return null;
+  }
+
+  async function verifyLogin(identifier: string, password: string, code: string, keepLoggedIn = true) {
+    await startSession(await authApi.verifyLogin(identifier, password, code), keepLoggedIn);
+  }
+
+  async function startSession(session: AuthSession, keepLoggedIn: boolean) {
     user.value = session.user;
     activeRole.value = defaultRoleContext(session.user);
     if (keepLoggedIn) {
@@ -133,6 +144,23 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = { ...user.value, email, emailVerified: false };
     }
     return delivery;
+  }
+
+  /**
+   * Leave a signup whose code was never entered.
+   *
+   * Deliberately not `logout()`. The token held for an unverified account is
+   * only good for delivering and checking a code, so `POST /auth/logout`
+   * answers 401, and the push registration it tries to revoke was never made.
+   *
+   * Nothing is destroyed: the account stays registered and unverified on the
+   * server, and signing in again lands back on the code screen with a fresh
+   * one. What this drops is the local session that `hydrate` holds open
+   * precisely so the router can pin the app to that screen — without dropping
+   * it, every way out is redirected straight back.
+   */
+  async function abandonPendingSignup() {
+    await clearSession();
   }
 
   /** `allDevices` also ends every other session on the account. */
@@ -190,8 +218,10 @@ export const useAuthStore = defineStore('auth', () => {
     hydrate,
     register,
     login,
+    verifyLogin,
     refreshUser,
     changeSignupEmail,
+    abandonPendingSignup,
     logout,
     linkMembership,
     activateTherapist,

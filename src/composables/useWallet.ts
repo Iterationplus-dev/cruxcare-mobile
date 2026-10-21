@@ -14,3 +14,17 @@ export function useLedger() {
     queryFn: () => walletApi.ledger(),
   });
 }
+
+/**
+ * A therapist's earnings, per client payment.
+ *
+ * Its own key rather than a slice of `['wallet']`: paying out changes both, but
+ * an earning accruing changes this and the wallet's pending figure without
+ * touching anything else the wallet screen shows.
+ */
+export function useTherapistEarnings() {
+  return useQuery({
+    queryKey: ['therapist', 'earnings'],
+    queryFn: () => walletApi.earnings(),
+  });
+}

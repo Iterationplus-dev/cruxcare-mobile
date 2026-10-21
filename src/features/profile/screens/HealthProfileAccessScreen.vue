@@ -33,6 +33,10 @@
                   <div class="cc-text-caption">Asked {{ formatDate(row.requestedAt) }}</div>
                 </div>
               </div>
+              <!-- The case they made for asking. A consent question with a
+                   stated reason is a different question to a bare demand, so
+                   it sits above the buttons rather than below them. -->
+              <p v-if="row.reason" class="cc-access__reason">“{{ row.reason }}”</p>
               <div class="cc-access__actions">
                 <AppButton :loading="busyId === row.id" @click="decide(row, 'grant')">Allow</AppButton>
                 <AppButton
@@ -115,7 +119,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { IonContent, IonPage } from '@ionic/vue';
-import { useQuery, useQueryClient } from '@tanstack/vue-query';
+import { useQueryClient } from '@tanstack/vue-query';
 import {
   AppAvatar,
   AppButton,
@@ -126,6 +130,7 @@ import {
 } from '@/components/ui';
 import { ErrorState, LoadingState } from '@/components/state';
 import { healthAccessApi } from '@/api/health-access.api';
+import { pendingHealthAccess, useHealthProfileAccess } from '@/composables/useHealthAccess';
 import { useToast } from '@/composables/useToast';
 import { ApiError } from '@/types/api';
 import type { HealthProfileAccess } from '@/types/care';
@@ -142,17 +147,9 @@ const toast = useToast();
 const queryClient = useQueryClient();
 const busyId = ref<string | null>(null);
 
-const {
-  data: rows,
-  isPending,
-  isError,
-  refetch,
-} = useQuery({
-  queryKey: ['health-profile', 'access'],
-  queryFn: () => healthAccessApi.list(),
-});
+const { data: rows, isPending, isError, refetch } = useHealthProfileAccess();
 
-const pending = computed(() => (rows.value ?? []).filter((r) => r.status === 'pending'));
+const pending = computed(() => pendingHealthAccess(rows.value));
 const granted = computed(() => (rows.value ?? []).filter((r) => r.status === 'granted'));
 const refused = computed(() => (rows.value ?? []).filter((r) => r.status === 'revoked'));
 
@@ -219,6 +216,15 @@ async function decide(row: HealthProfileAccess, action: 'grant' | 'revoke') {
   flex: 1;
   min-width: 0;
 }
+.cc-access__reason {
+  margin: 10px 0 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--cc-line);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--cc-ink-400);
+}
+
 .cc-access__actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

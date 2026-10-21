@@ -11,6 +11,25 @@ import type { HealthProfileAccess } from '@/types/care';
  * client had no way to see the question, let alone answer it.
  */
 export const healthAccessApi = {
+  /**
+   * The therapist asks. The client id is in the path, not the body — the server
+   * shipped it that way before this client existed (backend note §15.3).
+   *
+   * Re-asking after a refusal is allowed and reopens the same row rather than
+   * raising a second one, so there is no cooldown to display and no permanent
+   * refusal to design for: the care relationship is the whole gate, and a
+   * therapist the client has left cannot ask at all.
+   */
+  async request(clientId: string, reason?: string): Promise<HealthProfileAccess> {
+    const trimmed = reason?.trim();
+    const { data } = await apiClient.post<HealthProfileAccess>(
+      `/clients/${clientId}/health-profile/access`,
+      // Omitted rather than sent empty: a blank reason is not a reason given.
+      trimmed ? { reason: trimmed } : {},
+    );
+    return data;
+  },
+
   async list(): Promise<HealthProfileAccess[]> {
     const { data } = await apiClient.get<CursorPage<HealthProfileAccess>>('/health-profile/access');
     return data.data;

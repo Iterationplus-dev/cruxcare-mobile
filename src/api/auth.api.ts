@@ -36,6 +36,24 @@ export interface AuthSession {
   token: string;
 }
 
+/**
+ * What `POST /auth/login` answers instead of a session when the account has
+ * two-step verification on: the password was right, and a code is on its way.
+ * The session comes from `POST /auth/login/verify` with that code.
+ */
+export interface LoginChallenge {
+  status: 'otp_required';
+  channel: string;
+  /** Masked, e.g. `**********6383`. */
+  destination: string | null;
+  expiresAt: string;
+  resendAvailableAt: string | null;
+}
+
+function isLoginChallenge(data: unknown): data is LoginChallenge {
+  return isRecord(data) && data.status === 'otp_required';
+}
+
 /** Payment the provider still has to confirm — the plan is not active yet. */
 export interface PendingPlanPayment {
   status: 'pending_payment';
@@ -123,17 +141,44 @@ export const authApi = {
     return requireAuthSession(data);
   },
 
-  async login(identifier: string, password: string): Promise<AuthSession> {
-    const { data } = await apiClient.post<AuthSession>(
+  /** A session, or — for an account with two-step on — a code challenge. Calling
+   *  it again sends a fresh code. */
+  async login(identifier: string, password: string): Promise<AuthSession | LoginChallenge> {
+    const { data } = await apiClient.post<unknown>(
       '/auth/login',
       { identifier, password },
+      { headers: await installationHeader() },
+    );
+    if (isLoginChallenge(data)) return data;
+    return requireAuthSession(data);
+  },
+
+  /** Second step of a two-step login. Mints the token, so it carries the
+   *  installation id like the other two calls that do. */
+  async verifyLogin(identifier: string, password: string, code: string): Promise<AuthSession> {
+    const { data } = await apiClient.post<unknown>(
+      '/auth/login/verify',
+      { identifier, password, code },
       { headers: await installationHeader() },
     );
     return requireAuthSession(data);
   },
 
-  async requestOtp(channel: OtpChannel, purpose: 'signup' | 'recovery' | 'member-link'): Promise<OtpRequestResult> {
-    const { data } = await apiClient.post<OtpRequestResult>('/auth/otp/request', { channel, purpose });
+  /**
+   * `cruxId` is required by the API when `purpose` is `member-link` — it 422s
+   * without it, though the handoff table has not caught up. Left out for the
+   * other purposes, which have no Crux ID to send.
+   */
+  async requestOtp(
+    channel: OtpChannel,
+    purpose: 'signup' | 'recovery' | 'member-link',
+    cruxId?: string,
+  ): Promise<OtpRequestResult> {
+    const { data } = await apiClient.post<OtpRequestResult>('/auth/otp/request', {
+      channel,
+      purpose,
+      ...(cruxId ? { cruxId } : {}),
+    });
     return data;
   },
 
@@ -141,10 +186,12 @@ export const authApi = {
     const { data } = await apiClient.post<OtpRequestResult>('/auth/signup/email', { email });
     return data;
   },
-  async verifyOtp(code: string, purpose: 'signup' | 'recovery' | 'member-link') {
+  /** Same `cruxId` rule as requestOtp: the API 422s without it for `member-link`. */
+  async verifyOtp(code: string, purpose: 'signup' | 'recovery' | 'member-link', cruxId?: string) {
     const { data } = await apiClient.post<{ verified: boolean }>('/auth/otp/verify', {
       code,
       purpose,
+      ...(cruxId ? { cruxId } : {}),
     });
     return data;
   },

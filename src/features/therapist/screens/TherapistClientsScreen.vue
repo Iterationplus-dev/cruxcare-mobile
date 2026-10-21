@@ -4,6 +4,22 @@
     <ion-content class="cc-screen">
       <AppPullToRefresh :query-keys="[['case-files']]" />
       <LoadingState v-if="isPending" label="Loading your clients…" />
+
+      <!-- A failed load is not an empty caseload, and must never be drawn as
+           one. `GET /case-files` answering 500 left this screen telling a
+           therapist with five open case files that they had no clients — a
+           confident false statement about their own work, with no hint that
+           anything had gone wrong and nothing to retry. -->
+      <ErrorState
+        v-else-if="loadFailed"
+        title="We could not load your clients"
+        message="Your case files are safe. Check your connection and try again."
+      >
+        <template #actions>
+          <AppButton variant="secondary" @click="refetch()">Try again</AppButton>
+        </template>
+      </ErrorState>
+
       <!-- Only when the therapist has nobody at all — a tab that happens to be
            empty is a different message, handled below the chips. -->
       <EmptyState
@@ -41,19 +57,37 @@
           :title="emptyTitle"
           :message="emptyMessage"
         />
-        <AppCard v-else style="margin: 16px; padding: 0">
-        <AppListRow
-          v-for="cf in rows"
-          :key="cf.id"
-          :title="cf.clientName || 'CruxCare client'"
-          :subtitle="presentClientRow(cf).subtitle"
-          :subtitle-tone="presentClientRow(cf).tone === 'attention' ? 'warning' : undefined"
-          icon="folder_shared"
-          :icon-color="presentClientRow(cf).tone === 'attention' ? 'var(--cc-color-warning)' : 'var(--cc-color-primary)'"
-          chevron
-          clickable
-          @click="router.push({ name: 'case-file', params: { id: cf.id } })"
-        />
+        <AppCard v-else class="cc-clients__list">
+          <!-- One presentation per row rather than three calls in the
+               template: it reads the clock, so calling it repeatedly can put
+               two different times on one row. -->
+          <AppListRow
+            v-for="row in presentedRows"
+            :key="row.id"
+            :title="row.name"
+            :subtitle="row.subtitle"
+            :subtitle-tone="row.needsAttention ? 'warning' : undefined"
+            clickable
+            :divider="row.id !== presentedRows[presentedRows.length - 1].id"
+            @click="router.push({ name: 'case-file', params: { id: row.id } })"
+          >
+            <!-- A person, not a folder. Five identical folder glyphs gave the
+                 eye nothing to aim at; initials are the thing a therapist
+                 actually scans a caseload by. -->
+            <template #leading>
+              <AppAvatar :name="row.name" :size="38" />
+            </template>
+
+            <!-- Chevron kept alongside the badge: the badge says the row wants
+                 something, the chevron says the row opens. Colour alone would
+                 carry the first for nobody who cannot see orange. -->
+            <template #trailing>
+              <span class="cc-clients__meta">
+                <AppBadge v-if="row.needsAttention" label="NOTE DUE" tone="warning" />
+                <AppIcon name="chevron_right" :size="20" color="var(--cc-ink-400)" />
+              </span>
+            </template>
+          </AppListRow>
         </AppCard>
       </template>
     </ion-content>
@@ -65,8 +99,8 @@ import { AppPullToRefresh } from '@/components/ui';
 import { IonContent, IonPage } from '@ionic/vue';
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { AppCard, AppHeader, AppListRow } from '@/components/ui';
-import { EmptyState, LoadingState } from '@/components/state';
+import { AppAvatar, AppBadge, AppButton, AppCard, AppHeader, AppIcon, AppListRow } from '@/components/ui';
+import { EmptyState, ErrorState, LoadingState } from '@/components/state';
 import { AppInput } from '@/components/ui';
 import { useCaseFiles } from '@/composables/useCaseFiles';
 import { presentClientRow } from '@/features/therapist/clientListPresentation';
@@ -87,11 +121,44 @@ watch(query, (next) => {
   }, 250);
 });
 
-const { data: caseFiles, isPending } = useCaseFiles(
-  computed(() => ({ state: filter.value, q: debouncedQuery.value })),
-);
+const {
+  data: caseFiles,
+  isPending,
+  isError,
+  refetch,
+} = useCaseFiles(computed(() => ({ state: filter.value, q: debouncedQuery.value })));
+
+/**
+ * A failure with nothing to fall back on.
+ *
+ * Gated on there being no data rather than on `isError` alone: a background
+ * refetch that fails still has the last good list in hand, and replacing a
+ * therapist's caseload with a full-screen error because one poll failed is a
+ * worse lie than the stale row count. Only a first load with nothing to show
+ * gets the error screen.
+ */
+const loadFailed = computed(() => isError.value && !caseFiles.value);
 
 const rows = computed(() => caseFiles.value?.data ?? []);
+
+/**
+ * Each row, presented once.
+ *
+ * `presentClientRow` reads the clock, so calling it from three places in the
+ * template is three different readings of "now" on one row — enough, at a
+ * minute boundary, to render a subtitle that disagrees with its own tone.
+ */
+const presentedRows = computed(() =>
+  rows.value.map((cf) => {
+    const presented = presentClientRow(cf);
+    return {
+      id: cf.id,
+      name: cf.clientName || 'CruxCare client',
+      subtitle: presented.subtitle,
+      needsAttention: presented.tone === 'attention',
+    };
+  }),
+);
 /** Totals over everything the therapist can see, not the loaded page. */
 const counts = computed(() => caseFiles.value?.meta?.counts);
 
@@ -118,6 +185,18 @@ const emptyMessage = computed(() => {
 </script>
 
 <style scoped>
+.cc-clients__list {
+  margin: 16px;
+  padding: 0;
+  overflow: hidden;
+}
+/* Badge and chevron as one trailing unit, so the chevrons stay in a column
+   down the list whether or not a row carries a badge. */
+.cc-clients__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .cc-clients__search {
   padding: 12px 16px 0;
 }

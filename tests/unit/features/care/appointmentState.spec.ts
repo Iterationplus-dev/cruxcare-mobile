@@ -158,6 +158,11 @@ describe('isJoinable', () => {
     expect(isJoinable(appointment({ slot: at }), justBefore)).toBe(true);
   });
 
+  it('opens when the server does, 15 minutes before', () => {
+    expect(isJoinable(appointment({ slot: at }), new Date('2026-08-31T09:45:00'))).toBe(true);
+    expect(isJoinable(appointment({ slot: at }), new Date('2026-08-31T09:44:00'))).toBe(false);
+  });
+
   it('is still open once the session has started', () => {
     // The bug this replaces: Join vanished the instant the clock passed the
     // slot, which is exactly when someone would reach for it.

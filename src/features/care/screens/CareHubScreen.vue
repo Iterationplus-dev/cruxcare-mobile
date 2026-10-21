@@ -4,9 +4,33 @@
       <h1 class="cc-text-h1" style="margin: 0">Care</h1>
     </div>
     <ion-content class="cc-screen">
-      <AppPullToRefresh :query-keys="[['case-files'], ['therapists'], ['appointments'], ['chat', 'threads']]" />
+      <AppPullToRefresh
+        :query-keys="[['case-files'], ['therapists'], ['appointments'], ['chat', 'threads'], ['health-profile']]"
+      />
       <LoadingState v-if="isPending" label="Loading your care…" />
       <div v-else class="cc-screen__pad">
+        <!-- Above the therapist card because it is the one thing on this
+             screen waiting on the client, and until now it was reachable
+             only from Profile → Security & privacy. Outside the `therapist`
+             branch: a therapist can still be waiting on an answer while the
+             assignment behind it is being re-arranged. -->
+        <AppCard v-if="pendingAccess.length" class="cc-care__ask">
+          <div class="cc-care__ask-head">
+            <AppIcon name="pending_actions" :size="22" color="var(--cc-color-warning)" />
+            <div class="cc-care__ask-body">
+              <div class="cc-text-body-strong" style="font-size: 15px">{{ askTitle }}</div>
+              <div class="cc-text-caption">They cannot read it until you allow it.</div>
+            </div>
+          </div>
+          <!-- Only when one person is asking. Stacking several reasons here
+               would be the access screen, badly — so that is where more than
+               one goes. -->
+          <p v-if="soleAskReason" class="cc-care__ask-reason">“{{ soleAskReason }}”</p>
+          <AppButton @click="router.push({ name: 'health-profile-access' })">
+            {{ pendingAccess.length > 1 ? 'Review requests' : 'Review request' }}
+          </AppButton>
+        </AppCard>
+
         <template v-if="therapist">
           <AppCard>
             <div class="cc-care__therapist">
@@ -51,6 +75,17 @@
           <div class="cc-text-body-strong" style="font-size: 16px">Your care</div>
           <AppCard style="padding: 0">
             <AppListRow
+              v-if="carePlanRow"
+              title="Care plan"
+              :subtitle="carePlanRow.subtitle"
+              :subtitle-tone="carePlanRow.tone"
+              icon="event_repeat"
+              :icon-color="carePlanRow.tone === 'warning' ? 'var(--cc-color-warning)' : undefined"
+              chevron
+              clickable
+              @click="router.push({ name: 'care-plan', params: { id: caseFile!.caseId } })"
+            />
+            <AppListRow
               title="Health profile"
               :subtitle="healthGapSubtitle"
               icon="medical_information"
@@ -70,16 +105,62 @@
             />
           </AppCard>
 
-          <template v-if="caseFile?.recommendations.length">
+          <template v-if="recommendationGroups.length">
             <div class="cc-text-body-strong" style="font-size: 16px">Recommended by your therapist</div>
-            <AppCard v-for="r in caseFile.recommendations" :key="r.id" class="cc-care__reco">
+            <!-- Not "Add": these are not being bought here. Accepting one puts
+                 it on the case bill, so the decision belongs on the care plan
+                 screen next to what it costs, and this row says which are still
+                 waiting on an answer. -->
+            <AppCard v-for="r in recommendationGroups" :key="r.key" class="cc-care__reco">
+              <!-- The image spans both rows, so the name above and the price
+                   below share one left edge. Putting it inside the first row
+                   indented the name and left the price hanging out at the
+                   card's edge. -->
+              <ProductImage
+                :media="findProduct(r.productId)?.media ?? []"
+                :name="formatProductTitle(r.productName)"
+                class="cc-care__reco-thumb"
+              />
+
               <div class="cc-care__reco-body">
-                <div class="cc-text-body-strong" style="font-size: 14.5px">{{ r.productName }}</div>
-                <div class="cc-text-caption">{{ r.note }}</div>
+                <!-- Name and state on one line, then money and the action on
+                     the next. Two products can share a name, so the state is
+                     what tells them apart and it sits beside the name rather
+                     than trailing underneath as grey caption text. -->
+                <div class="cc-care__reco-row">
+                  <!-- Title-cased like the shop: the API stores names in caps,
+                       and three shouted words wrapped to three lines here. -->
+                  <span class="cc-care__reco-name">{{ formatProductTitle(r.productName) }}</span>
+                  <AppBadge
+                    :label="recoStatus(r).label"
+                    :tone="recoStatus(r).tone"
+                    class="cc-care__reco-badge"
+                  />
+                </div>
+
+                <p v-for="note in r.notes" :key="note" class="cc-care__reco-note">
+                  {{ note }}
+                </p>
+
+                <div class="cc-care__reco-row cc-care__reco-row--foot">
+                  <!-- The total leads, with the arithmetic under it. Putting
+                       the quantity in front of the total read as "two at
+                       fifty" — the unit price is what multiplies. -->
+                  <span class="cc-care__reco-price">
+                    <MoneyAmount :value="r.total" :currency="r.currency" />
+                    <span v-if="r.quantity > 1" class="cc-care__reco-each">
+                      {{ r.quantity }} × <MoneyAmount :value="r.unitPrice" :currency="r.currency" />
+                    </span>
+                  </span>
+                  <AppButton
+                    variant="secondary"
+                    :full-width="false"
+                    @click="router.push({ name: 'care-plan', params: { id: caseFile!.caseId } })"
+                  >
+                    {{ r.status === 'pending' ? 'Review' : 'View' }}
+                  </AppButton>
+                </div>
               </div>
-              <AppButton variant="secondary" @click="router.push({ name: 'product-detail', params: { id: r.productId } })">
-                Add
-              </AppButton>
             </AppCard>
           </template>
         </template>
@@ -174,10 +255,12 @@ import { IonContent, IonPage } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import {
   AppAvatar,
+  AppBadge,
   AppButton,
   AppCard,
   AppIcon,
   AppListRow,
+  MoneyAmount,
 } from '@/components/ui';
 import { EmptyState, LoadingState } from '@/components/state';
 import {
@@ -188,6 +271,12 @@ import {
 } from '@/features/care/appointmentState';
 import { useAppointments } from '@/composables/useAppointments';
 import { useCaseFiles } from '@/composables/useCaseFiles';
+import { usePendingHealthAccess } from '@/composables/useHealthAccess';
+import { subscriptionSummary } from '@/features/care/carePlans';
+import { formatProductTitle } from '@/features/marketplace/productPresentation';
+import { useProductLookup } from '@/composables/useProducts';
+import { groupRecommendations, type RecommendationGroup } from '@/features/care/recommendationGroups';
+import ProductImage from '@/components/marketplace/ProductImage.vue';
 import { useTherapist, useTherapists } from '@/composables/useTherapists';
 import { useCareRequests } from '@/composables/useCareRequests';
 import { presentCareRequest } from '@/features/care/careRequestPresentation';
@@ -206,10 +295,51 @@ const queryClient = useQueryClient();
 const clientName = computed(() => (auth.user ? formatFullName(auth.user) : 'A client'));
 const { data: chatThreads } = useChatThreads();
 
+/**
+ * Therapists waiting to be allowed to read the health profile. Kept out of
+ * `isPending` below: the card appears when this arrives rather than holding
+ * the whole hub on a list that is usually empty.
+ */
+const { pending: pendingAccess } = usePendingHealthAccess();
+const askTitle = computed(() => {
+  const rows = pendingAccess.value;
+  // Named where we can — the client is deciding about a person, and "a
+  // therapist asked" is the same sentence about a stranger.
+  if (rows.length === 1) {
+    return `${rows[0].therapistName ?? 'Your therapist'} asked to read your health profile`;
+  }
+  return `${rows.length} therapists asked to read your health profile`;
+});
+const soleAskReason = computed(() =>
+  pendingAccess.value.length === 1 ? pendingAccess.value[0].reason : null,
+);
+
 const { data: caseFilesPage, isPending: caseFilesPending } = useCaseFiles();
 const caseFile = computed(() =>
   caseFilesPage.value?.data.find((cf) => cf.clientId === auth.user?.id),
 );
+/**
+ * The client's own plan, as a row.
+ *
+ * Absent entirely until a therapist has proposed a cadence — a "Care plan" row
+ * leading to an empty screen would be an invitation to pay for nothing. Once
+ * proposed and unpaid it is the one thing on this screen that is waiting on
+ * them, so it says so rather than sitting silently among the others.
+ */
+const carePlanRow = computed<{ subtitle: string; tone?: 'warning' } | null>(() => {
+  const file = caseFile.value;
+  if (!file?.treatmentPlan?.cadence) return null;
+
+  const summary = subscriptionSummary(file.subscription);
+  if (!summary) {
+    return { subtitle: 'Chosen by your therapist · not paid for yet', tone: 'warning' };
+  }
+  return {
+    subtitle: [summary.visits, summary.renewal].filter(Boolean).join(' · '),
+    tone: summary.tone === 'warning' ? 'warning' : undefined,
+  };
+});
+
 const { data: therapist, isPending: therapistPending } = useTherapist(
   computed(() => caseFile.value?.therapistId ?? ''),
 );
@@ -253,6 +383,18 @@ const canRescheduleHeadline = computed(
 const overdueFor = computed(() =>
   headline.value?.timing === 'overdue' ? howLongAgo(headline.value.appointment.slot) : null,
 );
+
+/** What the client still has to do about this line, if anything. */
+const { findProduct } = useProductLookup();
+
+/** One row per product, per state, per captured price — the same collapsing
+ *  the client's care plan screen uses, so the two agree. */
+const recommendationGroups = computed(() => groupRecommendations(caseFile.value?.recommendations));
+
+function recoStatus(r: RecommendationGroup) {
+  if (r.status === 'accepted') return { label: 'On your plan', tone: 'success' as const };
+  return { label: 'Needs your answer', tone: 'warning' as const };
+}
 
 function rescheduleHeadline() {
   if (!headline.value) return;
@@ -357,6 +499,31 @@ async function requestTherapist(therapist: TherapistSummary) {
   flex-direction: column;
   gap: 14px;
 }
+.cc-care__ask {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Tinted rather than solid warning: it is a question, not a failure. */
+  background: var(--cc-color-warning-tint);
+  border: 1px solid color-mix(in srgb, var(--cc-color-warning) 35%, transparent);
+}
+.cc-care__ask-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.cc-care__ask-body {
+  flex: 1;
+  min-width: 0;
+}
+.cc-care__ask-reason {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 2px solid var(--cc-line);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--cc-ink-600);
+}
 .cc-care__therapist {
   display: flex;
   gap: 12px;
@@ -388,13 +555,76 @@ async function requestTherapist(therapist: TherapistSummary) {
   background: var(--cc-color-primary-dark);
   border: none;
 }
+/* Image beside a stacked body: identity above, money and the action below,
+   all sharing one left edge. It began as a two-column row with a full-width
+   button, which left the name a narrow strip and broke "Care Blood Activator"
+   over three lines. */
 .cc-care__reco {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
-  align-items: center;
+}
+.cc-care__reco-thumb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--cc-radius-sm);
+  overflow: hidden;
+  background: var(--cc-color-mist);
 }
 .cc-care__reco-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* Lets the rows inside wrap rather than pushing past the card. */
+  min-width: 0;
   flex: 1;
+}
+.cc-care__reco-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cc-care__reco-row--foot {
+  /* The button is taller than the price beside it, so the gap above is
+     trimmed to keep the card from growing a band of dead space. */
+  margin-top: -2px;
+}
+.cc-care__reco-name {
+  /* flex so it takes the space between the image and the badge instead of
+     being centred by space-between. */
+  flex: 1;
+  min-width: 0;
+  color: var(--cc-ink-900);
+  font-family: var(--cc-font-interface);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.cc-care__reco-badge {
+  flex: none;
+}
+.cc-care__reco-note {
+  margin: 0;
+  color: var(--cc-ink-600);
+  font-family: var(--cc-font-interface);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+.cc-care__reco-price {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  color: var(--cc-ink-900);
+  font-family: var(--cc-font-interface);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.cc-care__reco-each {
+  color: var(--cc-ink-600);
+  font-size: 11.5px;
+  font-weight: 400;
 }
 .cc-care__search {
   height: 44px;
