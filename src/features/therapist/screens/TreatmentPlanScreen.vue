@@ -224,10 +224,19 @@ const changed = computed(() => {
   );
 });
 
+/** Visits a week for each preset — the server prices a preset as this many
+ *  visits for every week of the window, at the cadence's catalogue rate. */
+const VISITS_PER_WEEK: Record<string, number> = { weekly: 1, 'twice-weekly': 2, 'thrice-weekly': 3 };
+
 const windowHint = computed(() => {
   const weeks = weeksBetween(startDate.value, endDate.value);
   if (weeks === null) return 'The window is what the client is buying, so it sets the plan length.';
-  return `${weeks} week${weeks === 1 ? '' : 's'}. The plans they are offered are built from this.`;
+  const span = `${weeks} week${weeks === 1 ? '' : 's'}`;
+  const perWeek = VISITS_PER_WEEK[cadence.value];
+  // A preview of the server's arithmetic, not a price: it rounds the window
+  // to whole weeks the same way, and it is the server that charges.
+  if (perWeek) return `${span}, so ${weeks * perWeek} visits. The client is offered a plan priced for exactly this.`;
+  return `${span}. The client is offered a plan for this window.`;
 });
 
 function validate(): boolean {
